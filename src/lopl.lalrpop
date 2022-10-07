@@ -1,0 +1,83 @@
+use std::str::FromStr;
+use crate::ast::{Exp, Literal, BinOpcode, UnOpcode};
+
+grammar;
+
+match {
+    "null" => NULL,
+    "this" => THIS,
+    r#""[^"]*""# => STRING,
+    r"(0|-?[1-9][0-9]*)" => NUM,
+    r"(true|false)" => BOOL
+} else {
+    r"[a-zA-Z][a-zA-Z0-9_]*" => ID,
+    _
+}
+
+Tier<Op, NextTier>: Box<Exp> = {
+    Tier<Op, NextTier> Op NextTier => Box::new(Exp::BinOp(<>)),
+    NextTier
+};
+
+
+
+// || operator has least precendence
+pub Exp = Tier<OrOperator, AndExp>;
+AndExp = Tier<AndOperator, EqExp>;
+EqExp = Tier<EqualityOperator, CompExp>;
+CompExp = Tier<CompareOperator, AddSubExp>;
+AddSubExp = Tier<AddSubOperator, MultDivExp>;
+MultDivExp = Tier<MultDivModOperator, NegExp>;
+NegExp: Box<Exp> = {
+    NegationOperator NegExp => Box::new(Exp::UnOp(<>)),
+    BottomExp,
+}
+
+BottomExp: Box<Exp> = {
+    NULL => Box::new(Exp::Lit(Literal::NullLit)),
+    THIS => Box::new(Exp::Lit(Literal::ThisLit)),
+    NUM => Box::new(Exp::Lit(Literal::NumLit(i64::from_str(<>).unwrap()))),
+    STRING => Box::new(Exp::Lit(Literal::StringLit(<>.to_string()))),
+    BOOL => Box::new(Exp::Lit(Literal::BoolLit(<>.parse().unwrap()))),
+    "(" <Exp> ")"
+}
+
+
+
+NegationOperator: UnOpcode = {
+    "!" => UnOpcode::Negation
+}
+
+MultDivModOperator: BinOpcode = {
+    "*" => BinOpcode::Mult,
+    "/" => BinOpcode::Div,
+    "%" => BinOpcode::Mod
+}
+
+AddSubOperator: BinOpcode = {
+    "+" => BinOpcode::Plus,
+    "-" => BinOpcode::Minus
+}
+
+
+CompareOperator: BinOpcode = {
+    "<=" => BinOpcode::LessThanEquals,
+    ">=" => BinOpcode::GreaterThanEquals,
+    "<" => BinOpcode::LessThan,
+    ">" => BinOpcode::GreaterThan,
+}
+
+EqualityOperator: BinOpcode = {
+    "==" => BinOpcode::Equals,
+    "!=" => BinOpcode::NotEquals,
+}
+
+AndOperator: BinOpcode = {
+    "&&" => BinOpcode::And
+}
+
+OrOperator: BinOpcode = {
+    "||" => BinOpcode::Or
+}
+
+Num: i32 = <s:r"[0-9]+"> => i32::from_str(s).unwrap();
