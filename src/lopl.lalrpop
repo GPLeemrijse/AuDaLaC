@@ -1,5 +1,7 @@
 use std::str::FromStr;
 use crate::ast::{Exp, Literal, BinOpcode, UnOpcode};
+use lalrpop_util::ParseError;
+
 
 grammar;
 
@@ -8,9 +10,9 @@ match {
     "this" => THIS,
     r#""[^"]*""# => STRING,
     r"(0|-?[1-9][0-9]*)" => NUM,
-    r"(true|false)" => BOOL
+    r"(true|false)" => BOOL,
 } else {
-    r"[a-zA-Z][a-zA-Z0-9_]*" => ID,
+    r"[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*" => ID,
     _
 }
 
@@ -18,6 +20,17 @@ Tier<Op, NextTier>: Box<Exp> = {
     Tier<Op, NextTier> Op NextTier => Box::new(Exp::BinOp(<>)),
     NextTier
 };
+
+Comma<T>: Vec<T> = {
+    <mut v:(<T> ",")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
 
 
 
@@ -37,11 +50,22 @@ BottomExp: Box<Exp> = {
     NULL => Box::new(Exp::Lit(Literal::NullLit)),
     THIS => Box::new(Exp::Lit(Literal::ThisLit)),
     NUM => Box::new(Exp::Lit(Literal::NumLit(i64::from_str(<>).unwrap()))),
-    STRING => Box::new(Exp::Lit(Literal::StringLit(<>.to_string()))),
+    <s:STRING> => Box::new(Exp::Lit(Literal::StringLit(s[1..s.len()-1].to_string()))),
     BOOL => Box::new(Exp::Lit(Literal::BoolLit(<>.parse().unwrap()))),
+    <i:ID> "(" <e:Exps> ")" =>? {
+        if i.contains(".") {
+            Err(ParseError::User {
+                error: "No dot-indexing is allowed in constructor calls."
+            })
+        } else {
+            Ok(Box::new(Exp::Constructor(i.to_string(), e)))
+        }
+    },
+    ID => Box::new(Exp::Var(<>.to_string().split(".").map(str::to_string).collect())),
     "(" <Exp> ")"
 }
 
+Exps = Comma<Exp>;
 
 
 NegationOperator: UnOpcode = {
