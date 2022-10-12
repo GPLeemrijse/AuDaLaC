@@ -66,6 +66,12 @@ pub enum UnOpcode {
     Negation,
 }
 
+impl Debug for Step {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+    	write!(fmt, "{} {{{:?}}}", self.name, self.statements)
+    }
+}
+
 impl Debug for Exp {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
         use self::Exp::*;
