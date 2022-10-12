@@ -1,0 +1,13 @@
+struct Node ( val : Int , prev : Node , auxprev : Node , auxval : Int){
+	prefixOne {
+		auxval := prev.val;
+		auxprev := prev.prev;
+	}
+
+	prefixTwo {
+		val := val + auxval;
+		prev := auxprev;
+	}
+}
+
+init < Fix(prefixOne < prefixTwo)

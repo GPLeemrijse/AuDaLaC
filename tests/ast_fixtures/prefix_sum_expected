@@ -1,0 +1,106 @@
+Program {
+    structs: [
+        LoplStruct {
+            name: "Node",
+            parameters: [
+                (
+                    "val",
+                    IntType,
+                ),
+                (
+                    "prev",
+                    NamedType(
+                        "Node",
+                    ),
+                ),
+                (
+                    "auxprev",
+                    NamedType(
+                        "Node",
+                    ),
+                ),
+                (
+                    "auxval",
+                    IntType,
+                ),
+            ],
+            steps: [
+                Step {
+                    name: "prefixOne",
+                    statements: [
+                        Assignment(
+                            [
+                                "auxval",
+                            ],
+                            Var(
+                                [
+                                    "prev",
+                                    "val",
+                                ],
+                            ),
+                        ),
+                        Assignment(
+                            [
+                                "auxprev",
+                            ],
+                            Var(
+                                [
+                                    "prev",
+                                    "prev",
+                                ],
+                            ),
+                        ),
+                    ],
+                },
+                Step {
+                    name: "prefixTwo",
+                    statements: [
+                        Assignment(
+                            [
+                                "val",
+                            ],
+                            BinOp(
+                                Var(
+                                    [
+                                        "val",
+                                    ],
+                                ),
+                                Plus,
+                                Var(
+                                    [
+                                        "auxval",
+                                    ],
+                                ),
+                            ),
+                        ),
+                        Assignment(
+                            [
+                                "prev",
+                            ],
+                            Var(
+                                [
+                                    "auxprev",
+                                ],
+                            ),
+                        ),
+                    ],
+                },
+            ],
+        },
+    ],
+    schedule: Sequential(
+        StepCall(
+            "init",
+        ),
+        Fixpoint(
+            Sequential(
+                StepCall(
+                    "prefixOne",
+                ),
+                StepCall(
+                    "prefixTwo",
+                ),
+            ),
+        ),
+    ),
+}
