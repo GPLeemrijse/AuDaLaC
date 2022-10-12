@@ -6,10 +6,10 @@ use lalrpop_util::ParseError;
 grammar;
 
 match {
+    "Fix" => "Fix",
     "struct" => "struct",
     "if" => "if",
     "then" => "then",
-    ":=" => ":=",
     "null" => "null",
     "this" => "this",
     "String" => "String",
@@ -54,6 +54,30 @@ SimpleID : String = {
             Ok(<>.to_string())
         }
     },
+}
+
+pub Program: Program = <structs:Structs> <schedule:Schedule> => Program {<>};
+
+pub Schedule: Box<Schedule> = {
+    <BottomSchedule> "<" <Schedule> => Box::new(Schedule::Sequential(<>)),
+    BottomSchedule
+}
+
+BottomSchedule: Box<Schedule> = {
+    ID =>? {
+        let parts : Vec<String> = <>.to_string().split(".").map(str::to_string).collect();
+        
+        if parts.len() == 1 {
+            Ok(Box::new(Schedule::StepCall(parts[0].clone())))
+        } else if parts.len() == 2 {
+            Ok(Box::new(Schedule::TypedStepCall(parts[0].clone(), parts[1].clone())))
+        } else {
+            Err(ParseError::User {
+                error: "At most one dot is allowed in a step call."
+            })
+        }
+    },
+    "Fix" "(" <Schedule> ")" => Box::new(Schedule::Fixpoint(<>)),
 }
 
 Struct: Box<LoplStruct> = {

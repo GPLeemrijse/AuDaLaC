@@ -1,9 +1,23 @@
 use crate::lopl::ExpParser;
+use crate::lopl::ScheduleParser;
 use crate::lopl::StatParser;
 use crate::lopl::StepsParser;
 use crate::lopl::StructsParser;
 use lalrpop_util::ParseError::User;
 use std::fmt::{Debug, Error, Formatter};
+
+pub struct Program {
+    pub structs: Vec<Box<LoplStruct>>,
+    pub schedule: Box<Schedule>,
+}
+
+#[derive(Eq, PartialEq)]
+pub enum Schedule {
+    StepCall(String),
+    TypedStepCall(String, String),
+    Sequential(Box<Schedule>, Box<Schedule>),
+    Fixpoint(Box<Schedule>),
+}
 
 #[derive(Eq, PartialEq)]
 pub struct Step {
@@ -90,6 +104,18 @@ impl Debug for LoplStruct {
     }
 }
 
+impl Debug for Schedule {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+        use self::Schedule::*;
+        match &*self {
+            StepCall(n) => write!(fmt, "stepcall({})", n),
+            TypedStepCall(n1, n2) => write!(fmt, "typedstepcall({}.{})", n1, n2),
+            Sequential(s1, s2) => write!(fmt, "({:?} < {:?})", s1, s2),
+            Fixpoint(s) => write!(fmt, "Fix({:?})", s),
+        }
+    }
+}
+
 impl Debug for Exp {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
         use self::Exp::*;
@@ -168,6 +194,19 @@ impl Debug for Literal {
             ThisLit => write!(fmt, "ThisLit"),
         }
     }
+}
+
+#[test]
+fn test_precedence_of_sequential() {
+    check_schedule_str("A < B < C", "(stepcall(A) < (stepcall(B) < stepcall(C)))");
+}
+
+#[test]
+fn test_nested_fixpoints() {
+    check_schedule_str(
+        "A < Fix(B < Fix(C.D))",
+        "(stepcall(A) < Fix((stepcall(B) < Fix(typedstepcall(C.D)))))",
+    );
 }
 
 #[test]
@@ -333,6 +372,21 @@ fn test_binops() {
             Box::new(Exp::Lit(Literal::NumLit(4))),
         ),
     );
+}
+
+fn check_schedule_str(string: &str, s: &str) {
+    match ScheduleParser::new().parse(string) {
+        Ok(sched) => {
+            let r = format!("{:?}", sched);
+            if s != r {
+                panic!(
+                    "The string '{}' does not parse to:\n'{}',\nreceived:\n'{}'",
+                    string, s, r
+                );
+            }
+        }
+        Err(e) => panic!("{}", e),
+    };
 }
 
 fn check_expression(string: &str, e: Exp) {
