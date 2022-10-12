@@ -1,7 +1,14 @@
 use crate::lopl::ExpParser;
 use crate::lopl::StatParser;
+use crate::lopl::StepsParser;
 use lalrpop_util::ParseError::User;
 use std::fmt::{Debug, Error, Formatter};
+
+#[derive(Eq, PartialEq)]
+pub struct Step {
+    pub name: String,
+    pub statements: Vec<Box<Stat>>,
+}
 
 #[derive(Eq, PartialEq)]
 pub enum Exp {
@@ -136,6 +143,20 @@ impl Debug for Literal {
             NullLit => write!(fmt, "NullLit"),
             ThisLit => write!(fmt, "ThisLit"),
         }
+    }
+}
+
+#[test]
+fn test_steps() {
+    let result = StepsParser::new().parse("init { a := 2; abc def := 3;} update {}");
+    assert!(result.is_ok());
+    if let Ok(steps) = result {
+        assert_eq!(steps.len(), 2);
+        assert!((*steps[0]).name == "init".to_string());
+        assert!(matches!(*steps[0].statements[0], Stat::Assignment { .. }));
+        assert!(matches!(*steps[0].statements[1], Stat::Declaration { .. }));
+        assert!(*steps[1].name == "update".to_string());
+        assert!((*steps[1]).statements.len() == 0);
     }
 }
 

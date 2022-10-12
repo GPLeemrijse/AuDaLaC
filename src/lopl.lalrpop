@@ -55,6 +55,12 @@ SimpleID : String = {
     },
 }
 
+Step : Box<Step> = {
+    <name:SimpleID> "{" <statements:Stats> "}" => Box::new(Step {<>})
+}
+
+pub Steps: Vec<Box<Step>> = Step*;
+
 pub Stat: Box<Stat> = {
     "if" <Exp> "then" "{" <Stats> "}" => Box::new(Stat::IfThen(<>)),
     <Type> <SimpleID> ":=" <Exp> ";" => Box::new(Stat::Declaration(<>)),
