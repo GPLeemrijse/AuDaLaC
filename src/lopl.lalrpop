@@ -1,13 +1,20 @@
 use std::str::FromStr;
-use crate::ast::{Exp, Literal, BinOpcode, UnOpcode};
+use crate::ast::*;
 use lalrpop_util::ParseError;
 
 
 grammar;
 
 match {
-    "null" => NULL,
-    "this" => THIS,
+    "if" => "if",
+    "then" => "then",
+    ":=" => ":=",
+    "null" => "null",
+    "this" => "this",
+    "String" => "String",
+    "Nat" => "Nat",
+    "Int" => "Int",
+    "Bool" => "Bool",
     r#""[^"]*""# => STRING,
     r"(0|-?[1-9][0-9]*)" => NUM,
     r"(true|false)" => BOOL,
@@ -31,7 +38,37 @@ Comma<T>: Vec<T> = {
     }
 };
 
+Var: Vec<String> = {
+    ID => <>.to_string().split(".").map(str::to_string).collect()
+}
 
+// An identifier which throws a parse error when it contains "."
+SimpleID : String = {
+    ID =>? {
+        if <>.contains(".") {
+            Err(ParseError::User {
+                error: "Expected Simple ID (= without '.')."
+            })
+        } else {
+            Ok(<>.to_string())
+        }
+    },
+}
+
+pub Stat: Box<Stat> = {
+    "if" <Exp> "then" "{" <Stats> "}" => Box::new(Stat::IfThen(<>)),
+    <Type> <SimpleID> ":=" <Exp> ";" => Box::new(Stat::Declaration(<>)),
+    <Var> ":=" <Exp> ";" => Box::new(Stat::Assignment(<>)),
+}
+
+Stats = Stat*;
+Type: Type = {
+    "String" => Type::StringType,
+    "Nat" => Type::NatType,
+    "Int" => Type::IntType,
+    "Bool" => Type::BoolType,
+    SimpleID => Type::NamedType(<>)
+}
 
 
 // || operator has least precendence
@@ -47,21 +84,13 @@ NegExp: Box<Exp> = {
 }
 
 BottomExp: Box<Exp> = {
-    NULL => Box::new(Exp::Lit(Literal::NullLit)),
-    THIS => Box::new(Exp::Lit(Literal::ThisLit)),
+    "null" => Box::new(Exp::Lit(Literal::NullLit)),
+    "this" => Box::new(Exp::Lit(Literal::ThisLit)),
     NUM => Box::new(Exp::Lit(Literal::NumLit(i64::from_str(<>).unwrap()))),
-    <s:STRING> => Box::new(Exp::Lit(Literal::StringLit(s[1..s.len()-1].to_string()))),
+    STRING => Box::new(Exp::Lit(Literal::StringLit(<>[1..<>.len()-1].to_string()))),
     BOOL => Box::new(Exp::Lit(Literal::BoolLit(<>.parse().unwrap()))),
-    <i:ID> "(" <e:Exps> ")" =>? {
-        if i.contains(".") {
-            Err(ParseError::User {
-                error: "No dot-indexing is allowed in constructor calls."
-            })
-        } else {
-            Ok(Box::new(Exp::Constructor(i.to_string(), e)))
-        }
-    },
-    ID => Box::new(Exp::Var(<>.to_string().split(".").map(str::to_string).collect())),
+    <SimpleID> "(" <Exps> ")" => Box::new(Exp::Constructor(<>)),
+    Var => Box::new(Exp::Var(<>)),
     "(" <Exp> ")"
 }
 
