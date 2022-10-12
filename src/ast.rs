@@ -1,6 +1,7 @@
 use crate::lopl::ExpParser;
 use crate::lopl::StatParser;
 use crate::lopl::StepsParser;
+use crate::lopl::StructsParser;
 use lalrpop_util::ParseError::User;
 use std::fmt::{Debug, Error, Formatter};
 
@@ -8,6 +9,13 @@ use std::fmt::{Debug, Error, Formatter};
 pub struct Step {
     pub name: String,
     pub statements: Vec<Box<Stat>>,
+}
+
+#[derive(Eq, PartialEq)]
+pub struct LoplStruct {
+    pub name: String,
+    pub parameters: Vec<(String, Type)>,
+    pub steps: Vec<Box<Step>>,
 }
 
 #[derive(Eq, PartialEq)]
@@ -68,7 +76,17 @@ pub enum UnOpcode {
 
 impl Debug for Step {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-    	write!(fmt, "{} {{{:?}}}", self.name, self.statements)
+        write!(fmt, "{} {{{:?}}}", self.name, self.statements)
+    }
+}
+
+impl Debug for LoplStruct {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
+        write!(
+            fmt,
+            "{}({:?}){{{:?}}}",
+            self.name, self.parameters, self.steps
+        )
     }
 }
 
@@ -149,6 +167,28 @@ impl Debug for Literal {
             NullLit => write!(fmt, "NullLit"),
             ThisLit => write!(fmt, "ThisLit"),
         }
+    }
+}
+
+#[test]
+fn test_structs() {
+    let result = StructsParser::new()
+        .parse("struct  ABC(param1 : Nat, param2: ABC) { step1{ param1 := 2;} } struct DEF () {}");
+    assert!(result.is_ok());
+    if let Ok(structs) = result {
+        assert_eq!(structs.len(), 2);
+        assert!((*structs[0]).name == "ABC".to_string());
+        assert!(
+            (*structs[0]).parameters
+                == vec![
+                    ("param1".to_string(), Type::NatType),
+                    ("param2".to_string(), Type::NamedType("ABC".to_string()))
+                ]
+        );
+        assert!(*structs[0].steps[0].name == "step1".to_string());
+        assert!((*structs[1]).name == "DEF".to_string());
+        assert!((*structs[1]).parameters.len() == 0);
+        assert!((*structs[1]).steps.len() == 0);
     }
 }
 

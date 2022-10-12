@@ -6,6 +6,7 @@ use lalrpop_util::ParseError;
 grammar;
 
 match {
+    "struct" => "struct",
     "if" => "if",
     "then" => "then",
     ":=" => ":=",
@@ -55,11 +56,19 @@ SimpleID : String = {
     },
 }
 
-Step : Box<Step> = {
+Struct: Box<LoplStruct> = {
+    "struct" <name:SimpleID> "(" <parameters:Pars> ")" "{" <steps:Steps> "}" => Box::new(LoplStruct{<>})
+}
+
+Pars = Comma<Par>;
+Par : (String, Type) = <SimpleID> ":" <Type>;
+
+Step: Box<Step> = {
     <name:SimpleID> "{" <statements:Stats> "}" => Box::new(Step {<>})
 }
 
 pub Steps: Vec<Box<Step>> = Step*;
+pub Structs: Vec<Box<LoplStruct>> = Struct+;
 
 pub Stat: Box<Stat> = {
     "if" <Exp> "then" "{" <Stats> "}" => Box::new(Stat::IfThen(<>)),
