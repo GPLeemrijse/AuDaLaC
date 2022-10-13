@@ -45,7 +45,7 @@ impl ErrorContext {
 /// An organised collection of references to the `Program` AST data
 #[derive(Debug, PartialEq, Eq)]
 struct StaticProgramData<'ast> {
-    struct_data: HashMap<&'ast String, StaticStructData<'ast>>,
+    struct_data: Vec<StaticStructData<'ast>>,
     schedule: &'ast Schedule,
 }
 
@@ -54,13 +54,13 @@ struct StaticProgramData<'ast> {
 struct StaticStructData<'ast> {
     name: &'ast String,
     parameters: HashMap<&'ast String, &'ast Type>,
-    steps: HashMap<&'ast String, &'ast Vec<Box<Stat>>>,
+    steps: Vec<(&'ast String, &'ast Vec<Box<Stat>>)>,
 }
 
 struct BlockEvaluationContext<'ast> {
     current_struct_name: Option<&'ast String>,
     current_step_name: Option<&'ast String>,
-    structs: &'ast HashMap<&'ast String, StaticStructData<'ast>>,
+    structs: &'ast Vec<StaticStructData<'ast>>,
     vars: Vec<HashMap<&'ast String, &'ast Type>>,
     errors: Vec<ValidationError>,
 }
@@ -97,7 +97,7 @@ fn extract_static_program_data<'ast>(
     let mut errors: Vec<ValidationError> = Vec::new();
 
     let mut program_data = StaticProgramData {
-        struct_data: HashMap::new(),
+        struct_data: Vec::new(),
         schedule: &ast.schedule,
     };
     for s in &ast.structs {
@@ -116,15 +116,15 @@ fn extract_static_program_data<'ast>(
             }
         }
 
-        let mut steps_map: HashMap<&'ast String, &'ast Vec<Box<Stat>>> = HashMap::new();
+        let mut steps_map: Vec<(&'ast String, &'ast Vec<Box<Stat>>)> = Vec::new();
         for step in &s.steps {
-            if steps_map.contains_key(&step.name) {
+            if steps_map.iter().any(|t| t.0 == &step.name) {
                 errors.push(ValidationError::StepDefinedTwice(ErrorContext {
                     struct_name: Some(s.name.clone()),
                     step_name: Some(step.name.clone()),
                 }));
             } else {
-                steps_map.insert(&step.name, &step.statements);
+                steps_map.push((&step.name, &step.statements));
             }
         }
 
@@ -133,7 +133,9 @@ fn extract_static_program_data<'ast>(
             parameters: parameters_map,
             steps: steps_map,
         };
-        if program_data.struct_data.contains_key(struct_data.name) {
+
+
+        if program_data.struct_data.iter().any(|s| s.name == struct_data.name) {
             errors.push(ValidationError::StructDefinedTwice(ErrorContext {
                 struct_name: Some(struct_data.name.clone()),
                 step_name: None,
@@ -141,7 +143,7 @@ fn extract_static_program_data<'ast>(
         } else {
             program_data
                 .struct_data
-                .insert(struct_data.name, struct_data);
+                .push(struct_data);
         }
     }
 
@@ -162,7 +164,7 @@ fn check_declared_before_use<'ast>(data: &StaticProgramData<'ast>) -> Vec<Valida
     };
 
     // Test each struct
-    for s in data.struct_data.values() {
+    for s in &data.struct_data {
         context.current_struct_name = Some(s.name);
 
         // Create a fresh scope for the Struct's parameters
@@ -267,7 +269,7 @@ fn get_var_type<'ast>(
     if let Some(t) = first_part {
         match t {
             Type::NamedType(s) => {
-                search_space = &context.structs.get(s).unwrap().parameters;
+                search_space = &context.structs.iter().find(|st| st.name == s).unwrap().parameters;
             }
             _ => {
                 context.errors.push(ValidationError::UndefinedField(
@@ -298,7 +300,7 @@ fn get_var_type<'ast>(
                 } else {
                     match t {
                         Type::NamedType(s) => {
-                            search_space = &context.structs.get(s).unwrap().parameters;
+                        	search_space = &context.structs.iter().find(|st| st.name == s).unwrap().parameters;
                         }
                         _ => {
                             context.errors.push(ValidationError::UndefinedField(
@@ -319,7 +321,7 @@ fn get_var_type<'ast>(
 
 fn check_type_is_defined<'ast>(t: &'ast Type, context: &mut BlockEvaluationContext<'ast>) {
     if let Type::NamedType(s) = t {
-        if !context.structs.contains_key(s) {
+        if !context.structs.iter().any(|st| st.name == s) {
             context.errors.push(ValidationError::UndefinedType(
                 ErrorContext::from_block_context(context),
                 s.clone(),
@@ -434,20 +436,19 @@ mod tests {
             VariableAlreadyDeclared(
                 ErrorContext {
                     struct_name: Some("Node".to_string()),
-                    step_name: Some("step_node".to_string())
+                    step_name: Some("init".to_string())
                 },
-                "n3".to_string()
+                "n1".to_string()
             )
         );
-
         assert_eq!(
             errors[1],
             VariableAlreadyDeclared(
                 ErrorContext {
                     struct_name: Some("Node".to_string()),
-                    step_name: Some("init".to_string())
+                    step_name: Some("step_node".to_string())
                 },
-                "n1".to_string()
+                "n3".to_string()
             )
         );
     }
@@ -480,12 +481,8 @@ mod tests {
             .expect("ParseError.");
         let static_data = extract_static_program_data(&program).expect("Validation errors found.");
         let struct_data = static_data.struct_data;
-        let node_data = struct_data
-            .get(&"Node".to_string())
-            .expect("Did not catch Node");
-        let edge_data = struct_data
-            .get(&"Edge".to_string())
-            .expect("Did not catch Edge");
+        let node_data = &struct_data[0];
+        let edge_data = &struct_data[1];
         let node_params = &node_data.parameters;
         let edge_params = &edge_data.parameters;
 
@@ -498,10 +495,10 @@ mod tests {
         test_param(edge_params, "t", NamedType("Node".to_string()));
         test_param(edge_params, "w", IntType);
 
-        assert!(node_data.steps.contains_key(&"init".to_string()));
-        assert!(node_data.steps.contains_key(&"step_node".to_string()));
-        assert!(edge_data.steps.contains_key(&"init".to_string()));
-        assert!(edge_data.steps.contains_key(&"step_edge".to_string()));
+        assert!(node_data.steps.iter().any(|t| t.0 == &"init".to_string()));
+        assert!(node_data.steps.iter().any(|t| t.0 == &"step_node".to_string()));
+        assert!(edge_data.steps.iter().any(|t| t.0 == &"init".to_string()));
+        assert!(edge_data.steps.iter().any(|t| t.0 == &"step_edge".to_string()));
         assert!(matches!(*static_data.schedule, Schedule::Sequential { .. }));
     }
 
