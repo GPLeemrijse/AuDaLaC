@@ -24,7 +24,6 @@ fn main() {
     let lopl_file_loc = args.value_of("file").unwrap();
     let lopl_program_text = fs::read_to_string(lopl_file_loc).expect("Could not open file");
 
-
     let lopl_program = ProgramParser::new().parse(&lopl_program_text);
 
     match lopl_program {
@@ -38,12 +37,12 @@ fn main() {
             if errors.len() > 0 {
                 println!("@@@@@@@@@@@@@@@@@@ ERRORS @@@@@@@@@@@@@@@@@@");
                 for e in errors {
-                    println!("{:#?}", e);
+                    println!("{}", e);
                 }
             }
-        },
+        }
         Err(e) => {
             panic!("{}", e)
-        },
+        }
     }
 }

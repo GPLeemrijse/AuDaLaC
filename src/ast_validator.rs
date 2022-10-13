@@ -1,5 +1,8 @@
 use crate::ast::*;
 use std::collections::HashMap;
+use std::fmt;
+use std::fmt::Display;
+use std::fmt::Write;
 
 // All steps in schedule have been defined
 // Numeric operators always between: Nat Nat, Nat Int, Int Int
@@ -14,6 +17,65 @@ pub enum ValidationError {
     VariableAlreadyDeclared(ErrorContext, String), //var name
     UndefinedType(ErrorContext, String),         //attempted type name
     UndefinedField(ErrorContext, String, String), //parent name, field name
+}
+
+impl Display for ValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use ValidationError::*;
+        match self {
+            StructDefinedTwice(c) => {
+                write!(
+                    f,
+                    "The struct '{}' has already been defined.",
+                    c.struct_name.as_ref().unwrap()
+                )
+            }
+            StepDefinedTwice(c) => {
+                write!(
+                    f,
+                    "The step '{}' has already been defined; in {}.",
+                    c.step_name.as_ref().unwrap(),
+                    c.struct_name.as_ref().unwrap()
+                )
+            }
+            ParameterDefinedTwice(c, p) => {
+                write!(
+                    f,
+                    "The parameter '{}' has already been defined; in {}.",
+                    p,
+                    c.struct_name.as_ref().unwrap()
+                )
+            }
+            VariableAlreadyDeclared(c, v) => {
+                write!(
+                    f,
+                    "The variable '{}' has already been defined; in {}.{}.",
+                    v,
+                    c.struct_name.as_ref().unwrap(),
+                    c.step_name.as_ref().unwrap()
+                )
+            }
+            UndefinedType(c, t) => {
+                write!(
+                    f,
+                    "The type '{}' has not been defined; in {}.{}.",
+                    t,
+                    c.struct_name.as_ref().unwrap(),
+                    c.step_name.as_ref().unwrap()
+                )
+            }
+            UndefinedField(c, p, p2) => {
+                write!(
+                    f,
+                    "The type '{}' does not have a field '{}'; in {}.{}.",
+                    p,
+                    p2,
+                    c.struct_name.as_ref().unwrap(),
+                    c.step_name.as_ref().unwrap()
+                )
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -134,16 +196,17 @@ fn extract_static_program_data<'ast>(
             steps: steps_map,
         };
 
-
-        if program_data.struct_data.iter().any(|s| s.name == struct_data.name) {
+        if program_data
+            .struct_data
+            .iter()
+            .any(|s| s.name == struct_data.name)
+        {
             errors.push(ValidationError::StructDefinedTwice(ErrorContext {
                 struct_name: Some(struct_data.name.clone()),
                 step_name: None,
             }));
         } else {
-            program_data
-                .struct_data
-                .push(struct_data);
+            program_data.struct_data.push(struct_data);
         }
     }
 
@@ -269,7 +332,12 @@ fn get_var_type<'ast>(
     if let Some(t) = first_part {
         match t {
             Type::NamedType(s) => {
-                search_space = &context.structs.iter().find(|st| st.name == s).unwrap().parameters;
+                search_space = &context
+                    .structs
+                    .iter()
+                    .find(|st| st.name == s)
+                    .unwrap()
+                    .parameters;
             }
             _ => {
                 context.errors.push(ValidationError::UndefinedField(
@@ -300,7 +368,12 @@ fn get_var_type<'ast>(
                 } else {
                     match t {
                         Type::NamedType(s) => {
-                        	search_space = &context.structs.iter().find(|st| st.name == s).unwrap().parameters;
+                            search_space = &context
+                                .structs
+                                .iter()
+                                .find(|st| st.name == s)
+                                .unwrap()
+                                .parameters;
                         }
                         _ => {
                             context.errors.push(ValidationError::UndefinedField(
@@ -496,9 +569,15 @@ mod tests {
         test_param(edge_params, "w", IntType);
 
         assert!(node_data.steps.iter().any(|t| t.0 == &"init".to_string()));
-        assert!(node_data.steps.iter().any(|t| t.0 == &"step_node".to_string()));
+        assert!(node_data
+            .steps
+            .iter()
+            .any(|t| t.0 == &"step_node".to_string()));
         assert!(edge_data.steps.iter().any(|t| t.0 == &"init".to_string()));
-        assert!(edge_data.steps.iter().any(|t| t.0 == &"step_edge".to_string()));
+        assert!(edge_data
+            .steps
+            .iter()
+            .any(|t| t.0 == &"step_edge".to_string()));
         assert!(matches!(*static_data.schedule, Schedule::Sequential { .. }));
     }
 
