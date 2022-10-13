@@ -41,7 +41,7 @@ pub enum Stat {
     Assignment(Vec<String>, Box<Exp>),
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Type {
     NamedType(String),
     StringType,

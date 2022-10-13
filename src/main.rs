@@ -5,6 +5,7 @@ use std::fs;
 
 use clap::clap_app;
 mod ast;
+mod ast_validator;
 
 lalrpop_mod!(pub lopl); // synthesized by LALRPOP
 
