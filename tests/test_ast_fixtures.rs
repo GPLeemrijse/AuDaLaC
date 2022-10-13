@@ -3,6 +3,7 @@ use std::fs;
 use std::str;
 
 #[test]
+#[ignore]
 fn test_ast_fixtures() {
     let paths = fs::read_dir("tests/ast_fixtures").unwrap();
 

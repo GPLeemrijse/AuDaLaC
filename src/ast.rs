@@ -1,3 +1,5 @@
+pub type Loc = (usize, usize);
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct Program {
     pub structs: Vec<Box<LoplStruct>>,
@@ -16,12 +18,13 @@ pub enum Schedule {
 pub struct Step {
     pub name: String,
     pub statements: Vec<Box<Stat>>,
+    pub loc: Loc,
 }
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct LoplStruct {
     pub name: String,
-    pub parameters: Vec<(String, Type)>,
+    pub parameters: Vec<(String, Type, Loc)>,
     pub steps: Vec<Box<Step>>,
 }
 
@@ -37,8 +40,8 @@ pub enum Exp {
 #[derive(Eq, PartialEq, Debug)]
 pub enum Stat {
     IfThen(Box<Exp>, Vec<Box<Stat>>),
-    Declaration(Type, String, Box<Exp>),
-    Assignment(Vec<String>, Box<Exp>),
+    Declaration(Type, String, Box<Exp>, Loc),
+    Assignment(Vec<String>, Box<Exp>, Loc),
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -116,12 +119,16 @@ mod tests {
         if let Ok(structs) = result {
             assert_eq!(structs.len(), 2);
             assert!((*structs[0]).name == "ABC".to_string());
-            assert!(
-                (*structs[0]).parameters
-                    == vec![
-                        ("param1".to_string(), Type::NatType),
-                        ("param2".to_string(), Type::NamedType("ABC".to_string()))
-                    ]
+            assert_eq!(
+                (*structs[0]).parameters,
+                vec![
+                    ("param1".to_string(), Type::NatType, (12, 24)),
+                    (
+                        "param2".to_string(),
+                        Type::NamedType("ABC".to_string()),
+                        (26, 37)
+                    )
+                ]
             );
             assert!(*structs[0].steps[0].name == "step1".to_string());
             assert!((*structs[1]).name == "DEF".to_string());
@@ -155,11 +162,13 @@ mod tests {
                     Box::new(Stat::Assignment(
                         vec!["id".to_string(), "id2".to_string()],
                         Box::new(Exp::Lit(Literal::NullLit)),
+                        (15, 30),
                     )),
                     Box::new(Stat::Declaration(
                         Type::StringType,
                         "b".to_string(),
                         Box::new(Exp::Lit(Literal::StringLit("a".to_string()))),
+                        (31, 47),
                     )),
                 ],
             ),

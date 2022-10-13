@@ -85,10 +85,10 @@ Struct: Box<LoplStruct> = {
 }
 
 Pars = Comma<Par>;
-Par : (String, Type) = <SimpleID> ":" <Type>;
+Par : (String, Type, Loc) = <start:@L> <id:SimpleID> ":" <t:Type> <end:@R> => (id, t, (start, end));
 
 Step: Box<Step> = {
-    <name:SimpleID> "{" <statements:Stats> "}" => Box::new(Step {<>})
+    <start:@L> <name:SimpleID> "{" <statements:Stats> "}" <end:@R> => Box::new(Step {name : name, statements: statements, loc : (start, end)})
 }
 
 pub Steps: Vec<Box<Step>> = Step*;
@@ -96,8 +96,8 @@ pub Structs: Vec<Box<LoplStruct>> = Struct+;
 
 pub Stat: Box<Stat> = {
     "if" <Exp> "then" "{" <Stats> "}" => Box::new(Stat::IfThen(<>)),
-    <Type> <SimpleID> ":=" <Exp> ";" => Box::new(Stat::Declaration(<>)),
-    <Var> ":=" <Exp> ";" => Box::new(Stat::Assignment(<>)),
+    <start:@L> <t:Type> <id:SimpleID> ":=" <e:Exp> ";" <end:@R> => Box::new(Stat::Declaration(t, id, e, (start, end))),
+    <start:@L> <v:Var> ":=" <e:Exp> ";" <end:@R> => Box::new(Stat::Assignment(v, e, (start, end))),
 }
 
 Stats = Stat*;

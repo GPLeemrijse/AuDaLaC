@@ -1,8 +1,8 @@
 use crate::ast::*;
+use codespan_reporting::diagnostic::Diagnostic;
+use codespan_reporting::diagnostic::Label;
+use core::ops::Range;
 use std::collections::HashMap;
-use std::fmt;
-use std::fmt::Display;
-use std::fmt::Write;
 
 // All steps in schedule have been defined
 // Numeric operators always between: Nat Nat, Nat Int, Int Int
@@ -10,70 +10,62 @@ use std::fmt::Write;
 // No declared variables in steps with the same name as parameters
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum ValidationError {
-    StructDefinedTwice(ErrorContext),
-    StepDefinedTwice(ErrorContext),
-    ParameterDefinedTwice(ErrorContext, String), //parameter name
-    VariableAlreadyDeclared(ErrorContext, String), //var name
-    UndefinedType(ErrorContext, String),         //attempted type name
-    UndefinedField(ErrorContext, String, String), //parent name, field name
+pub struct ValidationError {
+    error_type: ValidationErrorType,
+    context: ErrorContext,
+    loc: Loc,
 }
 
-impl Display for ValidationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use ValidationError::*;
-        match self {
-            StructDefinedTwice(c) => {
-                write!(
-                    f,
-                    "The struct '{}' has already been defined.",
-                    c.struct_name.as_ref().unwrap()
-                )
-            }
-            StepDefinedTwice(c) => {
-                write!(
-                    f,
-                    "The step '{}' has already been defined; in {}.",
-                    c.step_name.as_ref().unwrap(),
-                    c.struct_name.as_ref().unwrap()
-                )
-            }
-            ParameterDefinedTwice(c, p) => {
-                write!(
-                    f,
-                    "The parameter '{}' has already been defined; in {}.",
-                    p,
-                    c.struct_name.as_ref().unwrap()
-                )
-            }
-            VariableAlreadyDeclared(c, v) => {
-                write!(
-                    f,
-                    "The variable '{}' has already been defined; in {}.{}.",
-                    v,
-                    c.struct_name.as_ref().unwrap(),
-                    c.step_name.as_ref().unwrap()
-                )
-            }
-            UndefinedType(c, t) => {
-                write!(
-                    f,
-                    "The type '{}' has not been defined; in {}.{}.",
-                    t,
-                    c.struct_name.as_ref().unwrap(),
-                    c.step_name.as_ref().unwrap()
-                )
-            }
-            UndefinedField(c, p, p2) => {
-                write!(
-                    f,
-                    "The type '{}' does not have a field '{}'; in {}.{}.",
-                    p,
-                    p2,
-                    c.struct_name.as_ref().unwrap(),
-                    c.step_name.as_ref().unwrap()
-                )
-            }
+#[derive(Debug, PartialEq, Eq)]
+enum ValidationErrorType {
+    StructDefinedTwice,
+    StepDefinedTwice,
+    ParameterDefinedTwice(String),   //parameter name
+    VariableAlreadyDeclared(String), //var name
+    UndefinedType(String),           //attempted type name
+    UndefinedField(String, String),  //parent name, field name
+}
+
+impl ValidationError {
+    pub fn to_diagnostic(&self) -> Diagnostic<()> {
+        return Diagnostic::error()
+            .with_message(self.message())
+            .with_labels(vec![
+                Label::primary((), self.loc()).with_message(self.label())
+            ]);
+    }
+
+    fn loc(&self) -> Range<usize> {
+        return self.loc.0..self.loc.1;
+    }
+
+    fn label(&self) -> String {
+        use ValidationErrorType::*;
+        match &self.error_type {
+            StructDefinedTwice => format!(
+                "Struct {} defined twice.",
+                self.context.struct_name.as_ref().unwrap()
+            ),
+            StepDefinedTwice => format!(
+                "Step {} defined twice.",
+                self.context.step_name.as_ref().unwrap()
+            ),
+            ParameterDefinedTwice(p) => format!("Parameter {} defined twice.", p),
+            VariableAlreadyDeclared(v) => format!("Variable {} defined twice.", v),
+            UndefinedType(t) => format!("Undefined type {}.", t),
+            UndefinedField(f, t) => format!("Undefined field {} of {}.", f, t),
+        }
+    }
+
+    fn message(&self) -> &str {
+        use ValidationErrorType::*;
+        match self.error_type {
+            StructDefinedTwice => "Struct defined twice.",
+            StepDefinedTwice => "Step defined twice.",
+            ParameterDefinedTwice(..) => "Parameter defined twice.",
+            VariableAlreadyDeclared(..) => "Variable defined twice.",
+            UndefinedType(..) => "Undefined type.",
+            UndefinedField(..) => "Undefined field.",
         }
     }
 }
@@ -166,13 +158,14 @@ fn extract_static_program_data<'ast>(
         let mut parameters_map: HashMap<&'ast String, &'ast Type> = HashMap::new();
         for p in &s.parameters {
             if parameters_map.contains_key(&p.0) {
-                errors.push(ValidationError::ParameterDefinedTwice(
-                    ErrorContext {
+                errors.push(ValidationError {
+                    error_type: ValidationErrorType::ParameterDefinedTwice(p.0.clone()),
+                    context: ErrorContext {
                         struct_name: Some(s.name.clone()),
                         step_name: None,
                     },
-                    p.0.clone(),
-                ));
+                    loc: p.2,
+                });
             } else {
                 parameters_map.insert(&p.0, &p.1);
             }
@@ -181,10 +174,14 @@ fn extract_static_program_data<'ast>(
         let mut steps_map: Vec<(&'ast String, &'ast Vec<Box<Stat>>)> = Vec::new();
         for step in &s.steps {
             if steps_map.iter().any(|t| t.0 == &step.name) {
-                errors.push(ValidationError::StepDefinedTwice(ErrorContext {
-                    struct_name: Some(s.name.clone()),
-                    step_name: Some(step.name.clone()),
-                }));
+                errors.push(ValidationError {
+                    error_type: ValidationErrorType::StepDefinedTwice,
+                    context: ErrorContext {
+                        struct_name: Some(s.name.clone()),
+                        step_name: Some(step.name.clone()),
+                    },
+                    loc: (0, 0),
+                });
             } else {
                 steps_map.push((&step.name, &step.statements));
             }
@@ -201,10 +198,14 @@ fn extract_static_program_data<'ast>(
             .iter()
             .any(|s| s.name == struct_data.name)
         {
-            errors.push(ValidationError::StructDefinedTwice(ErrorContext {
-                struct_name: Some(struct_data.name.clone()),
-                step_name: None,
-            }));
+            errors.push(ValidationError {
+                error_type: ValidationErrorType::StructDefinedTwice,
+                context: ErrorContext {
+                    struct_name: Some(struct_data.name.clone()),
+                    step_name: None,
+                },
+                loc: (0, 0),
+            });
         } else {
             program_data.struct_data.push(struct_data);
         }
@@ -267,16 +268,15 @@ fn check_statement_block<'ast>(
         use crate::ast::Stat::*;
 
         match &**stmt {
-            Declaration(t, id, exp) => {
-                check_type_is_defined(t, context);
+            Declaration(t, id, exp, loc) => {
+                check_type_is_defined(t, context, *loc);
                 // id is not used before
                 if let Some(_) = get_id_type(&id, &context.vars) {
-                    context
-                        .errors
-                        .push(ValidationError::VariableAlreadyDeclared(
-                            ErrorContext::from_block_context(context),
-                            id.clone(),
-                        ));
+                    context.errors.push(ValidationError {
+                        error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone()),
+                        context: ErrorContext::from_block_context(context),
+                        loc: *loc,
+                    });
                 }
                 // Typecheck exp with t
                 // Make something like validate_exp(exp)
@@ -289,8 +289,8 @@ fn check_statement_block<'ast>(
                     .expect("There should be at least one context.")
                     .insert(id, t);
             }
-            Assignment(parts, exp) => {
-                let field_type = get_var_type(parts, context);
+            Assignment(parts, exp, loc) => {
+                let field_type = get_var_type(parts, context, *loc);
 
                 // Typecheck field_type with exp
                 //todo!();
@@ -313,6 +313,7 @@ fn check_statement_block<'ast>(
 fn get_var_type<'ast>(
     parts: &'ast Vec<String>,
     context: &mut BlockEvaluationContext<'ast>,
+    loc: Loc,
 ) -> Option<&'ast Type> {
     debug_assert!(parts.len() > 0);
     // Start in current scope
@@ -340,11 +341,14 @@ fn get_var_type<'ast>(
                     .parameters;
             }
             _ => {
-                context.errors.push(ValidationError::UndefinedField(
-                    ErrorContext::from_block_context(context),
-                    parts[0].clone(),
-                    parts[1].clone(),
-                ));
+                context.errors.push(ValidationError {
+                    error_type: ValidationErrorType::UndefinedField(
+                        parts[0].clone(),
+                        parts[1].clone(),
+                    ),
+                    context: ErrorContext::from_block_context(context),
+                    loc: loc,
+                });
                 return None;
             }
         }
@@ -355,11 +359,14 @@ fn get_var_type<'ast>(
     for i in 1..parts.len() {
         match search_space.get(&parts[i]) {
             None => {
-                context.errors.push(ValidationError::UndefinedField(
-                    ErrorContext::from_block_context(context),
-                    parts[i - 1].clone(),
-                    parts[i].clone(),
-                ));
+                context.errors.push(ValidationError {
+                    error_type: ValidationErrorType::UndefinedField(
+                        parts[i - 1].clone(),
+                        parts[i].clone(),
+                    ),
+                    context: ErrorContext::from_block_context(context),
+                    loc: loc,
+                });
                 return None;
             }
             Some(t) => {
@@ -376,11 +383,14 @@ fn get_var_type<'ast>(
                                 .parameters;
                         }
                         _ => {
-                            context.errors.push(ValidationError::UndefinedField(
-                                ErrorContext::from_block_context(context),
-                                parts[i - 1].clone(),
-                                parts[i].clone(),
-                            ));
+                            context.errors.push(ValidationError {
+                                error_type: ValidationErrorType::UndefinedField(
+                                    parts[i - 1].clone(),
+                                    parts[i].clone(),
+                                ),
+                                context: ErrorContext::from_block_context(context),
+                                loc: loc,
+                            });
                             return None;
                         }
                     }
@@ -392,13 +402,18 @@ fn get_var_type<'ast>(
     unreachable!("This should not be reachable!");
 }
 
-fn check_type_is_defined<'ast>(t: &'ast Type, context: &mut BlockEvaluationContext<'ast>) {
+fn check_type_is_defined<'ast>(
+    t: &'ast Type,
+    context: &mut BlockEvaluationContext<'ast>,
+    loc: Loc,
+) {
     if let Type::NamedType(s) = t {
         if !context.structs.iter().any(|st| st.name == s) {
-            context.errors.push(ValidationError::UndefinedType(
-                ErrorContext::from_block_context(context),
-                s.clone(),
-            ));
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::UndefinedType(s.clone()),
+                context: ErrorContext::from_block_context(context),
+                loc: loc,
+            });
         }
     }
 }
@@ -475,7 +490,7 @@ mod tests {
     use crate::ast_validator::ErrorContext;
     use crate::ast_validator::Type;
     use crate::ast_validator::ValidationError;
-    use crate::ast_validator::ValidationError::*;
+    use crate::ast_validator::ValidationErrorType::*;
     use crate::ProgramParser;
     use std::collections::HashMap;
 
@@ -506,23 +521,25 @@ mod tests {
         assert_eq!(errors.len(), 2);
         assert_eq!(
             errors[0],
-            VariableAlreadyDeclared(
-                ErrorContext {
+            ValidationError {
+                error_type: VariableAlreadyDeclared("n1".to_string()),
+                context: ErrorContext {
                     struct_name: Some("Node".to_string()),
                     step_name: Some("init".to_string())
                 },
-                "n1".to_string()
-            )
+                loc: (82, 94)
+            }
         );
         assert_eq!(
             errors[1],
-            VariableAlreadyDeclared(
-                ErrorContext {
+            ValidationError {
+                error_type: VariableAlreadyDeclared("n3".to_string()),
+                context: ErrorContext {
                     struct_name: Some("Node".to_string()),
                     step_name: Some("step_node".to_string())
                 },
-                "n3".to_string()
-            )
+                loc: (233, 245)
+            }
         );
     }
 
@@ -594,10 +611,14 @@ mod tests {
                 assert!(errors.len() == 1);
                 assert!(
                     errors[0]
-                        == ValidationError::StructDefinedTwice(ErrorContext {
-                            struct_name: Some("A".to_string()),
-                            step_name: None
-                        })
+                        == ValidationError {
+                            error_type: StructDefinedTwice,
+                            context: ErrorContext {
+                                struct_name: Some("A".to_string()),
+                                step_name: None
+                            },
+                            loc: (0, 0)
+                        }
                 );
             }
         }
@@ -616,10 +637,14 @@ mod tests {
                 assert!(errors.len() == 1);
                 assert!(
                     errors[0]
-                        == ValidationError::StepDefinedTwice(ErrorContext {
-                            struct_name: Some("B".to_string()),
-                            step_name: Some("init".to_string())
-                        })
+                        == ValidationError {
+                            error_type: StepDefinedTwice,
+                            context: ErrorContext {
+                                struct_name: Some("B".to_string()),
+                                step_name: Some("init".to_string())
+                            },
+                            loc: (0, 0)
+                        }
                 );
             }
         }
@@ -636,15 +661,16 @@ mod tests {
             Ok(r) => panic!("Expected a ParameterDefinedTwice failure, got: {:?}.", r),
             Err(errors) => {
                 assert!(errors.len() == 1);
-                assert!(
-                    errors[0]
-                        == ValidationError::ParameterDefinedTwice(
-                            ErrorContext {
-                                struct_name: Some("A".to_string()),
-                                step_name: None,
-                            },
-                            "param1".to_string()
-                        )
+                assert_eq!(
+                    errors[0],
+                    ValidationError {
+                        error_type: ParameterDefinedTwice("param1".to_string()),
+                        context: ErrorContext {
+                            struct_name: Some("A".to_string()),
+                            step_name: None,
+                        },
+                        loc: (22, 33)
+                    }
                 );
             }
         }

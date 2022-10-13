@@ -1,5 +1,12 @@
 #[macro_use]
 extern crate lalrpop_util;
+
+use codespan::FileId;
+use codespan_reporting::diagnostic::{Diagnostic, Label};
+use codespan_reporting::files::SimpleFile;
+use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
+use codespan_reporting::term::{self};
+
 use crate::ast_validator::validate_ast;
 use crate::lopl::ProgramParser;
 use std::fs;
@@ -29,15 +36,19 @@ fn main() {
     match lopl_program {
         Ok(program) => {
             if print_ast {
-                println!("@@@@@@@@@@@@@@@@@@ AST @@@@@@@@@@@@@@@@@@");
                 println!("{:#?}", program)
             }
 
             let errors = validate_ast(&program);
+
             if errors.len() > 0 {
-                println!("@@@@@@@@@@@@@@@@@@ ERRORS @@@@@@@@@@@@@@@@@@");
+                let file = SimpleFile::new(lopl_file_loc, lopl_program_text);
+                let writer = StandardStream::stderr(ColorChoice::Always);
+                let config = codespan_reporting::term::Config::default();
+
                 for e in errors {
-                    println!("{}", e);
+                    let diagnostic = e.to_diagnostic();
+                    let _term_result = term::emit(&mut writer.lock(), &config, &file, &diagnostic);
                 }
             }
         }
