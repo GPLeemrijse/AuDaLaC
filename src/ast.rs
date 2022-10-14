@@ -8,10 +8,10 @@ pub struct Program {
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum Schedule {
-    StepCall(String),
-    TypedStepCall(String, String),
-    Sequential(Box<Schedule>, Box<Schedule>),
-    Fixpoint(Box<Schedule>),
+    StepCall(String, Loc),
+    TypedStepCall(String, String, Loc),
+    Sequential(Box<Schedule>, Box<Schedule>, Loc),
+    Fixpoint(Box<Schedule>, Loc),
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -99,7 +99,7 @@ mod tests {
     fn test_precedence_of_sequential() {
         check_schedule_str(
             "A < B < C",
-            "Sequential(StepCall(\"A\"), Sequential(StepCall(\"B\"), StepCall(\"C\")))",
+            "Sequential(StepCall(\"A\", (0, 1)), Sequential(StepCall(\"B\", (4, 5)), StepCall(\"C\", (8, 9)), (4, 9)), (0, 9))",
         );
     }
 
@@ -107,7 +107,7 @@ mod tests {
     fn test_nested_fixpoints() {
         check_schedule_str(
 	        "A < Fix(B < Fix(C.D))",
-	        "Sequential(StepCall(\"A\"), Fixpoint(Sequential(StepCall(\"B\"), Fixpoint(TypedStepCall(\"C\", \"D\")))))",
+	        "Sequential(StepCall(\"A\", (0, 1)), Fixpoint(Sequential(StepCall(\"B\", (8, 9)), Fixpoint(TypedStepCall(\"C\", \"D\", (16, 19)), (12, 20)), (8, 20)), (4, 21)), (0, 21))",
 	    );
     }
 

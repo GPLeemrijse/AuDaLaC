@@ -59,25 +59,25 @@ SimpleID : String = {
 pub Program: Program = <structs:Structs> <schedule:Schedule> => Program {<>};
 
 pub Schedule: Box<Schedule> = {
-    <BottomSchedule> "<" <Schedule> => Box::new(Schedule::Sequential(<>)),
+    <start:@L> <s1:BottomSchedule> "<" <s2:Schedule> <end:@R> => Box::new(Schedule::Sequential(s1, s2, (start, end))),
     BottomSchedule
 }
 
 BottomSchedule: Box<Schedule> = {
-    ID =>? {
-        let parts : Vec<String> = <>.to_string().split(".").map(str::to_string).collect();
+    <start:@L> <id:ID> <end:@R> =>? {
+        let parts : Vec<String> = id.to_string().split(".").map(str::to_string).collect();
         
         if parts.len() == 1 {
-            Ok(Box::new(Schedule::StepCall(parts[0].clone())))
+            Ok(Box::new(Schedule::StepCall(parts[0].clone(), (start, end))))
         } else if parts.len() == 2 {
-            Ok(Box::new(Schedule::TypedStepCall(parts[0].clone(), parts[1].clone())))
+            Ok(Box::new(Schedule::TypedStepCall(parts[0].clone(), parts[1].clone(), (start, end))))
         } else {
             Err(ParseError::User {
                 error: "At most one dot is allowed in a step call."
             })
         }
     },
-    "Fix" "(" <Schedule> ")" => Box::new(Schedule::Fixpoint(<>)),
+    <start:@L> "Fix" "(" <s:Schedule> ")" <end:@R> => Box::new(Schedule::Fixpoint(s, (start, end))),
 }
 
 Struct: Box<LoplStruct> = {

@@ -21,4 +21,4 @@ struct Node(test : Nat) {
     
 }
 
-init < Fix(step_node)
+Node.init2 < Fix(ste_node) < abc.d

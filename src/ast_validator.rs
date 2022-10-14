@@ -23,6 +23,7 @@ enum ValidationErrorType {
     VariableAlreadyDeclared(String, Loc), //var name, Loc of earlier decl
     UndefinedType(String),                //attempted type name
     UndefinedField(String, String),       //parent name, field name
+    UndefinedStep,                        //Step and struct name already in error_context
 }
 
 impl ValidationError {
@@ -82,6 +83,20 @@ impl ValidationError {
             VariableAlreadyDeclared(v, _) => format!("Variable {} defined twice.", v),
             UndefinedType(t) => format!("Undefined type {}.", t),
             UndefinedField(f, t) => format!("Undefined field {} of {}.", f, t),
+            UndefinedStep => {
+                if let Some(n) = &self.context.struct_name {
+                    format!(
+                        "The struct {} does not have a step {} defined.",
+                        n,
+                        self.context.step_name.as_ref().unwrap()
+                    )
+                } else {
+                    format!(
+                        "The step {} is not defined for any struct.",
+                        self.context.step_name.as_ref().unwrap()
+                    )
+                }
+            }
         }
     }
 
@@ -94,6 +109,7 @@ impl ValidationError {
             VariableAlreadyDeclared(..) => "Variable defined twice.",
             UndefinedType(..) => "Undefined type.",
             UndefinedField(..) => "Undefined field.",
+            UndefinedStep => "Undefined step",
         }
     }
 }
@@ -178,8 +194,6 @@ pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
 
         // Create a fresh scope for the Struct's parameters
         context.push_var_scope();
-
-        // Add the Struct's parameters to the new scope
         s.parameters
             .iter()
             .for_each(|(n, t, l)| context.add_to_var_scope(n, t, l));
@@ -202,7 +216,61 @@ pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
     }
     context.current_struct_name = None;
 
+    // Make sure the schedule is well defined
+    check_schedule(&ast.schedule, &mut context);
+
     return context.errors;
+}
+
+fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationContext<'ast>) {
+    use crate::ast::Schedule::*;
+    match schedule {
+        StepCall(step_name, loc) => {
+            if !context
+                .structs
+                .iter()
+                .any(|strct| strct.steps.iter().any(|stp| stp.name == *step_name))
+            {
+                context.errors.push(ValidationError {
+                    error_type: ValidationErrorType::UndefinedStep,
+                    context: ErrorContext {
+                        step_name: Some(step_name.clone()),
+                        struct_name: None,
+                    },
+                    loc: *loc,
+                });
+            }
+        }
+        TypedStepCall(struct_name, step_name, loc) => {
+            let strct = context.structs.iter().find(|s| s.name == *struct_name);
+            if let Some(s) = strct {
+                if !s.steps.iter().any(|stp| stp.name == *step_name) {
+                    context.errors.push(ValidationError {
+                        error_type: ValidationErrorType::UndefinedStep,
+                        context: ErrorContext {
+                            step_name: Some(step_name.clone()),
+                            struct_name: Some(struct_name.clone()),
+                        },
+                        loc: *loc,
+                    });
+                }
+            } else {
+                context.errors.push(ValidationError {
+                    error_type: ValidationErrorType::UndefinedType(struct_name.clone()),
+                    context: ErrorContext {
+                        step_name: Some(step_name.clone()),
+                        struct_name: Some(struct_name.clone()),
+                    },
+                    loc: *loc,
+                });
+            }
+        }
+        Sequential(s1, s2, _) => {
+            check_schedule(s1, context);
+            check_schedule(s2, context);
+        }
+        Fixpoint(s, _) => check_schedule(s, context),
+    }
 }
 
 fn check_uniqueness_of_parameters<'ast>(
