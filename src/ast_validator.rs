@@ -2,7 +2,6 @@ use crate::ast::*;
 use codespan_reporting::diagnostic::Diagnostic;
 use codespan_reporting::diagnostic::Label;
 use core::ops::Range;
-use std::collections::HashMap;
 
 // All steps in schedule have been defined
 // Numeric operators always between: Nat Nat, Nat Int, Int Int
@@ -18,21 +17,50 @@ pub struct ValidationError {
 
 #[derive(Debug, PartialEq, Eq)]
 enum ValidationErrorType {
-    StructDefinedTwice,
-    StepDefinedTwice,
-    ParameterDefinedTwice(String),   //parameter name
-    VariableAlreadyDeclared(String), //var name
-    UndefinedType(String),           //attempted type name
-    UndefinedField(String, String),  //parent name, field name
+    StructDefinedTwice(Loc),              //Loc of earlier decl
+    StepDefinedTwice(Loc),                //Loc of earlier decl
+    ParameterDefinedTwice(String, Loc),   //parameter name, Loc of earlier decl
+    VariableAlreadyDeclared(String, Loc), //var name, Loc of earlier decl
+    UndefinedType(String),                //attempted type name
+    UndefinedField(String, String),       //parent name, field name
 }
 
 impl ValidationError {
     pub fn to_diagnostic(&self) -> Diagnostic<()> {
+        let mut labels: Vec<Label<()>> = Vec::new();
+
+        labels.push(self.primary());
+
+        if let Some(secondary) = self.secondary() {
+            labels.push(secondary);
+        }
+
         return Diagnostic::error()
             .with_message(self.message())
-            .with_labels(vec![
-                Label::primary((), self.loc()).with_message(self.label())
-            ]);
+            .with_labels(labels);
+    }
+
+    fn secondary(&self) -> Option<Label<()>> {
+        use ValidationErrorType::*;
+        match &self.error_type {
+            StructDefinedTwice(l) => {
+                Some(Label::secondary((), l.0..l.1).with_message("Previous declaration here."))
+            }
+            StepDefinedTwice(l) => {
+                Some(Label::secondary((), l.0..l.1).with_message("Previous declaration here."))
+            }
+            ParameterDefinedTwice(_, l) => {
+                Some(Label::secondary((), l.0..l.1).with_message("Previous declaration here."))
+            }
+            VariableAlreadyDeclared(_, l) => {
+                Some(Label::secondary((), l.0..l.1).with_message("Previous declaration here."))
+            }
+            _ => None,
+        }
+    }
+
+    fn primary(&self) -> Label<()> {
+        return Label::primary((), self.loc()).with_message(self.label());
     }
 
     fn loc(&self) -> Range<usize> {
@@ -42,16 +70,16 @@ impl ValidationError {
     fn label(&self) -> String {
         use ValidationErrorType::*;
         match &self.error_type {
-            StructDefinedTwice => format!(
+            StructDefinedTwice(..) => format!(
                 "Struct {} defined twice.",
                 self.context.struct_name.as_ref().unwrap()
             ),
-            StepDefinedTwice => format!(
+            StepDefinedTwice(..) => format!(
                 "Step {} defined twice.",
                 self.context.step_name.as_ref().unwrap()
             ),
-            ParameterDefinedTwice(p) => format!("Parameter {} defined twice.", p),
-            VariableAlreadyDeclared(v) => format!("Variable {} defined twice.", v),
+            ParameterDefinedTwice(p, _) => format!("Parameter {} defined twice.", p),
+            VariableAlreadyDeclared(v, _) => format!("Variable {} defined twice.", v),
             UndefinedType(t) => format!("Undefined type {}.", t),
             UndefinedField(f, t) => format!("Undefined field {} of {}.", f, t),
         }
@@ -60,8 +88,8 @@ impl ValidationError {
     fn message(&self) -> &str {
         use ValidationErrorType::*;
         match self.error_type {
-            StructDefinedTwice => "Struct defined twice.",
-            StepDefinedTwice => "Step defined twice.",
+            StructDefinedTwice(..) => "Struct defined twice.",
+            StepDefinedTwice(..) => "Step defined twice.",
             ParameterDefinedTwice(..) => "Parameter defined twice.",
             VariableAlreadyDeclared(..) => "Variable defined twice.",
             UndefinedType(..) => "Undefined type.",
@@ -94,159 +122,76 @@ impl ErrorContext {
     }
 }
 
-// Since we are using references to the AST datastructure,
-// we introduce the 'ast lifetime.
-/// An organised collection of references to the `Program` AST data
-#[derive(Debug, PartialEq, Eq)]
-struct StaticProgramData<'ast> {
-    struct_data: Vec<StaticStructData<'ast>>,
-    schedule: &'ast Schedule,
-}
-
-/// An organised collection of references to the `LoplStruct` AST data
-#[derive(Debug, Eq, PartialEq)]
-struct StaticStructData<'ast> {
-    name: &'ast String,
-    parameters: HashMap<&'ast String, &'ast Type>,
-    steps: Vec<(&'ast String, &'ast Vec<Box<Stat>>)>,
-}
-
+#[derive(Debug)]
 struct BlockEvaluationContext<'ast> {
     current_struct_name: Option<&'ast String>,
     current_step_name: Option<&'ast String>,
-    structs: &'ast Vec<StaticStructData<'ast>>,
-    vars: Vec<HashMap<&'ast String, &'ast Type>>,
+    structs: &'ast Vec<Box<LoplStruct>>,
+    vars: Vec<Vec<(String, Type, Loc)>>,
     errors: Vec<ValidationError>,
 }
 
 impl<'eval, 'ast> BlockEvaluationContext<'ast> {
-    fn add_to_var_scope(&'eval mut self, s: &'ast String, t: &'ast Type) {
-        self.vars.last_mut().unwrap().insert(s, t);
+    fn add_to_var_scope(&'eval mut self, s: &'ast String, t: &'ast Type, l: &'ast Loc) {
+        if let Some(v) = self.vars.last_mut() {
+            v.push((s.clone(), t.clone(), l.clone()));
+        } else {
+            panic!(
+                "Error: there was no variable scope at location {:?}. Context: {:#?}",
+                l, self
+            );
+        }
     }
 
     fn push_var_scope(&mut self) {
-        self.vars.push(HashMap::new());
+        self.vars.push(Vec::new());
     }
 
     fn pop_var_scope(&mut self) {
-        self.vars.pop();
+        if let None = self.vars.pop() {
+            panic!("Popped non-existing variable scope. Context: {:#?}", self);
+        }
     }
 }
 
 pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
-    match extract_static_program_data(ast) {
-        Err(e) => return e,
-        Ok(static_data) => return check_declared_before_use(&static_data),
-    }
-}
-
-/// Organises a `Program` AST into an easily accessible `StaticProgramData` struct
-/// Returns an error result when:
-/// - a struct is defined twice
-/// - a parameter is defined twice for the same struct
-/// - a step is defined twice for the same struct
-fn extract_static_program_data<'ast>(
-    ast: &'ast Program,
-) -> Result<StaticProgramData, Vec<ValidationError>> {
-    let mut errors: Vec<ValidationError> = Vec::new();
-
-    let mut program_data = StaticProgramData {
-        struct_data: Vec::new(),
-        schedule: &ast.schedule,
-    };
-    for s in &ast.structs {
-        let mut parameters_map: HashMap<&'ast String, &'ast Type> = HashMap::new();
-        for p in &s.parameters {
-            if parameters_map.contains_key(&p.0) {
-                errors.push(ValidationError {
-                    error_type: ValidationErrorType::ParameterDefinedTwice(p.0.clone()),
-                    context: ErrorContext {
-                        struct_name: Some(s.name.clone()),
-                        step_name: None,
-                    },
-                    loc: p.2,
-                });
-            } else {
-                parameters_map.insert(&p.0, &p.1);
-            }
-        }
-
-        let mut steps_map: Vec<(&'ast String, &'ast Vec<Box<Stat>>)> = Vec::new();
-        for step in &s.steps {
-            if steps_map.iter().any(|t| t.0 == &step.name) {
-                errors.push(ValidationError {
-                    error_type: ValidationErrorType::StepDefinedTwice,
-                    context: ErrorContext {
-                        struct_name: Some(s.name.clone()),
-                        step_name: Some(step.name.clone()),
-                    },
-                    loc: (0, 0),
-                });
-            } else {
-                steps_map.push((&step.name, &step.statements));
-            }
-        }
-
-        let struct_data = StaticStructData {
-            name: &s.name,
-            parameters: parameters_map,
-            steps: steps_map,
-        };
-
-        if program_data
-            .struct_data
-            .iter()
-            .any(|s| s.name == struct_data.name)
-        {
-            errors.push(ValidationError {
-                error_type: ValidationErrorType::StructDefinedTwice,
-                context: ErrorContext {
-                    struct_name: Some(struct_data.name.clone()),
-                    step_name: None,
-                },
-                loc: (0, 0),
-            });
-        } else {
-            program_data.struct_data.push(struct_data);
-        }
-    }
-
-    return if errors.is_empty() {
-        Ok(program_data)
-    } else {
-        Err(errors)
-    };
-}
-
-fn check_declared_before_use<'ast>(data: &StaticProgramData<'ast>) -> Vec<ValidationError> {
     let mut context = BlockEvaluationContext {
         current_struct_name: None,
         current_step_name: None,
-        structs: &data.struct_data,
+        structs: &ast.structs,
         vars: Vec::new(),
         errors: Vec::new(),
     };
 
+    // All Structs must have a unique name
+    check_uniqueness_of_structs(&ast.structs, &mut context);
+
     // Test each struct
-    for s in &data.struct_data {
-        context.current_struct_name = Some(s.name);
+    for s in &ast.structs {
+        context.current_struct_name = Some(&s.name);
+
+        // Test if all parameters are unique
+        check_uniqueness_of_parameters(&s.parameters, &mut context);
+
+        // Test if all steps are unique
+        check_uniqueness_of_steps(&s.steps, &mut context);
 
         // Create a fresh scope for the Struct's parameters
         context.push_var_scope();
 
         // Add the Struct's parameters to the new scope
-        for (s, t) in &s.parameters {
-            context.add_to_var_scope(s, t);
-        }
+        s.parameters
+            .iter()
+            .for_each(|(n, t, l)| context.add_to_var_scope(n, t, l));
 
         // Test each step
-        for (stepname, step) in &s.steps {
-            context.current_step_name = Some(stepname);
+        for step in &s.steps {
+            context.current_step_name = Some(&step.name);
 
             // Each step also gets its own context
             context.push_var_scope();
 
-            check_statement_block(step, &mut context);
+            check_statement_block(&step.statements, &mut context);
 
             context.pop_var_scope();
         }
@@ -260,6 +205,53 @@ fn check_declared_before_use<'ast>(data: &StaticProgramData<'ast>) -> Vec<Valida
     return context.errors;
 }
 
+fn check_uniqueness_of_parameters<'ast>(
+    params: &'ast Vec<(String, Type, Loc)>,
+    context: &mut BlockEvaluationContext<'ast>,
+) {
+    for (idx, (pname, _, ploc)) in params.iter().enumerate() {
+        if let Some((n, _, l)) = params[0..idx].iter().find(|p| p.0 == *pname) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::ParameterDefinedTwice(n.clone(), *l),
+                context: ErrorContext::from_block_context(&context),
+                loc: *ploc,
+            });
+        }
+    }
+}
+
+fn check_uniqueness_of_structs<'ast>(
+    structs: &'ast Vec<Box<LoplStruct>>,
+    context: &mut BlockEvaluationContext<'ast>,
+) {
+    for (idx, cur_struct) in structs.iter().enumerate() {
+        context.current_struct_name = Some(&cur_struct.name);
+        if let Some(s) = structs[0..idx].iter().find(|s1| s1.name == cur_struct.name) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::StructDefinedTwice(s.loc),
+                context: ErrorContext::from_block_context(&context),
+                loc: cur_struct.loc,
+            });
+        }
+    }
+}
+
+fn check_uniqueness_of_steps<'ast>(
+    steps: &'ast Vec<Box<Step>>,
+    context: &mut BlockEvaluationContext<'ast>,
+) {
+    for (idx, step) in steps.iter().enumerate() {
+        context.current_step_name = Some(&step.name);
+        if let Some(s) = steps[0..idx].iter().find(|s1| s1.name == step.name) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::StepDefinedTwice(s.loc),
+                context: ErrorContext::from_block_context(&context),
+                loc: step.loc,
+            });
+        }
+    }
+}
+
 fn check_statement_block<'ast>(
     block: &'ast Vec<Box<Stat>>,
     context: &mut BlockEvaluationContext<'ast>,
@@ -269,11 +261,11 @@ fn check_statement_block<'ast>(
 
         match &**stmt {
             Declaration(t, id, exp, loc) => {
-                check_type_is_defined(t, context, *loc);
+                check_type_is_defined(t, context, loc.clone());
                 // id is not used before
-                if let Some(_) = get_id_type(&id, &context.vars) {
+                if let Some((_, l)) = get_type_from_context(&id, context) {
                     context.errors.push(ValidationError {
-                        error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone()),
+                        error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone(), l),
                         context: ErrorContext::from_block_context(context),
                         loc: *loc,
                     });
@@ -283,14 +275,10 @@ fn check_statement_block<'ast>(
                 // Checking defines and var fields etc.
                 //todo!();
 
-                context
-                    .vars
-                    .last_mut()
-                    .expect("There should be at least one context.")
-                    .insert(id, t);
+                context.add_to_var_scope(id, t, loc)
             }
             Assignment(parts, exp, loc) => {
-                let field_type = get_var_type(parts, context, *loc);
+                let field_type = get_var_type(parts, context, loc);
 
                 // Typecheck field_type with exp
                 //todo!();
@@ -313,93 +301,53 @@ fn check_statement_block<'ast>(
 fn get_var_type<'ast>(
     parts: &'ast Vec<String>,
     context: &mut BlockEvaluationContext<'ast>,
-    loc: Loc,
-) -> Option<&'ast Type> {
-    debug_assert!(parts.len() > 0);
-    // Start in current scope
+    loc: &'ast Loc,
+) -> Option<(Type, Loc)> {
+    debug_assert!(
+        parts.len() > 0,
+        "The length of `parts` should be at least 1."
+    );
 
-    let first_part = get_id_type(&parts[0], &context.vars);
-    if let None = first_part {
-        // INSERT ERROR!!
-        return None;
-    }
-
+    let mut found_type: Option<(Type, Loc)> = get_type_from_context(&parts[0], context);
     if parts.len() == 1 {
-        return first_part; // We know it is not None
+        return match found_type {
+            None => {
+                context.errors.push(ValidationError {
+                    error_type: ValidationErrorType::UndefinedType(parts[0].clone()),
+                    context: ErrorContext::from_block_context(context),
+                    loc: *loc,
+                });
+                None
+            }
+            Some(t) => Some(t),
+        };
     }
-
-    let mut search_space: &HashMap<&'ast String, &'ast Type>;
-
-    if let Some(t) = first_part {
-        match t {
-            Type::NamedType(s) => {
-                search_space = &context
-                    .structs
-                    .iter()
-                    .find(|st| st.name == s)
-                    .unwrap()
-                    .parameters;
+    for (idx, id) in parts[1..].iter().enumerate() {
+        match found_type {
+            Some((Type::NamedType(s), _)) => {
+                found_type = get_type_from_scope(
+                    id,
+                    &context
+                        .structs
+                        .iter()
+                        .find(|st| st.name == *s)
+                        .unwrap()
+                        .parameters,
+                );
             }
             _ => {
                 context.errors.push(ValidationError {
                     error_type: ValidationErrorType::UndefinedField(
-                        parts[0].clone(),
-                        parts[1].clone(),
+                        parts[idx - 1].clone(),
+                        parts[idx].clone(),
                     ),
                     context: ErrorContext::from_block_context(context),
-                    loc: loc,
+                    loc: *loc,
                 });
-                return None;
-            }
-        }
-    } else {
-        unreachable!()
-    }
-
-    for i in 1..parts.len() {
-        match search_space.get(&parts[i]) {
-            None => {
-                context.errors.push(ValidationError {
-                    error_type: ValidationErrorType::UndefinedField(
-                        parts[i - 1].clone(),
-                        parts[i].clone(),
-                    ),
-                    context: ErrorContext::from_block_context(context),
-                    loc: loc,
-                });
-                return None;
-            }
-            Some(t) => {
-                if i == parts.len() - 1 {
-                    return Some(t);
-                } else {
-                    match t {
-                        Type::NamedType(s) => {
-                            search_space = &context
-                                .structs
-                                .iter()
-                                .find(|st| st.name == s)
-                                .unwrap()
-                                .parameters;
-                        }
-                        _ => {
-                            context.errors.push(ValidationError {
-                                error_type: ValidationErrorType::UndefinedField(
-                                    parts[i - 1].clone(),
-                                    parts[i].clone(),
-                                ),
-                                context: ErrorContext::from_block_context(context),
-                                loc: loc,
-                            });
-                            return None;
-                        }
-                    }
-                }
             }
         }
     }
-
-    unreachable!("This should not be reachable!");
+    return found_type;
 }
 
 fn check_type_is_defined<'ast>(
@@ -408,7 +356,7 @@ fn check_type_is_defined<'ast>(
     loc: Loc,
 ) {
     if let Type::NamedType(s) = t {
-        if !context.structs.iter().any(|st| st.name == s) {
+        if !context.structs.iter().any(|st| st.name == *s) {
             context.errors.push(ValidationError {
                 error_type: ValidationErrorType::UndefinedType(s.clone()),
                 context: ErrorContext::from_block_context(context),
@@ -418,13 +366,25 @@ fn check_type_is_defined<'ast>(
     }
 }
 
-fn get_id_type<'ast>(
+fn get_type_from_context<'ast>(
     id: &'ast String,
-    vars: &Vec<HashMap<&'ast String, &'ast Type>>,
-) -> Option<&'ast Type> {
-    for v in vars {
-        if let Some(t) = v.get(id) {
-            return Some(t);
+    context: &mut BlockEvaluationContext<'ast>,
+) -> Option<(Type, Loc)> {
+    for scope in &context.vars {
+        if let Some((t, l)) = get_type_from_scope(id, scope) {
+            return Some((t.clone(), l));
+        }
+    }
+    return None;
+}
+
+fn get_type_from_scope<'ast>(
+    id: &'ast String,
+    scope: &Vec<(String, Type, Loc)>,
+) -> Option<(Type, Loc)> {
+    for (var_name, var_type, loc) in scope {
+        if var_name == id {
+            return Some((var_type.clone(), *loc));
         }
     }
     return None;
@@ -485,17 +445,14 @@ mod tests {
     use crate::ast::Type::*;
     use crate::ast::*;
     use crate::ast_validator::check_type;
-    use crate::ast_validator::extract_static_program_data;
     use crate::ast_validator::validate_ast;
     use crate::ast_validator::ErrorContext;
-    use crate::ast_validator::Type;
     use crate::ast_validator::ValidationError;
     use crate::ast_validator::ValidationErrorType::*;
     use crate::ProgramParser;
-    use std::collections::HashMap;
 
     #[test]
-    fn test_validate_double_decl() {
+    fn test_validate_double_var_decl() {
         let program_string = r#"
 		struct Node (reachable : Bool) {
     		init {
@@ -522,7 +479,7 @@ mod tests {
         assert_eq!(
             errors[0],
             ValidationError {
-                error_type: VariableAlreadyDeclared("n1".to_string()),
+                error_type: VariableAlreadyDeclared("n1".to_string(), (59, 71)),
                 context: ErrorContext {
                     struct_name: Some("Node".to_string()),
                     step_name: Some("init".to_string())
@@ -533,7 +490,7 @@ mod tests {
         assert_eq!(
             errors[1],
             ValidationError {
-                error_type: VariableAlreadyDeclared("n3".to_string()),
+                error_type: VariableAlreadyDeclared("n3".to_string(), (183, 196)),
                 context: ErrorContext {
                     struct_name: Some("Node".to_string()),
                     step_name: Some("step_node".to_string())
@@ -544,136 +501,68 @@ mod tests {
     }
 
     #[test]
-    fn test_extract() {
-        let program_string = r#"
-		struct Node (reachable : Bool) {
-    		init {
-        		Node s1 := Node(true);
-        	}
-        	step_node {
-        		Nat n := 0;
-        	}
-        }
-        struct Edge (s: Node, t: Node, w: Int) {
-        	init {
-
-        	}
-
-        	step_edge {
-
-        	}
-        }
-
-        init < Fix(step_edge < step_node)
-		"#;
-        let program = ProgramParser::new()
-            .parse(program_string)
-            .expect("ParseError.");
-        let static_data = extract_static_program_data(&program).expect("Validation errors found.");
-        let struct_data = static_data.struct_data;
-        let node_data = &struct_data[0];
-        let edge_data = &struct_data[1];
-        let node_params = &node_data.parameters;
-        let edge_params = &edge_data.parameters;
-
-        fn test_param<'ast>(m: &HashMap<&'ast String, &'ast Type>, name: &str, t: Type) {
-            assert!(**m.get(&name.to_string()).unwrap() == t);
-        }
-
-        test_param(node_params, "reachable", BoolType);
-        test_param(edge_params, "s", NamedType("Node".to_string()));
-        test_param(edge_params, "t", NamedType("Node".to_string()));
-        test_param(edge_params, "w", IntType);
-
-        assert!(node_data.steps.iter().any(|t| t.0 == &"init".to_string()));
-        assert!(node_data
-            .steps
-            .iter()
-            .any(|t| t.0 == &"step_node".to_string()));
-        assert!(edge_data.steps.iter().any(|t| t.0 == &"init".to_string()));
-        assert!(edge_data
-            .steps
-            .iter()
-            .any(|t| t.0 == &"step_edge".to_string()));
-        assert!(matches!(*static_data.schedule, Schedule::Sequential { .. }));
-    }
-
-    #[test]
-    fn test_extract_double_struct() {
+    fn test_validate_double_struct() {
         let program_string = r#"struct A(){init{}} struct A(){} init"#;
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let static_data_result = extract_static_program_data(&program);
-        match static_data_result {
-            Ok(r) => panic!("Expected a StructDefinedTwice failure, got: {:?}.", r),
-            Err(errors) => {
-                assert!(errors.len() == 1);
-                assert!(
-                    errors[0]
-                        == ValidationError {
-                            error_type: StructDefinedTwice,
-                            context: ErrorContext {
-                                struct_name: Some("A".to_string()),
-                                step_name: None
-                            },
-                            loc: (0, 0)
-                        }
-                );
+        let validation_errors = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: StructDefinedTwice((0, 18)),
+                context: ErrorContext {
+                    struct_name: Some("A".to_string()),
+                    step_name: None
+                },
+                loc: (19, 31)
             }
-        }
+        );
     }
 
     #[test]
-    fn test_extract_double_step() {
+    fn test_validate_double_step() {
         let program_string = r#"struct A(){} struct B(){init {} init {}} init"#;
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let static_data_result = extract_static_program_data(&program);
-        match static_data_result {
-            Ok(r) => panic!("Expected a StepDefinedTwice failure, got: {:?}.", r),
-            Err(errors) => {
-                assert!(errors.len() == 1);
-                assert!(
-                    errors[0]
-                        == ValidationError {
-                            error_type: StepDefinedTwice,
-                            context: ErrorContext {
-                                struct_name: Some("B".to_string()),
-                                step_name: Some("init".to_string())
-                            },
-                            loc: (0, 0)
-                        }
-                );
+        let validation_errors = validate_ast(&program);
+
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: StepDefinedTwice((24, 31)),
+                context: ErrorContext {
+                    struct_name: Some("B".to_string()),
+                    step_name: Some("init".to_string())
+                },
+                loc: (32, 39)
             }
-        }
+        );
     }
 
     #[test]
-    fn test_extract_double_param() {
+    fn test_validate_double_param() {
         let program_string = r#"struct A(param1: Int, param1: Nat){init{}} init"#;
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let static_data_result = extract_static_program_data(&program);
-        match static_data_result {
-            Ok(r) => panic!("Expected a ParameterDefinedTwice failure, got: {:?}.", r),
-            Err(errors) => {
-                assert!(errors.len() == 1);
-                assert_eq!(
-                    errors[0],
-                    ValidationError {
-                        error_type: ParameterDefinedTwice("param1".to_string()),
-                        context: ErrorContext {
-                            struct_name: Some("A".to_string()),
-                            step_name: None,
-                        },
-                        loc: (22, 33)
-                    }
-                );
+        let validation_errors = validate_ast(&program);
+
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: ParameterDefinedTwice("param1".to_string(), (9, 20)),
+                context: ErrorContext {
+                    struct_name: Some("A".to_string()),
+                    step_name: None,
+                },
+                loc: (22, 33)
             }
-        }
+        );
     }
 
     #[test]

@@ -26,6 +26,7 @@ pub struct LoplStruct {
     pub name: String,
     pub parameters: Vec<(String, Type, Loc)>,
     pub steps: Vec<Box<Step>>,
+    pub loc: Loc,
 }
 
 #[derive(Eq, PartialEq, Debug)]

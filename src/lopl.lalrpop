@@ -81,7 +81,9 @@ BottomSchedule: Box<Schedule> = {
 }
 
 Struct: Box<LoplStruct> = {
-    "struct" <name:SimpleID> "(" <parameters:Pars> ")" "{" <steps:Steps> "}" => Box::new(LoplStruct{<>})
+    <start:@L> "struct" <name:SimpleID>
+    "(" <parameters:Pars> ")" 
+    "{" <steps:Steps> "}" <end:@R> => Box::new(LoplStruct{name: name, parameters: parameters, steps: steps, loc: (start, end)})
 }
 
 Pars = Comma<Par>;
