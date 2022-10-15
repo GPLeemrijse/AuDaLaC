@@ -37,8 +37,22 @@ impl ValidationError {
         }
 
         return Diagnostic::error()
+            .with_code(self.code())
             .with_message(self.message())
             .with_labels(labels);
+    }
+
+    fn code(&self) -> &str {
+        use ValidationErrorType::*;
+        match self.error_type {
+            StructDefinedTwice(..) => "VE001",
+            StepDefinedTwice(..) => "VE002",
+            ParameterDefinedTwice(..) => "VE003",
+            VariableAlreadyDeclared(..) => "VE004",
+            UndefinedType(..) => "VE005",
+            UndefinedField(..) => "VE006",
+            UndefinedStep => "VE007",
+        }
     }
 
     fn secondary(&self) -> Option<Label<()>> {
