@@ -182,12 +182,6 @@ pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
     // All Structs must have a unique name
     check_uniqueness_of_structs(&ast.structs, &mut context);
 
-    // Push all struct types to the context
-    context.push_var_scope();
-    ast.structs
-        .iter()
-        .for_each(|strct| context.add_to_var_scope(&strct.name, &Type::NamedType(strct.name), &strct.loc));
-
     // Test each struct
     for s in &ast.structs {
         context.current_struct_name = Some(&s.name);
@@ -221,9 +215,6 @@ pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
         context.pop_var_scope();
     }
     context.current_struct_name = None;
-    
-    // The struct types leave the scope
-    context.pop_var_scope();
 
     // Make sure the schedule is well defined
     check_schedule(&ast.schedule, &mut context);
@@ -338,13 +329,7 @@ fn check_statement_block<'ast>(
 
         match &**stmt {
             Declaration(t, id, exp, loc) => {
-
-                // If a named type is used, make sure it exists
-                if let Type::NamedType(s) = t {
-                    if let None = get_type_from_context(s, context) {
-                        todo!();
-                    }
-                }
+                check_type_is_defined(t, context, loc.clone());
                 
                 // Make sure id is not used before
                 if let Some((_, l)) = get_type_from_context(&id, context) {
@@ -392,6 +377,8 @@ fn get_var_type<'ast>(
         "The length of `parts` should be at least 1."
     );
 
+    todo!("Account for 'this' as first part");
+
     let mut found_type: Option<(Type, Loc)> = get_type_from_context(&parts[0], context);
     if parts.len() == 1 {
         return match found_type {
@@ -434,6 +421,22 @@ fn get_var_type<'ast>(
     return found_type;
 }
 
+fn check_type_is_defined<'ast>(
+    t: &'ast Type,
+    context: &mut BlockEvaluationContext<'ast>,
+    loc: Loc,
+) {
+    if let Type::NamedType(s) = t {
+        if !context.structs.iter().any(|st| st.name == *s) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::UndefinedType(s.clone()),
+                context: ErrorContext::from_block_context(context),
+                loc: loc,
+            });
+        }
+    }
+}
+
 /// returned Loc is the location where the variable or struct was declared
 fn get_type_from_context<'ast>(
     id: &'ast String,
@@ -462,18 +465,30 @@ fn get_type_from_scope<'ast>(
 
 fn get_expr_type<'ast>(expr: &'ast Exp, context: &mut BlockEvaluationContext<'ast>) -> Option<Type> {
     use crate::ast::Exp::*;
+    use crate::ast::Literal::*;
+    use crate::ast::Type::*;
+
     match expr {
         BinOp(l, code, r, loc) => todo!(),
         UnOp(code, e, loc) => todo!(),
         Constructor(id, exps, loc) => todo!(),
         Var(parts, loc) => {
-            if let Some((t, loc)) = get_var_type(parts, context, loc) {
-                return Some(t);
+            if let Some((t, _)) = get_var_type(parts, context, loc) {
+                Some(t)
             } else {
-                return None
+                None
             }
         },
-        Lit(lit, loc) => todo!(),
+        Lit(lit, loc) => {
+            Some (match lit {
+                NatLit(_) => NatType,
+                IntLit(_) => IntType,
+                BoolLit(_) => BoolType,
+                StringLit(_) => StringType,
+                NullLit => todo!(),
+                ThisLit => NamedType(context.current_struct_name.unwrap().clone()),
+            })
+        },
     }
 }
 
