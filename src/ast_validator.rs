@@ -377,9 +377,13 @@ fn get_var_type<'ast>(
         "The length of `parts` should be at least 1."
     );
 
-    todo!("Account for 'this' as first part");
+    let mut found_type: Option<(Type, Loc)>;
+    if parts[0] == "this" {
+        found_type = Some((Type::NamedType(context.current_struct_name.unwrap().clone()), (0, 0)));
+    } else {
+        found_type = get_type_from_context(&parts[0], context);
+    }
 
-    let mut found_type: Option<(Type, Loc)> = get_type_from_context(&parts[0], context);
     if parts.len() == 1 {
         return match found_type {
             None => {
@@ -463,7 +467,7 @@ fn get_type_from_scope<'ast>(
     return None;
 }
 
-fn get_expr_type<'ast>(expr: &'ast Exp, context: &mut BlockEvaluationContext<'ast>) -> Option<Type> {
+fn get_expr_type<'ast>(expr: &'ast Exp, null_type: Option<Type>, context: &mut BlockEvaluationContext<'ast>) -> Option<Type> {
     use crate::ast::Exp::*;
     use crate::ast::Literal::*;
     use crate::ast::Type::*;
@@ -485,7 +489,7 @@ fn get_expr_type<'ast>(expr: &'ast Exp, context: &mut BlockEvaluationContext<'as
                 IntLit(_) => IntType,
                 BoolLit(_) => BoolType,
                 StringLit(_) => StringType,
-                NullLit => todo!(),
+                NullLit => null_type.expect("Could not derive type of null."),
                 ThisLit => NamedType(context.current_struct_name.unwrap().clone()),
             })
         },

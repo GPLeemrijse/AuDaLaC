@@ -26,7 +26,7 @@ match {
 }
 
 Tier<Op, NextTier>: Box<Exp> = {
-    Tier<Op, NextTier> Op NextTier => Box::new(Exp::BinOp(<>)),
+    <start:@L> <l:Tier<Op, NextTier>> <o:Op> <r:NextTier> <end:@R> => Box::new(Exp::BinOp(l, o, r, (start, end))),
     NextTier
 };
 
@@ -121,17 +121,17 @@ CompExp = Tier<CompareOperator, AddSubExp>;
 AddSubExp = Tier<AddSubOperator, MultDivExp>;
 MultDivExp = Tier<MultDivModOperator, NegExp>;
 NegExp: Box<Exp> = {
-    NegationOperator NegExp => Box::new(Exp::UnOp(<>)),
+    <start:@L> <o:NegationOperator> <e:NegExp> <end:@R> => Box::new(Exp::UnOp(o, e, (start, end))),
     BottomExp,
 }
 
 BottomExp: Box<Exp> = {
     <start:@L> "null" <end:@R> => Box::new(Exp::Lit(Literal::NullLit, (start, end))),
     <start:@L> "this" <end:@R> => Box::new(Exp::Lit(Literal::ThisLit, (start, end))),
-    <start:@L> <e:NAT> <end:@R> => Box::new(Exp::Lit(Literal::NatLit(u32::from_str(e).expect("Could not convert to u32."), (start, end)))),
-    <start:@L> <e:INT> <end:@R> => Box::new(Exp::Lit(Literal::IntLit(i32::from_str(e).expect("Could not convert to i32."), (start, end)))),
-    <start:@L> <e:STRING> <end:@R> => Box::new(Exp::Lit(Literal::StringLit(e[1..e.len()-1].to_string(), (start, end)))),
-    <start:@L> <e:BOOL> <end:@R> => Box::new(Exp::Lit(Literal::BoolLit(e.parse().unwrap(), (start, end)))),
+    <start:@L> <e:NAT> <end:@R> => Box::new(Exp::Lit(Literal::NatLit(u32::from_str(e).expect("Could not convert to u32.")), (start, end))),
+    <start:@L> <e:INT> <end:@R> => Box::new(Exp::Lit(Literal::IntLit(i32::from_str(e).expect("Could not convert to i32.")), (start, end))),
+    <start:@L> <e:STRING> <end:@R> => Box::new(Exp::Lit(Literal::StringLit(e[1..e.len()-1].to_string()), (start, end))),
+    <start:@L> <e:BOOL> <end:@R> => Box::new(Exp::Lit(Literal::BoolLit(e.parse().unwrap()), (start, end))),
     <start:@L> <id:SimpleID> "(" <e:Exps> ")" <end:@R> => Box::new(Exp::Constructor(id, e, (start, end))),
     <start:@L> <v:Var> <end:@R> => Box::new(Exp::Var(v, (start, end))),
     "(" <Exp> ")"
