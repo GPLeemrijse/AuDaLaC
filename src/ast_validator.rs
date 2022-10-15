@@ -182,6 +182,12 @@ pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
     // All Structs must have a unique name
     check_uniqueness_of_structs(&ast.structs, &mut context);
 
+    // Push all struct types to the context
+    context.push_var_scope();
+    ast.structs
+        .iter()
+        .for_each(|strct| context.add_to_var_scope(&strct.name, &Type::NamedType(strct.name), &strct.loc));
+
     // Test each struct
     for s in &ast.structs {
         context.current_struct_name = Some(&s.name);
@@ -215,6 +221,9 @@ pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
         context.pop_var_scope();
     }
     context.current_struct_name = None;
+    
+    // The struct types leave the scope
+    context.pop_var_scope();
 
     // Make sure the schedule is well defined
     check_schedule(&ast.schedule, &mut context);
@@ -329,8 +338,15 @@ fn check_statement_block<'ast>(
 
         match &**stmt {
             Declaration(t, id, exp, loc) => {
-                check_type_is_defined(t, context, loc.clone());
-                // id is not used before
+
+                // If a named type is used, make sure it exists
+                if let Type::NamedType(s) = t {
+                    if let None = get_type_from_context(s, context) {
+                        todo!();
+                    }
+                }
+                
+                // Make sure id is not used before
                 if let Some((_, l)) = get_type_from_context(&id, context) {
                     context.errors.push(ValidationError {
                         error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone(), l),
@@ -365,7 +381,7 @@ fn check_statement_block<'ast>(
     }
 }
 
-// Returns the type of a `Var`: part1.part2.part3
+/// Returns the type of a `Var`: part1.part2.part3, and the location of the original definition
 fn get_var_type<'ast>(
     parts: &'ast Vec<String>,
     context: &mut BlockEvaluationContext<'ast>,
@@ -418,22 +434,7 @@ fn get_var_type<'ast>(
     return found_type;
 }
 
-fn check_type_is_defined<'ast>(
-    t: &'ast Type,
-    context: &mut BlockEvaluationContext<'ast>,
-    loc: Loc,
-) {
-    if let Type::NamedType(s) = t {
-        if !context.structs.iter().any(|st| st.name == *s) {
-            context.errors.push(ValidationError {
-                error_type: ValidationErrorType::UndefinedType(s.clone()),
-                context: ErrorContext::from_block_context(context),
-                loc: loc,
-            });
-        }
-    }
-}
-
+/// returned Loc is the location where the variable or struct was declared
 fn get_type_from_context<'ast>(
     id: &'ast String,
     context: &mut BlockEvaluationContext<'ast>,
@@ -446,6 +447,7 @@ fn get_type_from_context<'ast>(
     return None;
 }
 
+/// returned Loc is the location where the variable or struct was declared 
 fn get_type_from_scope<'ast>(
     id: &'ast String,
     scope: &Vec<(String, Type, Loc)>,
@@ -458,61 +460,29 @@ fn get_type_from_scope<'ast>(
     return None;
 }
 
-fn check_type(exp: Exp, expected_type: Type, containing_struct_type: Type) {
+fn get_expr_type<'ast>(expr: &'ast Exp, context: &mut BlockEvaluationContext<'ast>) -> Option<Type> {
     use crate::ast::Exp::*;
-    use crate::ast::Literal::*;
-    use crate::ast::Type::*;
-    match exp {
-        Lit(NumLit(n)) => match expected_type {
-            NatType => {
-                assert!(
-                    n <= u32::MAX.into(),
-                    "{} does not fit in unsigned 32 bits.",
-                    n
-                );
-                assert!(n >= 0, "{} is not a natural number.", n);
+    match expr {
+        BinOp(l, code, r, loc) => todo!(),
+        UnOp(code, e, loc) => todo!(),
+        Constructor(id, exps, loc) => todo!(),
+        Var(parts, loc) => {
+            if let Some((t, loc)) = get_var_type(parts, context, loc) {
+                return Some(t);
+            } else {
+                return None
             }
-            IntType => assert!(
-                n >= i32::MIN.into() && n <= i32::MAX.into(),
-                "{} does not fit in signed 32 bits.",
-                n
-            ),
-            _ => panic!(
-                "Expected type '{:?}', got 'Numeric Literal'.",
-                expected_type
-            ),
         },
-        Lit(BoolLit(_)) => assert!(
-            expected_type == BoolType,
-            "Expected type '{:?}', got 'Bool'.",
-            expected_type
-        ),
-        Lit(StringLit(_)) => assert!(
-            expected_type == StringType,
-            "Expected type '{:?}', got 'String'.",
-            expected_type
-        ),
-        Lit(NullLit) => assert!(
-            matches!(expected_type, NamedType { .. }),
-            "Expected type '{:?}', got 'null'.",
-            expected_type
-        ),
-        Lit(ThisLit) => assert!(
-            expected_type == containing_struct_type,
-            "Expected type '{:?}', got '{:?}'.",
-            expected_type,
-            containing_struct_type
-        ),
-        _ => unimplemented!(),
+        Lit(lit, loc) => todo!(),
     }
 }
+
 
 #[cfg(test)]
 mod tests {
     use crate::ast::Literal::*;
     use crate::ast::Type::*;
     use crate::ast::*;
-    use crate::ast_validator::check_type;
     use crate::ast_validator::validate_ast;
     use crate::ast_validator::ErrorContext;
     use crate::ast_validator::ValidationError;
@@ -630,50 +600,6 @@ mod tests {
                 },
                 loc: (22, 33)
             }
-        );
-    }
-
-    #[test]
-    fn test_check_type_literals() {
-        check_type(
-            Exp::Lit(NumLit(10)),
-            NatType,
-            NamedType("something".to_string()),
-        );
-        check_type(
-            Exp::Lit(NumLit(-10)),
-            IntType,
-            NamedType("something".to_string()),
-        );
-    }
-
-    #[test]
-    #[should_panic(expected = "-10 is not a natural number.")]
-    fn test_check_type_literals_illegal_1() {
-        check_type(
-            Exp::Lit(NumLit(-10)),
-            NatType,
-            NamedType("something".to_string()),
-        );
-    }
-
-    #[test]
-    #[should_panic(expected = "4294967296 does not fit in unsigned 32 bits.")]
-    fn test_check_type_literals_illegal_2() {
-        check_type(
-            Exp::Lit(NumLit((u32::MAX as i64) + 1)),
-            NatType,
-            NamedType("something".to_string()),
-        );
-    }
-
-    #[test]
-    #[should_panic(expected = "-2147483649 does not fit in signed 32 bits.")]
-    fn test_check_type_literals_illegal_3() {
-        check_type(
-            Exp::Lit(NumLit((i32::MIN as i64) - 1)),
-            IntType,
-            NamedType("something".to_string()),
         );
     }
 }

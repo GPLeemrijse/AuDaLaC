@@ -31,11 +31,11 @@ pub struct LoplStruct {
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum Exp {
-    BinOp(Box<Exp>, BinOpcode, Box<Exp>),
-    UnOp(UnOpcode, Box<Exp>),
-    Constructor(String, Vec<Box<Exp>>),
-    Var(Vec<String>),
-    Lit(Literal),
+    BinOp(Box<Exp>, BinOpcode, Box<Exp>, Loc),
+    UnOp(UnOpcode, Box<Exp>, Loc),
+    Constructor(String, Vec<Box<Exp>>, Loc),
+    Var(Vec<String>, Loc),
+    Lit(Literal, Loc),
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -56,7 +56,8 @@ pub enum Type {
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum Literal {
-    NumLit(i64),
+    NatLit(u32),
+    IntLit(i32),
     BoolLit(bool),
     StringLit(String),
     NullLit,
@@ -225,7 +226,8 @@ mod tests {
     fn test_literals() {
         check_expression("this", Exp::Lit(Literal::ThisLit));
         check_expression("null", Exp::Lit(Literal::NullLit));
-        check_expression("123", Exp::Lit(Literal::NumLit(123)));
+        check_expression("123", Exp::Lit(Literal::NatLit(123)));
+        check_expression("-123", Exp::Lit(Literal::IntLit(-123)));
         check_expression("true", Exp::Lit(Literal::BoolLit(true)));
         check_expression("\"true\"", Exp::Lit(Literal::StringLit("true".to_string())));
     }
@@ -235,40 +237,40 @@ mod tests {
         check_expression(
             "1 + 2",
             Exp::BinOp(
-                Box::new(Exp::Lit(Literal::NumLit(1))),
+                Box::new(Exp::Lit(Literal::NatLit(1))),
                 BinOpcode::Plus,
-                Box::new(Exp::Lit(Literal::NumLit(2))),
+                Box::new(Exp::Lit(Literal::NatLit(2))),
             ),
         );
 
         check_expression(
-            "1 + 2 * 3",
+            "-1 + 2 * 3",
             Exp::BinOp(
-                Box::new(Exp::Lit(Literal::NumLit(1))),
+                Box::new(Exp::Lit(Literal::IntLit(-1))),
                 BinOpcode::Plus,
                 Box::new(Exp::BinOp(
-                    Box::new(Exp::Lit(Literal::NumLit(2))),
+                    Box::new(Exp::Lit(Literal::NatLit(2))),
                     BinOpcode::Mult,
-                    Box::new(Exp::Lit(Literal::NumLit(3))),
+                    Box::new(Exp::Lit(Literal::NatLit(3))),
                 )),
             ),
         );
 
         check_expression(
-            "(!1 + 2) * 3 == null / this || 4",
+            "(!1 + 2) * 3 == null / this || -4",
             Exp::BinOp(
                 Box::new(Exp::BinOp(
                     Box::new(Exp::BinOp(
                         Box::new(Exp::BinOp(
                             Box::new(Exp::UnOp(
                                 UnOpcode::Negation,
-                                Box::new(Exp::Lit(Literal::NumLit(1))),
+                                Box::new(Exp::Lit(Literal::NatLit(1))),
                             )),
                             BinOpcode::Plus,
-                            Box::new(Exp::Lit(Literal::NumLit(2))),
+                            Box::new(Exp::Lit(Literal::NatLit(2))),
                         )),
                         BinOpcode::Mult,
-                        Box::new(Exp::Lit(Literal::NumLit(3))),
+                        Box::new(Exp::Lit(Literal::NatLit(3))),
                     )),
                     BinOpcode::Equals,
                     Box::new(Exp::BinOp(
@@ -278,7 +280,7 @@ mod tests {
                     )),
                 )),
                 BinOpcode::Or,
-                Box::new(Exp::Lit(Literal::NumLit(4))),
+                Box::new(Exp::Lit(Literal::IntLit(-4))),
             ),
         );
     }
