@@ -159,17 +159,17 @@ mod tests {
         check_statement(
             "if true then { id.id2 := null; String b := \"a\";}",
             Stat::IfThen(
-                Box::new(Exp::Lit(Literal::BoolLit(true))),
+                Box::new(Exp::Lit(Literal::BoolLit(true), (3, 7))),
                 vec![
                     Box::new(Stat::Assignment(
                         vec!["id".to_string(), "id2".to_string()],
-                        Box::new(Exp::Lit(Literal::NullLit)),
+                        Box::new(Exp::Lit(Literal::NullLit, (25, 29))),
                         (15, 30),
                     )),
                     Box::new(Stat::Declaration(
                         Type::StringType,
                         "b".to_string(),
-                        Box::new(Exp::Lit(Literal::StringLit("a".to_string()))),
+                        Box::new(Exp::Lit(Literal::StringLit("a".to_string()), (43, 46))),
                         (31, 47),
                     )),
                 ],
@@ -179,14 +179,14 @@ mod tests {
 
     #[test]
     fn test_vars() {
-        check_expression("somethingelse", Exp::Var(vec!["somethingelse".to_string()]));
+        check_expression("somethingelse", Exp::Var(vec!["somethingelse".to_string()], (0, 13)));
         check_expression(
             "some.thing.else",
             Exp::Var(vec![
                 "some".to_string(),
                 "thing".to_string(),
                 "else".to_string(),
-            ]),
+            ], (0, 15)),
         );
     }
 
@@ -194,13 +194,10 @@ mod tests {
     fn test_constructors() {
         check_expression(
             "somethingelse(a.b, \"test\")",
-            Exp::Constructor(
-                "somethingelse".to_string(),
-                vec![
-                    Box::new(Exp::Var(vec!["a".to_string(), "b".to_string()])),
-                    Box::new(Exp::Lit(Literal::StringLit("test".to_string()))),
-                ],
-            ),
+            Exp::Constructor("somethingelse".to_string(), vec![
+                    Box::new(Exp::Var(vec!["a".to_string(), "b".to_string()], (14, 17))),
+                    Box::new(Exp::Lit(Literal::StringLit("test".to_string()), (19, 25))),
+                ], (0, 26)),
         );
     }
 
@@ -224,12 +221,12 @@ mod tests {
 
     #[test]
     fn test_literals() {
-        check_expression("this", Exp::Lit(Literal::ThisLit));
-        check_expression("null", Exp::Lit(Literal::NullLit));
-        check_expression("123", Exp::Lit(Literal::NatLit(123)));
-        check_expression("-123", Exp::Lit(Literal::IntLit(-123)));
-        check_expression("true", Exp::Lit(Literal::BoolLit(true)));
-        check_expression("\"true\"", Exp::Lit(Literal::StringLit("true".to_string())));
+        check_expression("this", Exp::Lit(Literal::ThisLit, (0, 4)));
+        check_expression("null", Exp::Lit(Literal::NullLit, (0, 4)));
+        check_expression("123", Exp::Lit(Literal::NatLit(123), (0, 3)));
+        check_expression("-123", Exp::Lit(Literal::IntLit(-123), (0, 4)));
+        check_expression("true", Exp::Lit(Literal::BoolLit(true), (0, 4)));
+        check_expression("\"true\"", Exp::Lit(Literal::StringLit("true".to_string()), (0, 6)));
     }
 
     #[test]
@@ -237,23 +234,21 @@ mod tests {
         check_expression(
             "1 + 2",
             Exp::BinOp(
-                Box::new(Exp::Lit(Literal::NatLit(1))),
+                Box::new(Exp::Lit(Literal::NatLit(1), (0, 1))),
                 BinOpcode::Plus,
-                Box::new(Exp::Lit(Literal::NatLit(2))),
+                Box::new(Exp::Lit(Literal::NatLit(2), (4, 5))),
+                (0, 5)
             ),
         );
 
         check_expression(
             "-1 + 2 * 3",
-            Exp::BinOp(
-                Box::new(Exp::Lit(Literal::IntLit(-1))),
-                BinOpcode::Plus,
-                Box::new(Exp::BinOp(
-                    Box::new(Exp::Lit(Literal::NatLit(2))),
+            Exp::BinOp(Box::new(Exp::Lit(Literal::IntLit(-1), (0, 2))), BinOpcode::Plus, Box::new(Exp::BinOp(
+                    Box::new(Exp::Lit(Literal::NatLit(2), (5, 6))),
                     BinOpcode::Mult,
-                    Box::new(Exp::Lit(Literal::NatLit(3))),
-                )),
-            ),
+                    Box::new(Exp::Lit(Literal::NatLit(3), (9, 10))),
+                    (5, 10)
+                )), (0, 10)),
         );
 
         check_expression(
@@ -262,25 +257,27 @@ mod tests {
                 Box::new(Exp::BinOp(
                     Box::new(Exp::BinOp(
                         Box::new(Exp::BinOp(
-                            Box::new(Exp::UnOp(
-                                UnOpcode::Negation,
-                                Box::new(Exp::Lit(Literal::NatLit(1))),
-                            )),
+                            Box::new(Exp::UnOp(UnOpcode::Negation, Box::new(Exp::Lit(Literal::NatLit(1), (2, 3))), (1, 3))),
                             BinOpcode::Plus,
-                            Box::new(Exp::Lit(Literal::NatLit(2))),
+                            Box::new(Exp::Lit(Literal::NatLit(2), (6, 7))),
+                            (1, 7)
                         )),
                         BinOpcode::Mult,
-                        Box::new(Exp::Lit(Literal::NatLit(3))),
+                        Box::new(Exp::Lit(Literal::NatLit(3), (11, 12))),
+                        (0, 12)
                     )),
                     BinOpcode::Equals,
                     Box::new(Exp::BinOp(
-                        Box::new(Exp::Lit(Literal::NullLit)),
+                        Box::new(Exp::Lit(Literal::NullLit, (16, 20))),
                         BinOpcode::Div,
-                        Box::new(Exp::Lit(Literal::ThisLit)),
+                        Box::new(Exp::Lit(Literal::ThisLit, (23, 27))),
+                        (16, 27)
                     )),
-                )),
+                    (0, 27)
+                )),  
                 BinOpcode::Or,
-                Box::new(Exp::Lit(Literal::IntLit(-4))),
+                Box::new(Exp::Lit(Literal::IntLit(-4), (31, 33))),
+                (0, 33)
             ),
         );
     }
