@@ -98,7 +98,7 @@ pub Steps: Vec<Box<Step>> = Step*;
 pub Structs: Vec<Box<LoplStruct>> = Struct+;
 
 pub Stat: Box<Stat> = {
-    "if" <Exp> "then" "{" <Stats> "}" => Box::new(Stat::IfThen(<>)),
+    "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Box::new(Stat::IfThen(e, s, (start, end))),
     <start:@L> <t:Type> <id:SimpleID> ":=" <e:Exp> ";" <end:@R> => Box::new(Stat::Declaration(t, id, e, (start, end))),
     <start:@L> <v:Var> ":=" <e:Exp> ";" <end:@R> => Box::new(Stat::Assignment(v, e, (start, end))),
 }

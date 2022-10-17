@@ -17,13 +17,17 @@ pub struct ValidationError {
 
 #[derive(Debug, PartialEq, Eq)]
 enum ValidationErrorType {
-    StructDefinedTwice(Loc),              //Loc of earlier decl
-    StepDefinedTwice(Loc),                //Loc of earlier decl
-    ParameterDefinedTwice(String, Loc),   //parameter name, Loc of earlier decl
-    VariableAlreadyDeclared(String, Loc), //var name, Loc of earlier decl
-    UndefinedType(String),                //attempted type name
-    UndefinedField(String, String),       //parent name, field name
-    UndefinedStep,                        //Step and struct name already in error_context
+    StructDefinedTwice(Loc),                        //Loc of earlier decl
+    StepDefinedTwice(Loc),                          //Loc of earlier decl
+    ParameterDefinedTwice(String, Loc),             //parameter name, Loc of earlier decl
+    VariableAlreadyDeclared(String, Loc),           //var name, Loc of earlier decl
+    UndefinedType(String),                          //attempted type name
+    UndefinedField(String, String),                 //parent name, field name
+    UndefinedStep,                                  //Step and struct name already in error_context
+    InvalidNumberOfArguments(usize, usize),         //Expected number, supplied number
+    TypeMismatch(Type, Type),                       //Expected type, gotten type
+    InvalidTypesForOperator(Type, BinOpcode, Type), //lhs type, operator, rhs type
+    NoNullLiteralForType(Option<Type>),             // Type of attempted null literal
 }
 
 impl ValidationError {
@@ -44,16 +48,10 @@ impl ValidationError {
     fn secondary(&self) -> Option<Label<()>> {
         use ValidationErrorType::*;
         match &self.error_type {
-            StructDefinedTwice(l) => {
-                Some(Label::secondary((), l.0..l.1).with_message("Previous declaration here."))
-            }
-            StepDefinedTwice(l) => {
-                Some(Label::secondary((), l.0..l.1).with_message("Previous declaration here."))
-            }
-            ParameterDefinedTwice(_, l) => {
-                Some(Label::secondary((), l.0..l.1).with_message("Previous declaration here."))
-            }
-            VariableAlreadyDeclared(_, l) => {
+            StructDefinedTwice(l)
+            | StepDefinedTwice(l)
+            | ParameterDefinedTwice(_, l)
+            | VariableAlreadyDeclared(_, l) => {
                 Some(Label::secondary((), l.0..l.1).with_message("Previous declaration here."))
             }
             _ => None,
@@ -97,6 +95,23 @@ impl ValidationError {
                     )
                 }
             }
+            InvalidNumberOfArguments(e, r) => format!(
+                "The struct {} takes {} arguments, while {} were given.",
+                self.context.struct_name.as_ref().unwrap(),
+                e,
+                r
+            ),
+            TypeMismatch(t1, t2) => format!("Expected type '{}', but got '{}'", t1, t2),
+            InvalidTypesForOperator(l, o, r) => format!(
+                "The operator {:?} can not be applied to a LHS of type {} and a RHS of type {}",
+                o, l, r
+            ),
+            NoNullLiteralForType(None) => {
+                format!("The null literal is not defined in this context.")
+            }
+            NoNullLiteralForType(Some(t)) => {
+                format!("The null literal is not defined for type {}.", t)
+            }
         }
     }
 
@@ -110,6 +125,10 @@ impl ValidationError {
             UndefinedType(..) => "Undefined type.",
             UndefinedField(..) => "Undefined field.",
             UndefinedStep => "Undefined step",
+            InvalidNumberOfArguments(..) => "Invalid number of arguments supplied.",
+            TypeMismatch(..) => "An invalid type has been given.",
+            InvalidTypesForOperator(..) => "Operator can not be applied to given types.",
+            NoNullLiteralForType(..) => "The null literal is not defined in this context.",
         }
     }
 }
@@ -328,38 +347,67 @@ fn check_statement_block<'ast>(
         use crate::ast::Stat::*;
 
         match &**stmt {
-            Declaration(t, id, exp, loc) => {
-                check_type_is_defined(t, context, loc.clone());
-                
-                // Make sure id is not used before
-                if let Some((_, l)) = get_type_from_context(&id, context) {
-                    context.errors.push(ValidationError {
-                        error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone(), l),
-                        context: ErrorContext::from_block_context(context),
-                        loc: *loc,
-                    });
+            Declaration(decl_type, id, exp, loc) => {
+                if type_is_defined(decl_type, context, loc.clone()) {
+                    // Make sure id is not used before
+                    if let Some((_, l)) = get_type_from_context(&id, context) {
+                        context.errors.push(ValidationError {
+                            error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone(), l),
+                            context: ErrorContext::from_block_context(context),
+                            loc: *loc,
+                        });
+                    } else {
+                        // t is defined and id has not been used before
+                        if let Some(exp_type) =
+                            get_expr_type(exp, &Some(decl_type.clone()), context)
+                        {
+                            if !exp_type.can_be_coerced_to_type(decl_type) {
+                                context.errors.push(ValidationError {
+                                    error_type: ValidationErrorType::TypeMismatch(
+                                        decl_type.clone(),
+                                        exp_type,
+                                    ),
+                                    context: ErrorContext::from_block_context(context),
+                                    loc: *loc,
+                                });
+                            } else {
+                                context.add_to_var_scope(id, decl_type, loc);
+                            }
+                        } // else: type of expression could not be deduced
+                    }
                 }
-                // Typecheck exp with t
-                // Make something like validate_exp(exp)
-                // Checking defines and var fields etc.
-                //todo!();
-
-                context.add_to_var_scope(id, t, loc)
             }
             Assignment(parts, exp, loc) => {
-                let field_type = get_var_type(parts, context, loc);
-
-                // Typecheck field_type with exp
-                //todo!();
+                if let Some((var_type, _)) = get_var_type(parts, context, loc) {
+                    if let Some(exp_type) = get_expr_type(exp, &Some(var_type.clone()), context) {
+                        if !exp_type.can_be_coerced_to_type(&var_type) {
+                            context.errors.push(ValidationError {
+                                error_type: ValidationErrorType::TypeMismatch(var_type, exp_type),
+                                context: ErrorContext::from_block_context(context),
+                                loc: *loc,
+                            });
+                        }
+                    } // else: type of expression could not be deduced
+                }
             }
-            IfThen(cond, statements) => {
-                // Typecheck cond to be boolean
-                //todo!();
+            IfThen(cond, statements, cond_loc) => {
+                if let Some(cond_type) = get_expr_type(cond, &Some(Type::BoolType), context) {
+                    // Booleans have no Null value
+                    if cond_type != Type::BoolType {
+                        context.errors.push(ValidationError {
+                            error_type: ValidationErrorType::TypeMismatch(
+                                Type::BoolType,
+                                cond_type,
+                            ),
+                            context: ErrorContext::from_block_context(context),
+                            loc: *cond_loc,
+                        });
+                    }
+                }
 
+                // Regardless of if the guard is of boolean type, we check the statements
                 context.push_var_scope();
-
                 check_statement_block(statements, context);
-
                 context.pop_var_scope();
             }
         }
@@ -379,7 +427,10 @@ fn get_var_type<'ast>(
 
     let mut found_type: Option<(Type, Loc)>;
     if parts[0] == "this" {
-        found_type = Some((Type::NamedType(context.current_struct_name.unwrap().clone()), (0, 0)));
+        found_type = Some((
+            Type::NamedType(context.current_struct_name.unwrap().clone()),
+            (0, 0),
+        ));
     } else {
         found_type = get_type_from_context(&parts[0], context);
     }
@@ -425,11 +476,7 @@ fn get_var_type<'ast>(
     return found_type;
 }
 
-fn check_type_is_defined<'ast>(
-    t: &'ast Type,
-    context: &mut BlockEvaluationContext<'ast>,
-    loc: Loc,
-) {
+fn type_is_defined<'ast>(t: &Type, context: &mut BlockEvaluationContext<'ast>, loc: Loc) -> bool {
     if let Type::NamedType(s) = t {
         if !context.structs.iter().any(|st| st.name == *s) {
             context.errors.push(ValidationError {
@@ -437,8 +484,10 @@ fn check_type_is_defined<'ast>(
                 context: ErrorContext::from_block_context(context),
                 loc: loc,
             });
+            return false;
         }
     }
+    return true;
 }
 
 /// returned Loc is the location where the variable or struct was declared
@@ -454,7 +503,7 @@ fn get_type_from_context<'ast>(
     return None;
 }
 
-/// returned Loc is the location where the variable or struct was declared 
+/// returned Loc is the location where the variable or struct was declared
 fn get_type_from_scope<'ast>(
     id: &'ast String,
     scope: &Vec<(String, Type, Loc)>,
@@ -467,41 +516,156 @@ fn get_type_from_scope<'ast>(
     return None;
 }
 
-fn get_expr_type<'ast>(expr: &'ast Exp, null_type: Option<Type>, context: &mut BlockEvaluationContext<'ast>) -> Option<Type> {
+fn get_expr_type<'ast>(
+    expr: &'ast Exp,
+    preferred_type: &Option<Type>,
+    context: &mut BlockEvaluationContext<'ast>,
+) -> Option<Type> {
     use crate::ast::Exp::*;
     use crate::ast::Literal::*;
     use crate::ast::Type::*;
 
     match expr {
-        BinOp(l, code, r, loc) => todo!(),
-        UnOp(code, e, loc) => todo!(),
-        Constructor(id, exps, loc) => todo!(),
-        Var(parts, loc) => {
-            if let Some((t, _)) = get_var_type(parts, context, loc) {
-                Some(t)
-            } else {
-                None
+        BinOp(l, code, r, loc) => {
+            let l_type: Option<Type> = get_expr_type(l, preferred_type, context);
+            let r_type: Option<Type> = get_expr_type(r, preferred_type, context);
+
+            if l_type == None || r_type == None {
+                return None;
+            }
+            let bin_type =
+                get_binop_expr_type(l_type.as_ref().unwrap(), code, r_type.as_ref().unwrap());
+            if bin_type == None {
+                context.errors.push(ValidationError {
+                    error_type: ValidationErrorType::InvalidTypesForOperator(
+                        l_type.unwrap().clone(),
+                        code.clone(),
+                        r_type.unwrap().clone(),
+                    ),
+                    context: ErrorContext::from_block_context(context),
+                    loc: *loc,
+                });
+            }
+            return bin_type;
+        }
+        UnOp(code, e, loc) => match code {
+            UnOpcode::Negation => {
+                let e_type = get_expr_type(e, &Some(BoolType), context);
+                if let Some(ref t) = e_type {
+                    if t != &BoolType {
+                        context.errors.push(ValidationError {
+                            error_type: ValidationErrorType::TypeMismatch(BoolType, t.clone()),
+                            context: ErrorContext::from_block_context(context),
+                            loc: *loc,
+                        });
+                        return None;
+                    }
+                }
+                return e_type;
             }
         },
+        Constructor(id, exps, loc) => {
+            // Check if `id` is a proper type
+            let cons_type = NamedType(id.clone());
+            if type_is_defined(&cons_type, context, *loc) {
+                // check types of exps with parameters
+                let params = &context
+                    .structs
+                    .iter()
+                    .find(|strct| strct.name == *id)
+                    .unwrap()
+                    .parameters;
+                if params.len() != exps.len() {
+                    context.errors.push(ValidationError {
+                        error_type: ValidationErrorType::InvalidNumberOfArguments(
+                            params.len(),
+                            exps.len(),
+                        ),
+                        context: ErrorContext {
+                            struct_name: Some(id.clone()),
+                            step_name: None,
+                        },
+                        loc: *loc,
+                    });
+                }
+
+                for ((_, p_type, _), e) in params.iter().zip(exps) {
+                    if let Some(exp_type) = get_expr_type(e, &Some(p_type.clone()), context) {
+                        if exp_type != *p_type {
+                            context.errors.push(ValidationError {
+                                error_type: ValidationErrorType::TypeMismatch(
+                                    p_type.clone(),
+                                    exp_type,
+                                ),
+                                context: ErrorContext {
+                                    struct_name: Some(id.clone()),
+                                    step_name: None,
+                                },
+                                loc: *loc,
+                            });
+                        }
+                    }
+                }
+                return Some(cons_type);
+            } else {
+                return None;
+            }
+        }
+        Var(parts, loc) => get_var_type(parts, context, loc).map(|(t, _)| t),
         Lit(lit, loc) => {
-            Some (match lit {
-                NatLit(_) => NatType,
-                IntLit(_) => IntType,
-                BoolLit(_) => BoolType,
-                StringLit(_) => StringType,
-                NullLit => null_type.expect("Could not derive type of null."),
-                ThisLit => NamedType(context.current_struct_name.unwrap().clone()),
-            })
-        },
+            match lit {
+                NatLit(_) => Some(NatType),
+                IntLit(_) => Some(IntType),
+                BoolLit(_) => Some(BoolType),
+                StringLit(_) => Some(StringType),
+                NullLit => {
+                    // Only named types have null literals
+                    match preferred_type {
+                        Some(NamedType(s)) => Some(NamedType(s.clone())),
+                        t => {
+                            context.errors.push(ValidationError {
+                                error_type: ValidationErrorType::NoNullLiteralForType(
+                                    t.as_ref().map(|a| a.clone()),
+                                ),
+                                context: ErrorContext::from_block_context(context),
+                                loc: *loc,
+                            });
+                            None
+                        }
+                    }
+                }
+                ThisLit => Some(NamedType(context.current_struct_name.unwrap().clone())),
+            }
+        }
     }
 }
 
+fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<Type> {
+    use crate::ast::BinOpcode::*;
+    use crate::ast::Type::*;
+
+    let is_arithmetic = |o: &'ast BinOpcode| match o {
+        Plus | Minus | Mult | Div | Mod => true,
+        _ => false,
+    };
+    let is_comparison = |o: &'ast BinOpcode| match o {
+        Equals | NotEquals | LessThanEquals | GreaterThanEquals | LessThan | GreaterThan => true,
+        _ => false,
+    };
+
+    match (l, op, r) {
+        (NatType, _, NatType) if is_arithmetic(op) => Some(NatType),
+        (IntType, _, IntType) if is_arithmetic(op) => Some(IntType),
+        (NatType | IntType, _, NatType | IntType) if is_arithmetic(op) => Some(IntType),
+        (NatType | IntType, _, NatType | IntType) if is_comparison(op) => Some(BoolType),
+        (StringType, _, StringType) if is_comparison(op) => Some(BoolType),
+        (BoolType, _, BoolType) if is_comparison(op) => Some(BoolType),
+        (..) => None,
+    }
+}
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::Literal::*;
-    use crate::ast::Type::*;
-    use crate::ast::*;
     use crate::ast_validator::validate_ast;
     use crate::ast_validator::ErrorContext;
     use crate::ast_validator::ValidationError;

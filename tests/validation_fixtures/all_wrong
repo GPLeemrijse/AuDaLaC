@@ -8,17 +8,27 @@ struct Node (reachable : Bool, reachable: Bool) {
         Nat n2 := 0;
         Int n3 := 10;
         if true then {
-            Int n3 := 5;
+            Int n3 := 5 + 3;
         }
     }
 
     init {
+        Nat test_nat_not_negative := -1;
 
+        String t := 1;
+        Int t2 := "ad";
+        Node t3 := this;
     }
 }
 
 struct Node(test : Nat) {
     
+}
+
+struct Edge(){
+    init {
+        Node t3 := this;
+    }
 }
 
 Node.init2 < Fix(ste_node) < abc.d
