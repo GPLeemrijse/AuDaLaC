@@ -56,6 +56,10 @@ impl ValidationError {
             UndefinedType(..) => "VE005",
             UndefinedField(..) => "VE006",
             UndefinedStep => "VE007",
+            InvalidNumberOfArguments(..) => "VE008",
+            TypeMismatch(..) => "VE009",
+            InvalidTypesForOperator(..) => "VE010",
+            NoNullLiteralForType(..) => "VE011",
         }
     }
 
