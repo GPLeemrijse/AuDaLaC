@@ -17,7 +17,8 @@ match {
     "Int" => "Int",
     "Bool" => "Bool",
     r#""[^"]*""# => STRING,
-    r"(0|-?[1-9][0-9]*)" => NUM,
+    r"(0|[1-9][0-9]*)" => NAT,
+    r"-[1-9][0-9]*" => INT,
     r"(true|false)" => BOOL,
 } else {
     r"[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*" => ID,
@@ -25,7 +26,7 @@ match {
 }
 
 Tier<Op, NextTier>: Box<Exp> = {
-    Tier<Op, NextTier> Op NextTier => Box::new(Exp::BinOp(<>)),
+    <start:@L> <l:Tier<Op, NextTier>> <o:Op> <r:NextTier> <end:@R> => Box::new(Exp::BinOp(l, o, r, (start, end))),
     NextTier
 };
 
@@ -97,7 +98,7 @@ pub Steps: Vec<Box<Step>> = Step*;
 pub Structs: Vec<Box<LoplStruct>> = Struct+;
 
 pub Stat: Box<Stat> = {
-    "if" <Exp> "then" "{" <Stats> "}" => Box::new(Stat::IfThen(<>)),
+    "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Box::new(Stat::IfThen(e, s, (start, end))),
     <start:@L> <t:Type> <id:SimpleID> ":=" <e:Exp> ";" <end:@R> => Box::new(Stat::Declaration(t, id, e, (start, end))),
     <start:@L> <v:Var> ":=" <e:Exp> ";" <end:@R> => Box::new(Stat::Assignment(v, e, (start, end))),
 }
@@ -120,18 +121,19 @@ CompExp = Tier<CompareOperator, AddSubExp>;
 AddSubExp = Tier<AddSubOperator, MultDivExp>;
 MultDivExp = Tier<MultDivModOperator, NegExp>;
 NegExp: Box<Exp> = {
-    NegationOperator NegExp => Box::new(Exp::UnOp(<>)),
+    <start:@L> <o:NegationOperator> <e:NegExp> <end:@R> => Box::new(Exp::UnOp(o, e, (start, end))),
     BottomExp,
 }
 
 BottomExp: Box<Exp> = {
-    "null" => Box::new(Exp::Lit(Literal::NullLit)),
-    "this" => Box::new(Exp::Lit(Literal::ThisLit)),
-    NUM => Box::new(Exp::Lit(Literal::NumLit(i64::from_str(<>).unwrap()))),
-    STRING => Box::new(Exp::Lit(Literal::StringLit(<>[1..<>.len()-1].to_string()))),
-    BOOL => Box::new(Exp::Lit(Literal::BoolLit(<>.parse().unwrap()))),
-    <SimpleID> "(" <Exps> ")" => Box::new(Exp::Constructor(<>)),
-    Var => Box::new(Exp::Var(<>)),
+    <start:@L> "null" <end:@R> => Box::new(Exp::Lit(Literal::NullLit, (start, end))),
+    <start:@L> "this" <end:@R> => Box::new(Exp::Lit(Literal::ThisLit, (start, end))),
+    <start:@L> <e:NAT> <end:@R> => Box::new(Exp::Lit(Literal::NatLit(u32::from_str(e).expect("Could not convert to u32.")), (start, end))),
+    <start:@L> <e:INT> <end:@R> => Box::new(Exp::Lit(Literal::IntLit(i32::from_str(e).expect("Could not convert to i32.")), (start, end))),
+    <start:@L> <e:STRING> <end:@R> => Box::new(Exp::Lit(Literal::StringLit(e[1..e.len()-1].to_string()), (start, end))),
+    <start:@L> <e:BOOL> <end:@R> => Box::new(Exp::Lit(Literal::BoolLit(e.parse().unwrap()), (start, end))),
+    <start:@L> <id:SimpleID> "(" <e:Exps> ")" <end:@R> => Box::new(Exp::Constructor(id, e, (start, end))),
+    <start:@L> <v:Var> <end:@R> => Box::new(Exp::Var(v, (start, end))),
     "(" <Exp> ")"
 }
 

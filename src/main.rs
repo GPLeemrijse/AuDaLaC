@@ -1,8 +1,5 @@
 #[macro_use]
 extern crate lalrpop_util;
-
-use codespan::FileId;
-use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use codespan_reporting::term::{self};
