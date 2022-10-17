@@ -103,6 +103,27 @@ pub enum BinOpcode {
     Or,
 }
 
+impl Display for BinOpcode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use crate::ast::BinOpcode::*;
+        match self {
+            Equals => write!(f, "=="),
+            NotEquals => write!(f, "!="),
+            LessThanEquals => write!(f, "<="),
+            GreaterThanEquals => write!(f, ">="),
+            LessThan => write!(f, "<"),
+            GreaterThan => write!(f, ">"),
+            Mult => write!(f, "*"),
+            Div => write!(f, "/"),
+            Mod => write!(f, "%"),
+            Plus => write!(f, "+"),
+            Minus => write!(f, "-"),
+            And => write!(f, "&&"),
+            Or => write!(f, "||"),
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Debug)]
 pub enum UnOpcode {
     Negation,

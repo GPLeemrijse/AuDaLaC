@@ -3,11 +3,6 @@ use codespan_reporting::diagnostic::Diagnostic;
 use codespan_reporting::diagnostic::Label;
 use core::ops::Range;
 
-// All steps in schedule have been defined
-// Numeric operators always between: Nat Nat, Nat Int, Int Int
-// Unique step names in Structs
-// No declared variables in steps with the same name as parameters
-
 #[derive(Debug, PartialEq, Eq)]
 pub struct ValidationError {
     error_type: ValidationErrorType,
@@ -119,9 +114,9 @@ impl ValidationError {
                 e,
                 r
             ),
-            TypeMismatch(t1, t2) => format!("Expected type '{}', but got '{}'", t1, t2),
+            TypeMismatch(t1, t2) => format!("Expected type {}, but got {}", t1, t2),
             InvalidTypesForOperator(l, o, r) => format!(
-                "The operator {:?} can not be applied to a LHS of type {} and a RHS of type {}",
+                "The operator {} can not be applied to a LHS of type {} and a RHS of type {}",
                 o, l, r
             ),
             NoNullLiteralForType(None) => {
