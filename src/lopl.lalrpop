@@ -105,11 +105,11 @@ pub Stat: Stat = {
 
 Stats = Stat*;
 Type: Type = {
-    "String" => Type::StringType,
-    "Nat" => Type::NatType,
-    "Int" => Type::IntType,
-    "Bool" => Type::BoolType,
-    SimpleID => Type::NamedType(<>)
+    "String" => Type::String,
+    "Nat" => Type::Nat,
+    "Int" => Type::Int,
+    "Bool" => Type::Bool,
+    SimpleID => Type::Named(<>)
 }
 
 

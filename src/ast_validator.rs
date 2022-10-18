@@ -72,11 +72,11 @@ impl ValidationError {
     }
 
     fn primary(&self) -> Label<()> {
-        return Label::primary((), self.loc()).with_message(self.label());
+        Label::primary((), self.loc()).with_message(self.label())
     }
 
     fn loc(&self) -> Range<usize> {
-        return self.loc.0..self.loc.1;
+        self.loc.0..self.loc.1
     }
 
     fn label(&self) -> String {
@@ -120,7 +120,7 @@ impl ValidationError {
                 o, l, r
             ),
             NoNullLiteralForType(None) => {
-                format!("The null literal is not defined in this context.")
+                "The null literal is not defined in this context.".to_string()
             }
             NoNullLiteralForType(Some(t)) => {
                 format!("The null literal is not defined for type {}.", t)
@@ -163,10 +163,10 @@ impl ErrorContext {
             step_name = Some(s.clone());
         }
 
-        return ErrorContext {
+        ErrorContext {
             struct_name,
             step_name,
-        };
+        }
     }
 }
 
@@ -180,9 +180,9 @@ struct BlockEvaluationContext<'ast> {
 }
 
 impl<'eval, 'ast> BlockEvaluationContext<'ast> {
-    fn add_to_var_scope(&'eval mut self, s: &'ast String, t: &'ast Type, l: &'ast Loc) {
+    fn add_to_var_scope(&'eval mut self, s: &'ast str, t: &'ast Type, l: &'ast Loc) {
         if let Some(v) = self.vars.last_mut() {
-            v.push((s.clone(), t.clone(), l.clone()));
+            v.push((s.to_owned(), t.clone(), *l));
         } else {
             panic!(
                 "Error: there was no variable scope at location {:?}. Context: {:#?}",
@@ -196,13 +196,13 @@ impl<'eval, 'ast> BlockEvaluationContext<'ast> {
     }
 
     fn pop_var_scope(&mut self) {
-        if let None = self.vars.pop() {
+        if self.vars.pop().is_none() {
             panic!("Popped non-existing variable scope. Context: {:#?}", self);
         }
     }
 }
 
-pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
+pub fn validate_ast(ast: &Program) -> Vec<ValidationError> {
     let mut context = BlockEvaluationContext {
         current_struct_name: None,
         current_step_name: None,
@@ -251,7 +251,7 @@ pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
     // Make sure the schedule is well defined
     check_schedule(&ast.schedule, &mut context);
 
-    return context.errors;
+    context.errors
 }
 
 fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationContext<'ast>) {
@@ -306,7 +306,7 @@ fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationC
 }
 
 fn check_uniqueness_of_parameters<'ast>(
-    params: &'ast Vec<(String, Type, Loc)>,
+    params: &'ast [(String, Type, Loc)],
     context: &mut BlockEvaluationContext<'ast>,
 ) {
     for (idx, (pname, _, ploc)) in params.iter().enumerate() {
@@ -404,12 +404,12 @@ fn check_statement_block<'ast>(
                 }
             }
             IfThen(cond, statements, cond_loc) => {
-                if let Some(cond_type) = get_expr_type(cond, &Some(Type::BoolType), context) {
+                if let Some(cond_type) = get_expr_type(cond, &Some(Type::Bool), context) {
                     // Booleans have no Null value
-                    if cond_type != Type::BoolType {
+                    if cond_type != Type::Bool {
                         context.errors.push(ValidationError {
                             error_type: ValidationErrorType::TypeMismatch(
-                                Type::BoolType,
+                                Type::Bool,
                                 cond_type,
                             ),
                             context: ErrorContext::from_block_context(context),
@@ -441,7 +441,7 @@ fn get_var_type<'ast>(
     let mut found_type: Option<(Type, Loc)>;
     if parts[0] == "this" {
         found_type = Some((
-            Type::NamedType(context.current_struct_name.unwrap().clone()),
+            Type::Named(context.current_struct_name.unwrap().clone()),
             (0, 0),
         ));
     } else {
@@ -463,7 +463,7 @@ fn get_var_type<'ast>(
     }
     for (idx, id) in parts[1..].iter().enumerate() {
         match found_type {
-            Some((Type::NamedType(s), _)) => {
+            Some((Type::Named(s), _)) => {
                 found_type = get_type_from_scope(
                     id,
                     &context
@@ -490,7 +490,7 @@ fn get_var_type<'ast>(
 }
 
 fn type_is_defined<'ast>(t: &Type, context: &mut BlockEvaluationContext<'ast>, loc: Loc) -> bool {
-    if let Type::NamedType(s) = t {
+    if let Type::Named(s) = t {
         if !context.structs.iter().any(|st| st.name == *s) {
             context.errors.push(ValidationError {
                 error_type: ValidationErrorType::UndefinedType(s.clone()),
@@ -563,11 +563,11 @@ fn get_expr_type<'ast>(
         }
         UnOp(code, e, loc) => match code {
             UnOpcode::Negation => {
-                let e_type = get_expr_type(e, &Some(BoolType), context);
+                let e_type = get_expr_type(e, &Some(Bool), context);
                 if let Some(ref t) = e_type {
-                    if t != &BoolType {
+                    if t != &Bool {
                         context.errors.push(ValidationError {
-                            error_type: ValidationErrorType::TypeMismatch(BoolType, t.clone()),
+                            error_type: ValidationErrorType::TypeMismatch(Bool, t.clone()),
                             context: ErrorContext::from_block_context(context),
                             loc: *loc,
                         });
@@ -579,7 +579,7 @@ fn get_expr_type<'ast>(
         },
         Constructor(id, exps, loc) => {
             // Check if `id` is a proper type
-            let cons_type = NamedType(id.clone());
+            let cons_type = Named(id.clone());
             if type_is_defined(&cons_type, context, *loc) {
                 // check types of exps with parameters
                 let params = &context
@@ -627,14 +627,14 @@ fn get_expr_type<'ast>(
         Var(parts, loc) => get_var_type(parts, context, loc).map(|(t, _)| t),
         Lit(lit, loc) => {
             match lit {
-                NatLit(_) => Some(NatType),
-                IntLit(_) => Some(IntType),
-                BoolLit(_) => Some(BoolType),
-                StringLit(_) => Some(StringType),
+                NatLit(_) => Some(Nat),
+                IntLit(_) => Some(Int),
+                BoolLit(_) => Some(Bool),
+                StringLit(_) => Some(String),
                 NullLit => {
                     // Only named types have null literals
                     match preferred_type {
-                        Some(NamedType(s)) => Some(NamedType(s.clone())),
+                        Some(Named(s)) => Some(Named(s.clone())),
                         t => {
                             context.errors.push(ValidationError {
                                 error_type: ValidationErrorType::NoNullLiteralForType(
@@ -647,7 +647,7 @@ fn get_expr_type<'ast>(
                         }
                     }
                 }
-                ThisLit => Some(NamedType(context.current_struct_name.unwrap().clone())),
+                ThisLit => Some(Named(context.current_struct_name.unwrap().clone())),
             }
         }
     }
@@ -667,12 +667,12 @@ fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<
     };
 
     match (l, op, r) {
-        (NatType, _, NatType) if is_arithmetic(op) => Some(NatType),
-        (IntType, _, IntType) if is_arithmetic(op) => Some(IntType),
-        (NatType | IntType, _, NatType | IntType) if is_arithmetic(op) => Some(IntType),
-        (NatType | IntType, _, NatType | IntType) if is_comparison(op) => Some(BoolType),
-        (StringType, _, StringType) if is_comparison(op) => Some(BoolType),
-        (BoolType, _, BoolType) if is_comparison(op) => Some(BoolType),
+        (Nat, _, Nat) if is_arithmetic(op) => Some(Nat),
+        (Int, _, Int) if is_arithmetic(op) => Some(Int),
+        (Nat | Int, _, Nat | Int) if is_arithmetic(op) => Some(Int),
+        (Nat | Int, _, Nat | Int) if is_comparison(op) => Some(Bool),
+        (String, _, String) if is_comparison(op) => Some(Bool),
+        (Bool, _, Bool) if is_comparison(op) => Some(Bool),
         (..) => None,
     }
 }

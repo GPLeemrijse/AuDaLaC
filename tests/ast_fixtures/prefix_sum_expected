@@ -6,23 +6,23 @@ Program {
             parameters: [
                 (
                     "val",
-                    IntType,
+                    Int,
                 ),
                 (
                     "prev",
-                    NamedType(
+                    Named(
                         "Node",
                     ),
                 ),
                 (
                     "auxprev",
-                    NamedType(
+                    Named(
                         "Node",
                     ),
                 ),
                 (
                     "auxval",
-                    IntType,
+                    Int,
                 ),
             ],
             steps: [

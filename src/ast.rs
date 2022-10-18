@@ -50,16 +50,16 @@ pub enum Stat {
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Type {
-    NamedType(String),
-    StringType,
-    NatType,
-    IntType,
-    BoolType,
+    Named(String),
+    String,
+    Nat,
+    Int,
+    Bool,
 }
 
 impl Type {
     pub fn can_be_coerced_to_type(&self, t: &Type) -> bool {
-        return self == t || (*t == Type::IntType && *self == Type::NatType);
+        self == t || (*t == Type::Int && *self == Type::Nat)
     }
 }
 
@@ -67,11 +67,11 @@ impl Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use crate::ast::Type::*;
         match self {
-            NamedType(s) => write!(f, "{}", s),
-            StringType => write!(f, "String"),
-            NatType => write!(f, "Nat"),
-            IntType => write!(f, "Int"),
-            BoolType => write!(f, "Bool"),
+            Named(s) => write!(f, "{}", s),
+            String => write!(f, "String"),
+            Nat => write!(f, "Nat"),
+            Int => write!(f, "Int"),
+            Bool => write!(f, "Bool"),
         }
     }
 }
@@ -167,10 +167,10 @@ mod tests {
             assert_eq!(
                 structs[0].parameters,
                 vec![
-                    ("param1".to_string(), Type::NatType, (12, 24)),
+                    ("param1".to_string(), Type::Nat, (12, 24)),
                     (
                         "param2".to_string(),
-                        Type::NamedType("ABC".to_string()),
+                        Type::Named("ABC".to_string()),
                         (26, 37)
                     )
                 ]
@@ -210,7 +210,7 @@ mod tests {
                         (15, 30),
                     ),
                     Stat::Declaration(
-                        Type::StringType,
+                        Type::String,
                         "b".to_string(),
                         Box::new(Exp::Lit(Literal::StringLit("a".to_string()), (43, 46))),
                         (31, 47),
