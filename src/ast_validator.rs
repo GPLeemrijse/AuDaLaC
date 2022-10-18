@@ -164,8 +164,8 @@ impl ErrorContext {
         }
 
         return ErrorContext {
-            struct_name: struct_name,
-            step_name: step_name,
+            struct_name,
+            step_name,
         };
     }
 }
@@ -495,7 +495,7 @@ fn type_is_defined<'ast>(t: &Type, context: &mut BlockEvaluationContext<'ast>, l
             context.errors.push(ValidationError {
                 error_type: ValidationErrorType::UndefinedType(s.clone()),
                 context: ErrorContext::from_block_context(context),
-                loc: loc,
+                loc,
             });
             return false;
         }
