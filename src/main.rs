@@ -38,7 +38,7 @@ fn main() {
 
             let errors = validate_ast(&program);
 
-            if errors.len() > 0 {
+            if !errors.is_empty() {
                 let file = SimpleFile::new(lopl_file_loc, lopl_program_text);
                 let writer = StandardStream::stderr(ColorChoice::Always);
                 let config = codespan_reporting::term::Config::default();
