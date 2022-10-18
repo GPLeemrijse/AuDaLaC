@@ -163,7 +163,7 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(structs) = result {
             assert_eq!(structs.len(), 2);
-            assert!(structs[0].name == "ABC".to_string());
+            assert!(structs[0].name == *"ABC");
             assert_eq!(
                 structs[0].parameters,
                 vec![
@@ -175,10 +175,10 @@ mod tests {
                     )
                 ]
             );
-            assert!(structs[0].steps[0].name == "step1".to_string());
-            assert!(structs[1].name == "DEF".to_string());
-            assert!(structs[1].parameters.len() == 0);
-            assert!(structs[1].steps.len() == 0);
+            assert!(structs[0].steps[0].name == *"step1");
+            assert!(structs[1].name == *"DEF");
+            assert!(structs[1].parameters.is_empty());
+            assert!(structs[1].steps.is_empty());
         }
     }
 
@@ -188,11 +188,11 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(steps) = result {
             assert_eq!(steps.len(), 2);
-            assert!(steps[0].name == "init".to_string());
+            assert!(steps[0].name == *"init");
             assert!(matches!(steps[0].statements[0], Stat::Assignment { .. }));
             assert!(matches!(steps[0].statements[1], Stat::Declaration { .. }));
-            assert!(steps[1].name == "update".to_string());
-            assert!(steps[1].statements.len() == 0);
+            assert!(steps[1].name == *"update");
+            assert!(steps[1].statements.is_empty());
         }
     }
 

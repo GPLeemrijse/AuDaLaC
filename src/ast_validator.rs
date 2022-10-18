@@ -313,7 +313,7 @@ fn check_uniqueness_of_parameters<'ast>(
         if let Some((n, _, l)) = params[0..idx].iter().find(|p| p.0 == *pname) {
             context.errors.push(ValidationError {
                 error_type: ValidationErrorType::ParameterDefinedTwice(n.clone(), *l),
-                context: ErrorContext::from_block_context(&context),
+                context: ErrorContext::from_block_context(context),
                 loc: *ploc,
             });
         }
@@ -329,7 +329,7 @@ fn check_uniqueness_of_structs<'ast>(
         if let Some(s) = structs[0..idx].iter().find(|s1| s1.name == cur_struct.name) {
             context.errors.push(ValidationError {
                 error_type: ValidationErrorType::StructDefinedTwice(s.loc),
-                context: ErrorContext::from_block_context(&context),
+                context: ErrorContext::from_block_context(context),
                 loc: cur_struct.loc,
             });
         }
@@ -345,7 +345,7 @@ fn check_uniqueness_of_steps<'ast>(
         if let Some(s) = steps[0..idx].iter().find(|s1| s1.name == step.name) {
             context.errors.push(ValidationError {
                 error_type: ValidationErrorType::StepDefinedTwice(s.loc),
-                context: ErrorContext::from_block_context(&context),
+                context: ErrorContext::from_block_context(context),
                 loc: step.loc,
             });
         }
@@ -361,9 +361,9 @@ fn check_statement_block<'ast>(
 
         match stmt {
             Declaration(decl_type, id, exp, loc) => {
-                if type_is_defined(decl_type, context, loc.clone()) {
+                if type_is_defined(decl_type, context, *loc) {
                     // Make sure id is not used before
-                    if let Some((_, l)) = get_type_from_context(&id, context) {
+                    if let Some((_, l)) = get_type_from_context(id, context) {
                         context.errors.push(ValidationError {
                             error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone(), l),
                             context: ErrorContext::from_block_context(context),
@@ -434,7 +434,7 @@ fn get_var_type<'ast>(
     loc: &'ast Loc,
 ) -> Option<(Type, Loc)> {
     debug_assert!(
-        parts.len() > 0,
+        !parts.is_empty(),
         "The length of `parts` should be at least 1."
     );
 
@@ -486,7 +486,7 @@ fn get_var_type<'ast>(
             }
         }
     }
-    return found_type;
+    found_type
 }
 
 fn type_is_defined<'ast>(t: &Type, context: &mut BlockEvaluationContext<'ast>, loc: Loc) -> bool {
@@ -500,7 +500,7 @@ fn type_is_defined<'ast>(t: &Type, context: &mut BlockEvaluationContext<'ast>, l
             return false;
         }
     }
-    return true;
+    true
 }
 
 /// returned Loc is the location where the variable or struct was declared
@@ -510,10 +510,10 @@ fn get_type_from_context<'ast>(
 ) -> Option<(Type, Loc)> {
     for scope in &context.vars {
         if let Some((t, l)) = get_type_from_scope(id, scope) {
-            return Some((t.clone(), l));
+            return Some((t, l));
         }
     }
-    return None;
+    None
 }
 
 /// returned Loc is the location where the variable or struct was declared
@@ -526,7 +526,7 @@ fn get_type_from_scope<'ast>(
             return Some((var_type.clone(), *loc));
         }
     }
-    return None;
+    None
 }
 
 fn get_expr_type<'ast>(
@@ -551,15 +551,15 @@ fn get_expr_type<'ast>(
             if bin_type == None {
                 context.errors.push(ValidationError {
                     error_type: ValidationErrorType::InvalidTypesForOperator(
-                        l_type.unwrap().clone(),
+                        l_type.unwrap(),
                         code.clone(),
-                        r_type.unwrap().clone(),
+                        r_type.unwrap(),
                     ),
                     context: ErrorContext::from_block_context(context),
                     loc: *loc,
                 });
             }
-            return bin_type;
+            bin_type
         }
         UnOp(code, e, loc) => match code {
             UnOpcode::Negation => {
@@ -574,7 +574,7 @@ fn get_expr_type<'ast>(
                         return None;
                     }
                 }
-                return e_type;
+                e_type
             }
         },
         Constructor(id, exps, loc) => {
@@ -619,9 +619,9 @@ fn get_expr_type<'ast>(
                         }
                     }
                 }
-                return Some(cons_type);
+                Some(cons_type)
             } else {
-                return None;
+                None
             }
         }
         Var(parts, loc) => get_var_type(parts, context, loc).map(|(t, _)| t),
@@ -638,7 +638,7 @@ fn get_expr_type<'ast>(
                         t => {
                             context.errors.push(ValidationError {
                                 error_type: ValidationErrorType::NoNullLiteralForType(
-                                    t.as_ref().map(|a| a.clone()),
+                                    t.as_ref().cloned(),
                                 ),
                                 context: ErrorContext::from_block_context(context),
                                 loc: *loc,
