@@ -1,0 +1,493 @@
+   Compiling loplparser v0.1.0 (/home/gpleemrijse/repos/loplparser)
+warning: `Vec<T>` is already on the heap, the boxing is unnecessary
+  --> src/ast.rs:39:25
+   |
+39 |     Constructor(String, Vec<Box<Exp>>, Loc),
+   |                         ^^^^^^^^^^^^^ help: try: `Vec<Exp>`
+   |
+   = note: `#[warn(clippy::vec_box)]` on by default
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#vec_box
+
+warning: variant name ends with the enum's name
+  --> src/ast.rs:53:5
+   |
+53 |     NamedType(String),
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(clippy::enum_variant_names)]` on by default
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#enum_variant_names
+
+warning: variant name ends with the enum's name
+  --> src/ast.rs:54:5
+   |
+54 |     StringType,
+   |     ^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#enum_variant_names
+
+warning: variant name ends with the enum's name
+  --> src/ast.rs:55:5
+   |
+55 |     NatType,
+   |     ^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#enum_variant_names
+
+warning: variant name ends with the enum's name
+  --> src/ast.rs:56:5
+   |
+56 |     IntType,
+   |     ^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#enum_variant_names
+
+warning: variant name ends with the enum's name
+  --> src/ast.rs:57:5
+   |
+57 |     BoolType,
+   |     ^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#enum_variant_names
+
+warning: all variants have the same postfix: `Type`
+  --> src/ast.rs:52:1
+   |
+52 | / pub enum Type {
+53 | |     NamedType(String),
+54 | |     StringType,
+55 | |     NatType,
+56 | |     IntType,
+57 | |     BoolType,
+58 | | }
+   | |_^
+   |
+   = help: remove the postfixes and use full paths to the variants instead of glob imports
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#enum_variant_names
+
+warning: unneeded `return` statement
+  --> src/ast.rs:62:9
+   |
+62 |         return self == t || (*t == Type::IntType && *self == Type::NatType);
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `self == t || (*t == Type::IntType && *self == Type::NatType)`
+   |
+   = note: `#[warn(clippy::needless_return)]` on by default
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: all variants have the same postfix: `Lit`
+  --> src/ast.rs:80:1
+   |
+80 | / pub enum Literal {
+81 | |     NatLit(u32),
+82 | |     IntLit(i32),
+83 | |     BoolLit(bool),
+...  |
+86 | |     ThisLit,
+87 | | }
+   | |_^
+   |
+   = help: remove the postfixes and use full paths to the variants instead of glob imports
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#enum_variant_names
+
+warning: unneeded `return` statement
+  --> src/ast_validator.rs:75:9
+   |
+75 |         return Label::primary((), self.loc()).with_message(self.label());
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `Label::primary((), self.loc()).with_message(self.label())`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: unneeded `return` statement
+  --> src/ast_validator.rs:79:9
+   |
+79 |         return self.loc.0..self.loc.1;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `self.loc.0..self.loc.1`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: useless use of `format!`
+   --> src/ast_validator.rs:123:17
+    |
+123 |                 format!("The null literal is not defined in this context.")
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using `.to_string()`: `"The null literal is not defined in this context.".to_string()`
+    |
+    = note: `#[warn(clippy::useless_format)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#useless_format
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:166:9
+    |
+166 | /         return ErrorContext {
+167 | |             struct_name,
+168 | |             step_name,
+169 | |         };
+    | |__________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+help: remove `return`
+    |
+166 ~         ErrorContext {
+167 +             struct_name,
+168 +             step_name,
+169 +         }
+    |
+
+warning: writing `&String` instead of `&str` involves a new object where a slice will do
+   --> src/ast_validator.rs:183:45
+    |
+183 |     fn add_to_var_scope(&'eval mut self, s: &'ast String, t: &'ast Type, l: &'ast Loc) {
+    |                                             ^^^^^^^^^^^^
+    |
+    = note: `#[warn(clippy::ptr_arg)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#ptr_arg
+help: change this to
+    |
+183 ~     fn add_to_var_scope(&'eval mut self, s: &'ast str, t: &'ast Type, l: &'ast Loc) {
+184 |         if let Some(v) = self.vars.last_mut() {
+185 ~             v.push((s.to_owned(), t.clone(), l.clone()));
+    |
+
+warning: using `clone` on type `(usize, usize)` which implements the `Copy` trait
+   --> src/ast_validator.rs:185:43
+    |
+185 |             v.push((s.clone(), t.clone(), l.clone()));
+    |                                           ^^^^^^^^^ help: try dereferencing it: `*l`
+    |
+    = note: `#[warn(clippy::clone_on_copy)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#clone_on_copy
+
+warning: redundant pattern matching, consider using `is_none()`
+   --> src/ast_validator.rs:199:16
+    |
+199 |         if let None = self.vars.pop() {
+    |         -------^^^^------------------ help: try this: `if self.vars.pop().is_none()`
+    |
+    = note: `#[warn(clippy::redundant_pattern_matching)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_pattern_matching
+
+warning: explicit lifetimes given in parameter types where they could be elided (or replaced with `'_` if needed by type declaration)
+   --> src/ast_validator.rs:205:1
+    |
+205 | pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(clippy::needless_lifetimes)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_lifetimes
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:254:5
+    |
+254 |     return context.errors;
+    |     ^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `context.errors`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: writing `&Vec` instead of `&[_]` involves a new object where a slice will do
+   --> src/ast_validator.rs:309:13
+    |
+309 |     params: &'ast Vec<(String, Type, Loc)>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `&'ast [(String, Type, Loc)]`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#ptr_arg
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src/ast_validator.rs:316:59
+    |
+316 |                 context: ErrorContext::from_block_context(&context),
+    |                                                           ^^^^^^^^ help: change this to: `context`
+    |
+    = note: `#[warn(clippy::needless_borrow)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrow
+
+warning: writing `&Vec` instead of `&[_]` involves a new object where a slice will do
+   --> src/ast_validator.rs:324:14
+    |
+324 |     structs: &'ast Vec<LoplStruct>,
+    |              ^^^^^^^^^^^^^^^^^^^^^ help: change this to: `&'ast [LoplStruct]`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#ptr_arg
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src/ast_validator.rs:332:59
+    |
+332 |                 context: ErrorContext::from_block_context(&context),
+    |                                                           ^^^^^^^^ help: change this to: `context`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrow
+
+warning: writing `&Vec` instead of `&[_]` involves a new object where a slice will do
+   --> src/ast_validator.rs:340:12
+    |
+340 |     steps: &'ast Vec<Step>,
+    |            ^^^^^^^^^^^^^^^ help: change this to: `&'ast [Step]`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#ptr_arg
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src/ast_validator.rs:348:59
+    |
+348 |                 context: ErrorContext::from_block_context(&context),
+    |                                                           ^^^^^^^^ help: change this to: `context`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrow
+
+warning: using `clone` on type `(usize, usize)` which implements the `Copy` trait
+   --> src/ast_validator.rs:364:56
+    |
+364 |                 if type_is_defined(decl_type, context, loc.clone()) {
+    |                                                        ^^^^^^^^^^^ help: try dereferencing it: `*loc`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#clone_on_copy
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src/ast_validator.rs:366:65
+    |
+366 |                     if let Some((_, l)) = get_type_from_context(&id, context) {
+    |                                                                 ^^^ help: change this to: `id`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrow
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:489:5
+    |
+489 |     return found_type;
+    |     ^^^^^^^^^^^^^^^^^^ help: remove `return`: `found_type`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: length comparison to zero
+   --> src/ast_validator.rs:437:9
+    |
+437 |         parts.len() > 0,
+    |         ^^^^^^^^^^^^^^^ help: using `!is_empty` is clearer and more explicit: `!parts.is_empty()`
+    |
+    = note: `#[warn(clippy::len_zero)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#len_zero
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:503:5
+    |
+503 |     return true;
+    |     ^^^^^^^^^^^^ help: remove `return`: `true`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: redundant clone
+   --> src/ast_validator.rs:513:27
+    |
+513 |             return Some((t.clone(), l));
+    |                           ^^^^^^^^ help: remove this
+    |
+    = note: `#[warn(clippy::redundant_clone)]` on by default
+note: this value is dropped without further use
+   --> src/ast_validator.rs:513:26
+    |
+513 |             return Some((t.clone(), l));
+    |                          ^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:516:5
+    |
+516 |     return None;
+    |     ^^^^^^^^^^^^ help: remove `return`: `None`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: explicit lifetimes given in parameter types where they could be elided (or replaced with `'_` if needed by type declaration)
+   --> src/ast_validator.rs:520:1
+    |
+520 | / fn get_type_from_scope<'ast>(
+521 | |     id: &'ast String,
+522 | |     scope: &Vec<(String, Type, Loc)>,
+523 | | ) -> Option<(Type, Loc)> {
+    | |________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_lifetimes
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:529:5
+    |
+529 |     return None;
+    |     ^^^^^^^^^^^^ help: remove `return`: `None`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: redundant clone
+   --> src/ast_validator.rs:554:40
+    |
+554 |                         l_type.unwrap().clone(),
+    |                                        ^^^^^^^^ help: remove this
+    |
+note: this value is dropped without further use
+   --> src/ast_validator.rs:554:25
+    |
+554 |                         l_type.unwrap().clone(),
+    |                         ^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: redundant clone
+   --> src/ast_validator.rs:556:40
+    |
+556 |                         r_type.unwrap().clone(),
+    |                                        ^^^^^^^^ help: remove this
+    |
+note: this value is dropped without further use
+   --> src/ast_validator.rs:556:25
+    |
+556 |                         r_type.unwrap().clone(),
+    |                         ^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:562:13
+    |
+562 |             return bin_type;
+    |             ^^^^^^^^^^^^^^^^ help: remove `return`: `bin_type`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:577:17
+    |
+577 |                 return e_type;
+    |                 ^^^^^^^^^^^^^^ help: remove `return`: `e_type`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:622:17
+    |
+622 |                 return Some(cons_type);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `Some(cons_type)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: unneeded `return` statement
+   --> src/ast_validator.rs:624:17
+    |
+624 |                 return None;
+    |                 ^^^^^^^^^^^^ help: remove `return`: `None`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: you are using an explicit closure for cloning elements
+   --> src/ast_validator.rs:641:37
+    |
+641 | ...                   t.as_ref().map(|a| a.clone()),
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider calling the dedicated `cloned` method: `t.as_ref().cloned()`
+    |
+    = note: `#[warn(clippy::map_clone)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_clone
+
+warning: match expression looks like `matches!` macro
+   --> src/ast_validator.rs:660:46
+    |
+660 |       let is_arithmetic = |o: &'ast BinOpcode| match o {
+    |  ______________________________________________^
+661 | |         Plus | Minus | Mult | Div | Mod => true,
+662 | |         _ => false,
+663 | |     };
+    | |_____^ help: try this: `matches!(o, Plus | Minus | Mult | Div | Mod)`
+    |
+    = note: `#[warn(clippy::match_like_matches_macro)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#match_like_matches_macro
+
+warning: match expression looks like `matches!` macro
+   --> src/ast_validator.rs:664:46
+    |
+664 |       let is_comparison = |o: &'ast BinOpcode| match o {
+    |  ______________________________________________^
+665 | |         Equals | NotEquals | LessThanEquals | GreaterThanEquals | LessThan | GreaterThan => true,
+666 | |         _ => false,
+667 | |     };
+    | |_____^ help: try this: `matches!(o, Equals | NotEquals | LessThanEquals | GreaterThanEquals | LessThan | GreaterThan)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#match_like_matches_macro
+
+warning: this function has too many arguments (11/7)
+     --> /home/gpleemrijse/repos/loplparser/target/debug/build/loplparser-44e08f069386151e/out/lopl.rs:19693:1
+      |
+19693 | / fn __action13<
+19694 | |     'input,
+19695 | | >(
+19696 | |     input: &'input str,
+...     |
+19706 | |     (_, end, _): (usize, usize, usize),
+19707 | | ) -> LoplStruct
+      | |_______________^
+      |
+      = note: `#[warn(clippy::too_many_arguments)]` on by default
+      = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+     --> /home/gpleemrijse/repos/loplparser/target/debug/build/loplparser-44e08f069386151e/out/lopl.rs:19777:1
+      |
+19777 | / fn __action19<
+19778 | |     'input,
+19779 | | >(
+19780 | |     input: &'input str,
+...     |
+19788 | |     (_, _, _): (usize, &'input str, usize),
+19789 | | ) -> Stat
+      | |_________^
+      |
+      = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+     --> /home/gpleemrijse/repos/loplparser/target/debug/build/loplparser-44e08f069386151e/out/lopl.rs:19795:1
+      |
+19795 | / fn __action20<
+19796 | |     'input,
+19797 | | >(
+19798 | |     input: &'input str,
+...     |
+19805 | |     (_, end, _): (usize, usize, usize),
+19806 | | ) -> Stat
+      | |_________^
+      |
+      = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+     --> /home/gpleemrijse/repos/loplparser/target/debug/build/loplparser-44e08f069386151e/out/lopl.rs:21309:1
+      |
+21309 | / fn __action122<
+21310 | |     'input,
+21311 | | >(
+21312 | |     input: &'input str,
+...     |
+21319 | |     __6: (usize, &'input str, usize),
+21320 | | ) -> Stat
+      | |_________^
+      |
+      = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+warning: this function has too many arguments (10/7)
+     --> /home/gpleemrijse/repos/loplparser/target/debug/build/loplparser-44e08f069386151e/out/lopl.rs:21439:1
+      |
+21439 | / fn __action126<
+21440 | |     'input,
+21441 | | >(
+21442 | |     input: &'input str,
+...     |
+21451 | |     __8: (usize, usize, usize),
+21452 | | ) -> LoplStruct
+      | |_______________^
+      |
+      = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+     --> /home/gpleemrijse/repos/loplparser/target/debug/build/loplparser-44e08f069386151e/out/lopl.rs:22095:1
+      |
+22095 | / fn __action150<
+22096 | |     'input,
+22097 | | >(
+22098 | |     input: &'input str,
+...     |
+22106 | |     __7: (usize, &'input str, usize),
+22107 | | ) -> LoplStruct
+      | |_______________^
+      |
+      = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#too_many_arguments
+
+warning: `loplparser` (bin "loplparser") generated 546 warnings
+    Finished dev [unoptimized + debuginfo] target(s) in 1.95s

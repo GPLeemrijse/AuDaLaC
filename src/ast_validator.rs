@@ -174,7 +174,7 @@ impl ErrorContext {
 struct BlockEvaluationContext<'ast> {
     current_struct_name: Option<&'ast String>,
     current_step_name: Option<&'ast String>,
-    structs: &'ast Vec<Box<LoplStruct>>,
+    structs: &'ast Vec<LoplStruct>,
     vars: Vec<Vec<(String, Type, Loc)>>,
     errors: Vec<ValidationError>,
 }
@@ -321,7 +321,7 @@ fn check_uniqueness_of_parameters<'ast>(
 }
 
 fn check_uniqueness_of_structs<'ast>(
-    structs: &'ast Vec<Box<LoplStruct>>,
+    structs: &'ast Vec<LoplStruct>,
     context: &mut BlockEvaluationContext<'ast>,
 ) {
     for (idx, cur_struct) in structs.iter().enumerate() {
@@ -337,7 +337,7 @@ fn check_uniqueness_of_structs<'ast>(
 }
 
 fn check_uniqueness_of_steps<'ast>(
-    steps: &'ast Vec<Box<Step>>,
+    steps: &'ast Vec<Step>,
     context: &mut BlockEvaluationContext<'ast>,
 ) {
     for (idx, step) in steps.iter().enumerate() {
@@ -353,13 +353,13 @@ fn check_uniqueness_of_steps<'ast>(
 }
 
 fn check_statement_block<'ast>(
-    block: &'ast Vec<Box<Stat>>,
+    block: &'ast Vec<Stat>,
     context: &mut BlockEvaluationContext<'ast>,
 ) {
     for stmt in block {
         use crate::ast::Stat::*;
 
-        match &**stmt {
+        match stmt {
             Declaration(decl_type, id, exp, loc) => {
                 if type_is_defined(decl_type, context, loc.clone()) {
                     // Make sure id is not used before

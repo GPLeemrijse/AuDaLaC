@@ -5,7 +5,7 @@ use std::fmt::Display;
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct Program {
-    pub structs: Vec<Box<LoplStruct>>,
+    pub structs: Vec<LoplStruct>,
     pub schedule: Box<Schedule>,
 }
 
@@ -20,7 +20,7 @@ pub enum Schedule {
 #[derive(Eq, PartialEq, Debug)]
 pub struct Step {
     pub name: String,
-    pub statements: Vec<Box<Stat>>,
+    pub statements: Vec<Stat>,
     pub loc: Loc,
 }
 
@@ -28,7 +28,7 @@ pub struct Step {
 pub struct LoplStruct {
     pub name: String,
     pub parameters: Vec<(String, Type, Loc)>,
-    pub steps: Vec<Box<Step>>,
+    pub steps: Vec<Step>,
     pub loc: Loc,
 }
 
@@ -36,14 +36,14 @@ pub struct LoplStruct {
 pub enum Exp {
     BinOp(Box<Exp>, BinOpcode, Box<Exp>, Loc),
     UnOp(UnOpcode, Box<Exp>, Loc),
-    Constructor(String, Vec<Box<Exp>>, Loc),
+    Constructor(String, Vec<Exp>, Loc),
     Var(Vec<String>, Loc),
     Lit(Literal, Loc),
 }
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum Stat {
-    IfThen(Box<Exp>, Vec<Box<Stat>>, Loc),
+    IfThen(Box<Exp>, Vec<Stat>, Loc),
     Declaration(Type, String, Box<Exp>, Loc),
     Assignment(Vec<String>, Box<Exp>, Loc),
 }
@@ -163,9 +163,9 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(structs) = result {
             assert_eq!(structs.len(), 2);
-            assert!((*structs[0]).name == "ABC".to_string());
+            assert!(structs[0].name == "ABC".to_string());
             assert_eq!(
-                (*structs[0]).parameters,
+                structs[0].parameters,
                 vec![
                     ("param1".to_string(), Type::NatType, (12, 24)),
                     (
@@ -175,10 +175,10 @@ mod tests {
                     )
                 ]
             );
-            assert!(*structs[0].steps[0].name == "step1".to_string());
-            assert!((*structs[1]).name == "DEF".to_string());
-            assert!((*structs[1]).parameters.len() == 0);
-            assert!((*structs[1]).steps.len() == 0);
+            assert!(structs[0].steps[0].name == "step1".to_string());
+            assert!(structs[1].name == "DEF".to_string());
+            assert!(structs[1].parameters.len() == 0);
+            assert!(structs[1].steps.len() == 0);
         }
     }
 
@@ -188,11 +188,11 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(steps) = result {
             assert_eq!(steps.len(), 2);
-            assert!((*steps[0]).name == "init".to_string());
-            assert!(matches!(*steps[0].statements[0], Stat::Assignment { .. }));
-            assert!(matches!(*steps[0].statements[1], Stat::Declaration { .. }));
-            assert!(*steps[1].name == "update".to_string());
-            assert!((*steps[1]).statements.len() == 0);
+            assert!(steps[0].name == "init".to_string());
+            assert!(matches!(steps[0].statements[0], Stat::Assignment { .. }));
+            assert!(matches!(steps[0].statements[1], Stat::Declaration { .. }));
+            assert!(steps[1].name == "update".to_string());
+            assert!(steps[1].statements.len() == 0);
         }
     }
 
@@ -204,17 +204,17 @@ mod tests {
             Stat::IfThen(
                 Box::new(Exp::Lit(Literal::BoolLit(true), (3, 7))),
                 vec![
-                    Box::new(Stat::Assignment(
+                    Stat::Assignment(
                         vec!["id".to_string(), "id2".to_string()],
                         Box::new(Exp::Lit(Literal::NullLit, (25, 29))),
                         (15, 30),
-                    )),
-                    Box::new(Stat::Declaration(
+                    ),
+                    Stat::Declaration(
                         Type::StringType,
                         "b".to_string(),
                         Box::new(Exp::Lit(Literal::StringLit("a".to_string()), (43, 46))),
                         (31, 47),
-                    )),
+                    ),
                 ],
                 (3, 7),
             ),
@@ -243,8 +243,8 @@ mod tests {
             Exp::Constructor(
                 "somethingelse".to_string(),
                 vec![
-                    Box::new(Exp::Var(vec!["a".to_string(), "b".to_string()], (14, 17))),
-                    Box::new(Exp::Lit(Literal::StringLit("test".to_string()), (19, 25))),
+                    Exp::Var(vec!["a".to_string(), "b".to_string()], (14, 17)),
+                    Exp::Lit(Literal::StringLit("test".to_string()), (19, 25)),
                 ],
                 (0, 26),
             ),
@@ -362,7 +362,7 @@ mod tests {
     fn check_expression(string: &str, e: Exp) {
         match ExpParser::new().parse(string) {
             Ok(exp) => {
-                if *exp != e {
+                if exp != e {
                     panic!(
                         "The string '{}' is not equal to:\n'{:?}'\nreceived:\n'{:?}'",
                         string, e, exp
@@ -376,7 +376,7 @@ mod tests {
     fn check_statement(string: &str, s: Stat) {
         match StatParser::new().parse(string) {
             Ok(stat) => {
-                if *stat != s {
+                if stat != s {
                     panic!(
                         "The string '{}' is not equal to:\n'{:?}'\nreceived:\n'{:?}'",
                         string, s, stat

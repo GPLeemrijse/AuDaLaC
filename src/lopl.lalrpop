@@ -25,8 +25,8 @@ match {
     _
 }
 
-Tier<Op, NextTier>: Box<Exp> = {
-    <start:@L> <l:Tier<Op, NextTier>> <o:Op> <r:NextTier> <end:@R> => Box::new(Exp::BinOp(l, o, r, (start, end))),
+Tier<Op, NextTier>: Exp = {
+    <start:@L> <l:Tier<Op, NextTier>> <o:Op> <r:NextTier> <end:@R> => Exp::BinOp(Box::new(l), o, Box::new(r), (start, end)),
     NextTier
 };
 
@@ -81,26 +81,26 @@ BottomSchedule: Box<Schedule> = {
     <start:@L> "Fix" "(" <s:Schedule> ")" <end:@R> => Box::new(Schedule::Fixpoint(s, (start, end))),
 }
 
-Struct: Box<LoplStruct> = {
+Struct: LoplStruct = {
     <start:@L> "struct" <name:SimpleID>
     "(" <parameters:Pars> ")" 
-    "{" <steps:Steps> "}" <end:@R> => Box::new(LoplStruct{name: name, parameters: parameters, steps: steps, loc: (start, end)})
+    "{" <steps:Steps> "}" <end:@R> => LoplStruct{name: name, parameters: parameters, steps: steps, loc: (start, end)}
 }
 
 Pars = Comma<Par>;
 Par : (String, Type, Loc) = <start:@L> <id:SimpleID> ":" <t:Type> <end:@R> => (id, t, (start, end));
 
-Step: Box<Step> = {
-    <start:@L> <name:SimpleID> "{" <statements:Stats> "}" <end:@R> => Box::new(Step {name : name, statements: statements, loc : (start, end)})
+Step: Step = {
+    <start:@L> <name:SimpleID> "{" <statements:Stats> "}" <end:@R> => Step {name : name, statements: statements, loc : (start, end)}
 }
 
-pub Steps: Vec<Box<Step>> = Step*;
-pub Structs: Vec<Box<LoplStruct>> = Struct+;
+pub Steps: Vec<Step> = Step*;
+pub Structs: Vec<LoplStruct> = Struct+;
 
-pub Stat: Box<Stat> = {
-    "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Box::new(Stat::IfThen(e, s, (start, end))),
-    <start:@L> <t:Type> <id:SimpleID> ":=" <e:Exp> ";" <end:@R> => Box::new(Stat::Declaration(t, id, e, (start, end))),
-    <start:@L> <v:Var> ":=" <e:Exp> ";" <end:@R> => Box::new(Stat::Assignment(v, e, (start, end))),
+pub Stat: Stat = {
+    "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Stat::IfThen(Box::new(e), s, (start, end)),
+    <start:@L> <t:Type> <id:SimpleID> ":=" <e:Exp> ";" <end:@R> => Stat::Declaration(t, id, Box::new(e), (start, end)),
+    <start:@L> <v:Var> ":=" <e:Exp> ";" <end:@R> => Stat::Assignment(v, Box::new(e), (start, end)),
 }
 
 Stats = Stat*;
@@ -120,20 +120,20 @@ EqExp = Tier<EqualityOperator, CompExp>;
 CompExp = Tier<CompareOperator, AddSubExp>;
 AddSubExp = Tier<AddSubOperator, MultDivExp>;
 MultDivExp = Tier<MultDivModOperator, NegExp>;
-NegExp: Box<Exp> = {
-    <start:@L> <o:NegationOperator> <e:NegExp> <end:@R> => Box::new(Exp::UnOp(o, e, (start, end))),
+NegExp: Exp = {
+    <start:@L> <o:NegationOperator> <e:NegExp> <end:@R> => Exp::UnOp(o, Box::new(e), (start, end)),
     BottomExp,
 }
 
-BottomExp: Box<Exp> = {
-    <start:@L> "null" <end:@R> => Box::new(Exp::Lit(Literal::NullLit, (start, end))),
-    <start:@L> "this" <end:@R> => Box::new(Exp::Lit(Literal::ThisLit, (start, end))),
-    <start:@L> <e:NAT> <end:@R> => Box::new(Exp::Lit(Literal::NatLit(u32::from_str(e).expect("Could not convert to u32.")), (start, end))),
-    <start:@L> <e:INT> <end:@R> => Box::new(Exp::Lit(Literal::IntLit(i32::from_str(e).expect("Could not convert to i32.")), (start, end))),
-    <start:@L> <e:STRING> <end:@R> => Box::new(Exp::Lit(Literal::StringLit(e[1..e.len()-1].to_string()), (start, end))),
-    <start:@L> <e:BOOL> <end:@R> => Box::new(Exp::Lit(Literal::BoolLit(e.parse().unwrap()), (start, end))),
-    <start:@L> <id:SimpleID> "(" <e:Exps> ")" <end:@R> => Box::new(Exp::Constructor(id, e, (start, end))),
-    <start:@L> <v:Var> <end:@R> => Box::new(Exp::Var(v, (start, end))),
+BottomExp: Exp = {
+    <start:@L> "null" <end:@R> => Exp::Lit(Literal::NullLit, (start, end)),
+    <start:@L> "this" <end:@R> => Exp::Lit(Literal::ThisLit, (start, end)),
+    <start:@L> <e:NAT> <end:@R> => Exp::Lit(Literal::NatLit(u32::from_str(e).expect("Could not convert to u32.")), (start, end)),
+    <start:@L> <e:INT> <end:@R> => Exp::Lit(Literal::IntLit(i32::from_str(e).expect("Could not convert to i32.")), (start, end)),
+    <start:@L> <e:STRING> <end:@R> => Exp::Lit(Literal::StringLit(e[1..e.len()-1].to_string()), (start, end)),
+    <start:@L> <e:BOOL> <end:@R> => Exp::Lit(Literal::BoolLit(e.parse().unwrap()), (start, end)),
+    <start:@L> <id:SimpleID> "(" <e:Exps> ")" <end:@R> => Exp::Constructor(id, e, (start, end)),
+    <start:@L> <v:Var> <end:@R> => Exp::Var(v, (start, end)),
     "(" <Exp> ")"
 }
 
