@@ -1,6 +1,6 @@
 Program {
     structs: [
-        LoplStruct {
+        ADLStruct {
             name: "Node",
             parameters: [
                 (
@@ -204,7 +204,7 @@ Program {
                 },
             ],
         },
-        LoplStruct {
+        ADLStruct {
             name: "Edge",
             parameters: [
                 (

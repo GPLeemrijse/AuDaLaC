@@ -1,5 +1,5 @@
 [package]
-name = "loplparser"
+name = "adl"
 version = "0.1.0"
 edition = "2021"
 authors = ["G. P. Leemrijse <g.p.leemrijse@student.tue.nl>"]

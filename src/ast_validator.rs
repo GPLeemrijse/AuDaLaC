@@ -174,7 +174,7 @@ impl ErrorContext {
 struct BlockEvaluationContext<'ast> {
     current_struct_name: Option<&'ast String>,
     current_step_name: Option<&'ast String>,
-    structs: &'ast Vec<LoplStruct>,
+    structs: &'ast Vec<ADLStruct>,
     vars: Vec<Vec<(String, Type, Loc)>>,
     errors: Vec<ValidationError>,
 }
@@ -321,7 +321,7 @@ fn check_uniqueness_of_parameters<'ast>(
 }
 
 fn check_uniqueness_of_structs<'ast>(
-    structs: &'ast Vec<LoplStruct>,
+    structs: &'ast Vec<ADLStruct>,
     context: &mut BlockEvaluationContext<'ast>,
 ) {
     for (idx, cur_struct) in structs.iter().enumerate() {

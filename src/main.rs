@@ -1,18 +1,24 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::basic_transpiler::BasicCUDATranspiler;
+use crate::basic_schedule_manager::BasicScheduleManager;
+use crate::transpilation_traits::Transpiler;
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use codespan_reporting::term::{self};
 
 use crate::ast_validator::validate_ast;
-use crate::lopl::ProgramParser;
+use crate::adl::ProgramParser;
 use std::fs;
 
 use clap::clap_app;
 mod ast;
 mod ast_validator;
+mod transpilation_traits;
+mod basic_transpiler;
+mod basic_schedule_manager;
 
-lalrpop_mod!(pub lopl); // synthesized by LALRPOP
+lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
 fn main() {
     let args = clap_app!(LOPL =>
@@ -38,7 +44,13 @@ fn main() {
 
             let errors = validate_ast(&program);
 
-            if !errors.is_empty() {
+            if errors.is_empty() {
+                let schedule_manager : BasicScheduleManager = BasicScheduleManager::new(&program);
+                let result = BasicCUDATranspiler::transpile(&program, &schedule_manager);
+
+                println!("{}", result);
+
+            } else { // Print errors
                 let file = SimpleFile::new(lopl_file_loc, lopl_program_text);
                 let writer = StandardStream::stderr(ColorChoice::Always);
                 let config = codespan_reporting::term::Config::default();

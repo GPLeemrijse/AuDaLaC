@@ -81,10 +81,10 @@ BottomSchedule: Box<Schedule> = {
     <start:@L> "Fix" "(" <s:Schedule> ")" <end:@R> => Box::new(Schedule::Fixpoint(s, (start, end))),
 }
 
-Struct: LoplStruct = {
+Struct: ADLStruct = {
     <start:@L> "struct" <name:SimpleID>
     "(" <parameters:Pars> ")" 
-    "{" <steps:Steps> "}" <end:@R> => LoplStruct{name: name, parameters: parameters, steps: steps, loc: (start, end)}
+    "{" <steps:Steps> "}" <end:@R> => ADLStruct{name: name, parameters: parameters, steps: steps, loc: (start, end)}
 }
 
 Pars = Comma<Par>;
@@ -95,7 +95,7 @@ Step: Step = {
 }
 
 pub Steps: Vec<Step> = Step*;
-pub Structs: Vec<LoplStruct> = Struct+;
+pub Structs: Vec<ADLStruct> = Struct+;
 
 pub Stat: Stat = {
     "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Stat::IfThen(Box::new(e), s, (start, end)),

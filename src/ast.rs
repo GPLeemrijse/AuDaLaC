@@ -5,7 +5,7 @@ use std::fmt::Display;
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct Program {
-    pub structs: Vec<LoplStruct>,
+    pub structs: Vec<ADLStruct>,
     pub schedule: Box<Schedule>,
 }
 
@@ -17,6 +17,17 @@ pub enum Schedule {
     Fixpoint(Box<Schedule>, Loc),
 }
 
+impl Schedule {
+    pub fn fixpoint_depth(&self) -> u32 {
+        use crate::ast::Schedule::*;
+        match self {
+            Sequential(s1, s2, _) => std::cmp::max(s1.fixpoint_depth(), s2.fixpoint_depth()),
+            Fixpoint(s, _) => s.fixpoint_depth() + 1,
+            _ => 0
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct Step {
     pub name: String,
@@ -25,7 +36,7 @@ pub struct Step {
 }
 
 #[derive(Eq, PartialEq, Debug)]
-pub struct LoplStruct {
+pub struct ADLStruct {
     pub name: String,
     pub parameters: Vec<(String, Type, Loc)>,
     pub steps: Vec<Step>,
@@ -132,11 +143,11 @@ pub enum UnOpcode {
 #[cfg(test)]
 mod tests {
     use crate::ast::*;
-    use crate::lopl::ExpParser;
-    use crate::lopl::ScheduleParser;
-    use crate::lopl::StatParser;
-    use crate::lopl::StepsParser;
-    use crate::lopl::StructsParser;
+    use crate::adl::ExpParser;
+    use crate::adl::ScheduleParser;
+    use crate::adl::StatParser;
+    use crate::adl::StepsParser;
+    use crate::adl::StructsParser;
     use lalrpop_util::ParseError::User;
 
     #[test]
