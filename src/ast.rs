@@ -72,6 +72,17 @@ impl Type {
     pub fn can_be_coerced_to_type(&self, t: &Type) -> bool {
         self == t || (*t == Type::Int && *self == Type::Nat)
     }
+
+    pub fn as_c_type(&self) -> String {
+        use Type::*;
+        match self {
+            Named(s) => format!("{s}*").to_string(),
+            String => "string".to_string(),
+            Nat => "unsigned int".to_string(),
+            Int => "int".to_string(),
+            Bool => "bool".to_string(),
+        }
+    }
 }
 
 impl Display for Type {

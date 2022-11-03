@@ -2,6 +2,7 @@
 extern crate lalrpop_util;
 use crate::basic_transpiler::BasicCUDATranspiler;
 use crate::basic_schedule_manager::BasicScheduleManager;
+use crate::basic_struct_manager::BasicStructManager;
 use crate::transpilation_traits::Transpiler;
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
@@ -17,6 +18,7 @@ mod ast_validator;
 mod transpilation_traits;
 mod basic_transpiler;
 mod basic_schedule_manager;
+mod basic_struct_manager;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
@@ -45,8 +47,9 @@ fn main() {
             let errors = validate_ast(&program);
 
             if errors.is_empty() {
-                let schedule_manager : BasicScheduleManager = BasicScheduleManager::new(&program);
-                let result = BasicCUDATranspiler::transpile(&program, &schedule_manager);
+                let schedule_manager = BasicScheduleManager::new(&program);
+                let struct_manager = BasicStructManager::new(&program);
+                let result = BasicCUDATranspiler::transpile(&program, &schedule_manager, &struct_manager);
 
                 println!("{}", result);
 

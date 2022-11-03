@@ -9,7 +9,7 @@ pub struct BasicCUDATranspiler {
 }
 
 impl Transpiler for BasicCUDATranspiler {
-	fn transpile(program: &Program, schedule_manager : &impl ScheduleManager) -> String {
+	fn transpile(program: &Program, schedule_manager : &impl ScheduleManager, struct_manager : &impl StructManager) -> String {
 		let mut includes = String::new();
 		let mut defines = String::new();
 		let mut typedefs = String::new();
@@ -18,18 +18,22 @@ impl Transpiler for BasicCUDATranspiler {
 
 		let mut includes_set : BTreeSet<String> = BTreeSet::new();
 		schedule_manager.add_includes(&mut includes_set);
+		struct_manager.add_includes(&mut includes_set);
 
 		for i in includes_set {
 			includes.push_str(&format!("#include {}\n", i));
 		}
 
 		defines.push_str(&schedule_manager.defines());
+		defines.push_str(&struct_manager.defines());
 		typedefs.push_str(&schedule_manager.struct_typedef());
+		typedefs.push_str(&struct_manager.struct_typedef());
 		globals.push_str(&schedule_manager.globals());
+		globals.push_str(&struct_manager.globals());
 		functs.push_str(&schedule_manager.function_defs());
+		functs.push_str(&struct_manager.function_defs());
 
 		let schedule = schedule_manager.run_schedule();
-		println!("{}", schedule);
 		formatdoc! {"
 			{includes}
 			{defines}

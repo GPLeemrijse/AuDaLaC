@@ -3,7 +3,7 @@ use crate::ast::*;
 
 
 pub trait Transpiler {
-    fn transpile(program: &Program, schedule_manager: &impl ScheduleManager) -> String;
+    fn transpile(program: &Program, schedule_manager: &impl ScheduleManager, struct_manager: &impl StructManager) -> String;
 }
 
 
@@ -18,7 +18,7 @@ pub trait ScheduleManager {
 }
 
 pub trait StructManager {
-    fn includes(&self) -> String;
+    fn add_includes(&self, set: &mut BTreeSet<String>);
     fn defines(&self) -> String;
     fn struct_typedef(&self) -> String;
     fn globals(&self) -> String;
