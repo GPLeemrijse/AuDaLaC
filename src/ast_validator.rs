@@ -708,7 +708,6 @@ mod tests {
             .parse(program_string)
             .expect("ParseError.");
         let errors = validate_ast(&program);
-        println!("{:#?}", errors);
         assert_eq!(errors.len(), 2);
         assert_eq!(
             errors[0],

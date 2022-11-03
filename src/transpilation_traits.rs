@@ -14,7 +14,7 @@ pub trait ScheduleManager {
     fn globals(&self) -> String;
     fn function_defs(&self) -> String;
     fn run_schedule(&self) -> String;
-    fn call_reset_stability(&self) -> String;
+    fn call_set_dirty(&self) -> String;
 }
 
 pub trait StructManager {

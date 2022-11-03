@@ -14,3 +14,4 @@ clap = { version = "^3.2.22", features = ["derive"] }
 assert_cmd = "^2.0.4"
 codespan = "^0.11.1"
 codespan-reporting = "^0.11.1"
+indoc = "1.0"
