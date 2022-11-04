@@ -1,9 +1,7 @@
 use std::collections::BTreeSet;
-use crate::ast::*;
-
 
 pub trait Transpiler {
-    fn transpile(program: &Program, schedule_manager: &impl ScheduleManager, struct_manager: &impl StructManager) -> String;
+    fn transpile(schedule_manager: &impl ScheduleManager, struct_manager: &impl StructManager) -> String;
 }
 
 
@@ -23,6 +21,7 @@ pub trait StructManager {
     fn struct_typedef(&self) -> String;
     fn globals(&self) -> String;
     fn function_defs(&self) -> String;
+    fn kernels(&self) -> String;
     fn pre_main(&self) -> String;
     fn post_main(&self) -> String;
 }

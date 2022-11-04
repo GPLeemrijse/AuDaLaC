@@ -25,7 +25,6 @@ impl ScheduleManager for BasicScheduleManager<'_> {
 			    bool stack[FP_DEPTH];
 			    unsigned int current_level;
 			} FixpointManager;
-			
 		"}.to_string()
 	}
 

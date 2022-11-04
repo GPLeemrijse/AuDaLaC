@@ -49,7 +49,7 @@ fn main() {
             if errors.is_empty() {
                 let schedule_manager = BasicScheduleManager::new(&program);
                 let struct_manager = BasicStructManager::new(&program);
-                let result = BasicCUDATranspiler::transpile(&program, &schedule_manager, &struct_manager);
+                let result = BasicCUDATranspiler::transpile(&schedule_manager, &struct_manager);
 
                 println!("{}", result);
 

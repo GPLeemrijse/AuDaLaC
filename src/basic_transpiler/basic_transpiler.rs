@@ -1,6 +1,5 @@
 use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
-use crate::ast::Program;
 use indoc::formatdoc;
 
 
@@ -9,12 +8,15 @@ pub struct BasicCUDATranspiler {
 }
 
 impl Transpiler for BasicCUDATranspiler {
-	fn transpile(program: &Program, schedule_manager : &impl ScheduleManager, struct_manager : &impl StructManager) -> String {
+	fn transpile(schedule_manager : &impl ScheduleManager, struct_manager : &impl StructManager) -> String {
 		let mut includes = String::new();
 		let mut defines = String::new();
 		let mut typedefs = String::new();
 		let mut globals = String::new();
 		let mut functs = String::new();
+		let mut pre_main = String::new();
+		let mut post_main = String::new();
+		let kernels = struct_manager.kernels();
 
 		let mut includes_set : BTreeSet<String> = BTreeSet::new();
 		schedule_manager.add_includes(&mut includes_set);
@@ -32,17 +34,30 @@ impl Transpiler for BasicCUDATranspiler {
 		globals.push_str(&struct_manager.globals());
 		functs.push_str(&schedule_manager.function_defs());
 		functs.push_str(&struct_manager.function_defs());
+		pre_main.push_str(&struct_manager.pre_main());
+		post_main.push_str(&struct_manager.post_main());
+
 
 		let schedule = schedule_manager.run_schedule();
 		formatdoc! {"
 			{includes}
+
 			{defines}
+
 			{typedefs}
+
 			{globals}
+
 			{functs}
 
+			{kernels}
+
 			int main() {{
+				{pre_main}
+
 			    {schedule}
+
+				{post_main}
 			}}
 		"}
 	}
@@ -51,18 +66,3 @@ impl Transpiler for BasicCUDATranspiler {
 impl BasicCUDATranspiler {
 	
 }
-
-
-static SET_PARAM: &str = r#"#define SET_PARAM(T, P, V) ({T read_val = P; if (read_val != V) {P = V; clear_stability_stack();}})"#;
-
-static STRUCT_MANAGER : &str = r#"typedef struct StructManager {
-	void* structs;
-	unsigned int struct_size;
-	unsigned int nrof_active_structs;
-	unsigned int nrof_active_structs_before_launch;
-} StructManager;"#;
-
-static FP_MANAGER : &str = r#"typedef struct FixpointManager {
-	bool stack[FP_DEPTH];
-	unsigned int current_level;
-} FixpointManager;"#;

@@ -52,6 +52,38 @@ pub enum Exp {
     Lit(Literal, Loc),
 }
 
+impl Exp {
+    pub fn as_c_expression<F: Fn(&String) -> bool>(&self, is_param: &F) -> String {
+        use crate::ast::Exp::*;
+        match self {
+            BinOp(e1, c, e2, _) => {
+                let e1_comp = e1.as_c_expression(is_param);
+                let e2_comp = e2.as_c_expression(is_param);
+
+                format!("({e1_comp} {c} {e2_comp})")
+            },
+            UnOp(c, e, _) => {
+                let e_comp = e.as_c_expression(is_param);
+                format!("({c}{e_comp})")
+            },
+            Constructor(n, args, _) => {
+                let args_comp = args.iter()
+                        .map(|e| e.as_c_expression(is_param))
+                        .reduce(|acc: String, nxt| acc + ", " + &nxt).unwrap();
+
+                format!("create_{n}(&{n}_manager, {args_comp})")
+            },
+            Var(parts, _) => {
+                let is_p = if is_param(&parts[0]) {"self->"} else {""};
+                let p = parts.join("->");
+
+                format!("({is_p}{p})")
+            },
+            Lit(l, _) => l.as_c_literal(),
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Debug)]
 pub enum Stat {
     IfThen(Box<Exp>, Vec<Stat>, Loc),
@@ -83,6 +115,28 @@ impl Type {
             Bool => "bool".to_string(),
         }
     }
+
+    pub fn as_printf(&self) -> String {
+        use Type::*;
+        match self {
+            Named(_) => "%p",
+            String => "%s",
+            Nat => "%u",
+            Int => "%d",
+            Bool => "%u",
+        }.to_string()
+    }
+
+    pub fn as_c_default(&self) -> String {
+        use Type::*;
+        match self {
+            Named(_) => "NULL",
+            String => "\"\"",
+            Nat => "0",
+            Int => "0",
+            Bool => "false",
+        }.to_string()
+    }
 }
 
 impl Display for Type {
@@ -106,6 +160,20 @@ pub enum Literal {
     StringLit(String),
     NullLit,
     ThisLit,
+}
+
+impl Literal {
+    pub fn as_c_literal(&self) -> String {
+        use crate::ast::Literal::*;
+        match self {
+            NatLit(n) => format!("{}", n),
+            IntLit(i) => format!("{}", i),
+            BoolLit(b) => format!("{}", if *b {"true"} else {"false"}),
+            StringLit(s) => format!("\"{}\"", s),
+            NullLit => "NULL".to_string(),
+            ThisLit => "self".to_string(),
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -149,6 +217,15 @@ impl Display for BinOpcode {
 #[derive(Eq, PartialEq, Debug)]
 pub enum UnOpcode {
     Negation,
+}
+
+impl Display for UnOpcode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use crate::ast::UnOpcode::*;
+        match self {
+            Negation => write!(f, "!"),
+        }
+    }
 }
 
 #[cfg(test)]
