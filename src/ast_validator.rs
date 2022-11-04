@@ -276,7 +276,7 @@ fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationC
         TypedStepCall(struct_name, step_name, loc) => {
             let strct = context.structs.iter().find(|s| s.name == *struct_name);
             if let Some(s) = strct {
-                if !s.steps.iter().any(|stp| stp.name == *step_name) {
+                if step_name != "print" && !s.steps.iter().any(|stp| stp.name == *step_name) {
                     context.errors.push(ValidationError {
                         error_type: ValidationErrorType::UndefinedStep,
                         context: ErrorContext {

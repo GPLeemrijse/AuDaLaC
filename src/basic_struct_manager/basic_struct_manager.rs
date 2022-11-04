@@ -123,6 +123,16 @@ impl StructManager for BasicStructManager<'_> {
 					__host__ __device__ void print_{n}({n}* m){{
 					    printf("{n}: %p{fmt}\n", m{cast_params});
 					}}
+
+					__global__ void {n}_print() {{
+					    int i = threadIdx.x;
+					    if(i >= {n}_manager.nrof_active_structs_before_launch)
+					        return;
+
+					    {n}* self = ({n}*)((char*){n}_manager.structs + {n}_manager.struct_size * i);
+
+					    print_{n}(self);
+					}}
 				"#}
 			);
 		}
@@ -149,15 +159,6 @@ impl StructManager for BasicStructManager<'_> {
 
 			res.push_str(&formatdoc!{"
 				{n}* null_{n} = host_create_{n}(&{n}_manager{param_defaults});
-			"});
-		}
-		res.push('\n');
-
-		for strct in &self.program.structs {
-			let n = &strct.name;
-
-			res.push_str(&formatdoc!{"
-				ready_struct_manager(&{n}_manager);
 			"});
 		}
 		res.push('\n');

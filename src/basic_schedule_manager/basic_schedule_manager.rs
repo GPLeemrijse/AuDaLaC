@@ -92,9 +92,16 @@ impl BasicScheduleManager<'_> {
 		let indent = " ".repeat(indent_lvl * 4);
 		match sched {
 			StepCall(s, _) => {
+				let readies = self.program.structs.iter()
+									.map(|s| format!(
+										"{indent}ready_struct_manager(&{}_manager);"
+										, s.name.clone())
+									).reduce(|acc: String, nxt| acc + "\n" + &nxt).unwrap();
+									
 				for strct in self.step_to_structs.get(s).unwrap() {
 					res.push_str(&formatdoc!{"
-						{strct}_{s}<<<1, {strct}_manager.nrof_active_structs>>>();
+						{readies}
+						{indent}{strct}_{s}<<<1, {strct}_manager.nrof_active_structs>>>();
 						{indent}cudaDeviceSynchronize();
 					"});
 				}
@@ -104,17 +111,19 @@ impl BasicScheduleManager<'_> {
 				self.print_schedule(s2, indent_lvl, res);
 			},
 			TypedStepCall(t, s, _) => {
+				let readies = self.program.structs.iter()
+									.map(|s| format!(
+										"{indent}ready_struct_manager(&{}_manager);"
+										, s.name.clone())
+									).reduce(|acc: String, nxt| acc + "\n" + &nxt).unwrap();
+
 				res.push_str(&formatdoc!{"
-					{t}_{s}<<<1, {t}_manager.nrof_active_structs>>>();
+					{readies}
+					{indent}{t}_{s}<<<1, {t}_manager.nrof_active_structs>>>();
 					{indent}cudaDeviceSynchronize();
 				"});
 			},
 			Fixpoint(s, _) => {
-				let mut readies = String::new();
-				let struct_names = self.program.structs.iter().map(|s| s.name.clone());
-				for sn in struct_names {
-					readies.push_str(&format!{"{indent}{indent}ready_struct_manager(&{sn}_manager);\n"});
-				}
 				let mut sched = String::new();
 				self.print_schedule(s, indent_lvl + 1, &mut sched);
 
@@ -122,9 +131,8 @@ impl BasicScheduleManager<'_> {
 					push_stability_stack();
 					{indent}do{{
 					{indent}{indent}reset_current_iteration_stability_stack();
-					{readies}
-
-					{indent}{indent}{sched}
+					
+					{sched}
 					{indent}}}
 					{indent}while(!fixpoint_reached_stability_stack());
 					{indent}pop_stability_stack();

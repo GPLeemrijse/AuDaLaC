@@ -19,4 +19,4 @@ struct Edge (n1 : Node, n2 : Node) {
     }
 }
 
-init < Fix(reachability)
+init < Fix(reachability) < Node.print
