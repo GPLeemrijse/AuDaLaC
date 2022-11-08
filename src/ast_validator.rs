@@ -604,7 +604,7 @@ fn get_expr_type<'ast>(
 
                 for ((_, p_type, _), e) in params.iter().zip(exps) {
                     if let Some(exp_type) = get_expr_type(e, &Some(p_type.clone()), context) {
-                        if exp_type != *p_type {
+                        if !exp_type.can_be_coerced_to_type(p_type) {
                             context.errors.push(ValidationError {
                                 error_type: ValidationErrorType::TypeMismatch(
                                     p_type.clone(),
