@@ -12,17 +12,18 @@ pub struct ValidationError {
 
 #[derive(Debug, PartialEq, Eq)]
 enum ValidationErrorType {
-    StructDefinedTwice(Loc),                        //Loc of earlier decl
-    StepDefinedTwice(Loc),                          //Loc of earlier decl
-    ParameterDefinedTwice(String, Loc),             //parameter name, Loc of earlier decl
-    VariableAlreadyDeclared(String, Loc),           //var name, Loc of earlier decl
-    UndefinedType(String),                          //attempted type name
-    UndefinedField(String, String),                 //parent name, field name
-    UndefinedStep,                                  //Step and struct name already in error_context
-    InvalidNumberOfArguments(usize, usize),         //Expected number, supplied number
-    TypeMismatch(Type, Type),                       //Expected type, gotten type
-    InvalidTypesForOperator(Type, BinOpcode, Type), //lhs type, operator, rhs type
+    StructDefinedTwice(Loc),                        // Loc of earlier decl
+    StepDefinedTwice(Loc),                          // Loc of earlier decl
+    ParameterDefinedTwice(String, Loc),             // parameter name, Loc of earlier decl
+    VariableAlreadyDeclared(String, Loc),           // var name, Loc of earlier decl
+    UndefinedType(String),                          // attempted type name
+    UndefinedField(String, String),                 // parent name, field name
+    UndefinedStep,                                  // Step and struct name already in error_context
+    InvalidNumberOfArguments(usize, usize),         // Expected number, supplied number
+    TypeMismatch(Type, Type),                       // Expected type, gotten type
+    InvalidTypesForOperator(Type, BinOpcode, Type), // lhs type, operator, rhs type
     NoNullLiteralForType(Option<Type>),             // Type of attempted null literal
+    ReservedKeyword(String),                        // Name of reserved keyword.
 }
 
 impl ValidationError {
@@ -44,17 +45,18 @@ impl ValidationError {
     fn code(&self) -> &str {
         use ValidationErrorType::*;
         match self.error_type {
-            StructDefinedTwice(..) => "VE001",
-            StepDefinedTwice(..) => "VE002",
-            ParameterDefinedTwice(..) => "VE003",
-            VariableAlreadyDeclared(..) => "VE004",
-            UndefinedType(..) => "VE005",
-            UndefinedField(..) => "VE006",
-            UndefinedStep => "VE007",
-            InvalidNumberOfArguments(..) => "VE008",
-            TypeMismatch(..) => "VE009",
-            InvalidTypesForOperator(..) => "VE010",
-            NoNullLiteralForType(..) => "VE011",
+            StructDefinedTwice(..) => "E001",
+            StepDefinedTwice(..) => "E002",
+            ParameterDefinedTwice(..) => "E003",
+            VariableAlreadyDeclared(..) => "E004",
+            UndefinedType(..) => "E005",
+            UndefinedField(..) => "E006",
+            UndefinedStep => "E007",
+            InvalidNumberOfArguments(..) => "E008",
+            TypeMismatch(..) => "E009",
+            InvalidTypesForOperator(..) => "E010",
+            NoNullLiteralForType(..) => "E011",
+            ReservedKeyword(_) => "E012",
         }
     }
 
@@ -125,6 +127,7 @@ impl ValidationError {
             NoNullLiteralForType(Some(t)) => {
                 format!("The null literal is not defined for type {}.", t)
             }
+            &ReservedKeyword(_) => todo!()
         }
     }
 
@@ -142,6 +145,7 @@ impl ValidationError {
             TypeMismatch(..) => "An invalid type has been given.",
             InvalidTypesForOperator(..) => "Operator can not be applied to given types.",
             NoNullLiteralForType(..) => "The null literal is not defined in this context.",
+            ReservedKeyword(_) => todo!(),
         }
     }
 }
