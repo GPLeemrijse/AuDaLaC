@@ -43,7 +43,6 @@ impl StructManager for BasicStructManager<'_> {
 			&indoc!{"
 				typedef struct StructManager {
 				    void* structs;
-				    unsigned int struct_size;
 				    unsigned int nrof_active_structs;
 				    unsigned int nrof_active_structs_before_launch;
 				} StructManager;
@@ -60,7 +59,6 @@ impl StructManager for BasicStructManager<'_> {
 				&formatdoc!{"
 					__managed__ StructManager {n}_manager = {{
 						NULL,
-						sizeof({n}),
 						0,
 						0
 					}};
@@ -73,7 +71,7 @@ impl StructManager for BasicStructManager<'_> {
 	fn function_defs(&self) -> String {
 		let mut res = indoc! {r#"
 			__host__ __device__ void print_struct_manager(StructManager* m){{
-			    printf("size:%u, active:%u, active_bl:%u\n", m->struct_size, m->nrof_active_structs, m->nrof_active_structs_before_launch);
+			    printf("active:%u, active_bl:%u\n", m->nrof_active_structs, m->nrof_active_structs_before_launch);
 			}}
 
 			void destroy_struct_manager(StructManager* self){{
@@ -108,14 +106,14 @@ impl StructManager for BasicStructManager<'_> {
 					    unsigned int idx = manager->nrof_active_structs;
 					    manager->nrof_active_structs++;
 
-					    {n}* result = ({n}*)((char*)(manager->structs) + manager->struct_size * idx);
+					    {n}* result = &(({n}*)manager->structs)[idx];
 					{set_params}
 					    return result;
 					}}
 
 					__device__ {n}* create_{n}(StructManager* manager{params}) {{
 					    unsigned int idx = atomicInc(&manager->nrof_active_structs, MAX_NROF_{n_cap}S);
-					    {n}* result = ({n}*)((char*)(manager->structs) + manager->struct_size * idx);
+					    {n}* result = &(({n}*)manager->structs)[idx];
 					{set_params}
 					    return result;
 					}}
@@ -129,7 +127,7 @@ impl StructManager for BasicStructManager<'_> {
 					    if(i >= {n}_manager.nrof_active_structs_before_launch)
 					        return;
 
-					    {n}* self = ({n}*)((char*){n}_manager.structs + {n}_manager.struct_size * i);
+					    {n}* self = &(({n}*){n}_manager.structs)[i];
 
 					    print_{n}(self);
 					}}
@@ -146,7 +144,7 @@ impl StructManager for BasicStructManager<'_> {
 			let n_cap : String = n.chars().map(|c| c.to_uppercase().collect::<String>()).collect::<String>();
 
 			res.push_str(&formatdoc!{"
-				cudaMallocManaged(&{n}_manager.structs, MAX_NROF_{n_cap}S * {n}_manager.struct_size);
+				cudaMallocManaged(&{n}_manager.structs, MAX_NROF_{n_cap}S * sizeof({n}));
 			"});
 		}
 		res.push('\n');
@@ -201,7 +199,7 @@ impl StructManager for BasicStructManager<'_> {
 					    if(i >= {strct_name}_manager.nrof_active_structs_before_launch)
 					    	return;
 
-					    {strct_name}* self = ({strct_name}*)((char*){strct_name}_manager.structs + {strct_name}_manager.struct_size * i);
+					    {strct_name}* self = &(({strct_name}*){strct_name}_manager.structs)[i];
 
 					    {body}
 					}}
