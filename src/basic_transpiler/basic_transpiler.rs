@@ -40,6 +40,7 @@ impl Transpiler for BasicCUDATranspiler {
 
 		let schedule = schedule_manager.run_schedule();
 		formatdoc! {"
+			#include <sys/time.h>
 			{includes}
 
 			{defines}
@@ -53,11 +54,19 @@ impl Transpiler for BasicCUDATranspiler {
 			{kernels}
 
 			int main() {{
+				struct timeval t1, t2;
+
+				gettimeofday(&t1, 0);
+
 				{pre_main}
 
 			    {schedule}
 
 				{post_main}
+
+				gettimeofday(&t2, 0);
+				double time = (1000000.0*(t2.tv_sec-t1.tv_sec) + t2.tv_usec-t1.tv_usec)/1000.0;
+				fprintf(stderr, \"%3.1f ms\", time);
 			}}
 		"}
 	}

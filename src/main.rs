@@ -23,22 +23,24 @@ mod basic_struct_manager;
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
 fn main() {
-    let args = clap_app!(LOPL =>
+    let args = clap_app!(ADL =>
         (version: "0.1")
         (author: "GPLeemrijse <g.p.leemrijse@student.tue.nl>")
-        (about: "Parses \"LOPL\" programs")
+        (about: "Parses \"ADL\" programs")
         (@arg print_ast: -p --print-ast "Print the AST of the program")
-        (@arg file: +required "\"LOPL\" file")
+        (@arg output: -o --output +takes_value +required "Output .cu file")
+        (@arg file: +required "\"ADL\" file")
     )
     .get_matches();
 
     let print_ast = args.is_present("print_ast");
-    let lopl_file_loc = args.value_of("file").unwrap();
-    let lopl_program_text = fs::read_to_string(lopl_file_loc).expect("Could not open file");
+    let adl_file_loc = args.value_of("file").unwrap();
+    let output_file = args.value_of("output").unwrap();
+    let adl_program_text = fs::read_to_string(adl_file_loc).expect("Could not open file");
 
-    let lopl_program = ProgramParser::new().parse(&lopl_program_text);
+    let adl_program = ProgramParser::new().parse(&adl_program_text);
 
-    match lopl_program {
+    match adl_program {
         Ok(program) => {
             if print_ast {
                 println!("{:#?}", program)
@@ -51,10 +53,10 @@ fn main() {
                 let struct_manager = BasicStructManager::new(&program);
                 let result = BasicCUDATranspiler::transpile(&schedule_manager, &struct_manager);
 
-                println!("{}", result);
+                fs::write(output_file, result).expect("Unable to write output file.");
 
             } else { // Print errors
-                let file = SimpleFile::new(lopl_file_loc, lopl_program_text);
+                let file = SimpleFile::new(adl_file_loc, adl_program_text);
                 let writer = StandardStream::stderr(ColorChoice::Always);
                 let config = codespan_reporting::term::Config::default();
 

@@ -15,10 +15,14 @@ impl StructManager for BasicStructManager<'_> {
 
 	fn defines(&self) -> String {
 		let struct_names = self.program.structs.iter().map(|s| s.name.clone());
+		let max_nrof_statements = self.program.structs.iter()
+									.map(|s| &s.steps)
+									.flatten()
+									.map(|s| s.statements.len()).max().unwrap();
 		let mut res = "#define SET_PARAM(I, T, P, V) ({if (I != 0) { T read_val = P; if (read_val != V) {P = V; clear_stability_stack();}}})\n".to_string();
 		for s in struct_names {
 			let s_cap : String = s.chars().map(|c| c.to_uppercase().collect::<String>()).collect::<String>();
-			res.push_str(&format!("#define MAX_NROF_{}S 100\n", s_cap));
+			res.push_str(&format!("#define MAX_NROF_{}S {}\n", s_cap, max_nrof_statements));
 		}
 		res
 	}

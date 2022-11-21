@@ -20,7 +20,7 @@ fn check_file_ast(file: &str) {
     let expected_output = fs::read_to_string(format!("{}_expected", file))
         .expect("Could not open file with expected_output");
 
-    let out = Command::cargo_bin("loplparser")
+    let out = Command::cargo_bin("adl")
         .unwrap()
         .arg("--print")
         .arg(file)
