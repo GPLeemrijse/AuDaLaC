@@ -6,6 +6,7 @@ use indoc::{indoc, formatdoc};
 
 pub struct BasicStructManager<'a> {
 	program : &'a Program,
+	nrof_structs : u64,
 }
 
 impl StructManager for BasicStructManager<'_> {
@@ -15,14 +16,10 @@ impl StructManager for BasicStructManager<'_> {
 
 	fn defines(&self) -> String {
 		let struct_names = self.program.structs.iter().map(|s| s.name.clone());
-		let max_nrof_statements = self.program.structs.iter()
-									.map(|s| &s.steps)
-									.flatten()
-									.map(|s| s.statements.len()).max().unwrap();
 		let mut res = "#define SET_PARAM(I, T, P, V) ({if (I != 0) { T read_val = P; if (read_val != V) {P = V; clear_stability_stack();}}})\n".to_string();
 		for s in struct_names {
 			let s_cap : String = s.chars().map(|c| c.to_uppercase().collect::<String>()).collect::<String>();
-			res.push_str(&format!("#define MAX_NROF_{}S {}\n", s_cap, max_nrof_statements));
+			res.push_str(&format!("#define MAX_NROF_{}S {}\n", s_cap, self.nrof_structs));
 		}
 		res
 	}
@@ -127,7 +124,7 @@ impl StructManager for BasicStructManager<'_> {
 					}}
 
 					__global__ void {n}_print() {{
-					    int i = threadIdx.x;
+					    int i = blockDim.x * blockIdx.x + threadIdx.x;
 					    if(i >= {n}_manager.nrof_active_structs_before_launch)
 					        return;
 
@@ -199,7 +196,7 @@ impl StructManager for BasicStructManager<'_> {
 				let body = self.make_body(&step.statements, &strct.parameters);
 				res.push_str(&formatdoc!{"
 					__global__ void {strct_name}_{step_name}() {{
-					    int i = threadIdx.x;
+					    int i = blockDim.x * blockIdx.x + threadIdx.x;
 					    if(i >= {strct_name}_manager.nrof_active_structs_before_launch)
 					    	return;
 
@@ -216,9 +213,10 @@ impl StructManager for BasicStructManager<'_> {
 
 
 impl BasicStructManager<'_> {
-	pub fn new(program: &Program) -> BasicStructManager {
+	pub fn new(program: &Program, nrof_structs: u64) -> BasicStructManager {
 		BasicStructManager {
 			program,
+			nrof_structs
 		}
 	}
 

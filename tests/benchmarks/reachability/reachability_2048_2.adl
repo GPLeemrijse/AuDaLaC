@@ -1,13 +1,8 @@
 
     struct Node (reachable : Bool) {
         init {
-            Node s := Node(true);
-            Node t := Node(false);
-
-            Node n_0_0 := Node(false);
-            Edge e_0_0 := Edge(s, n_0_0);
-            Node n_1_0 := Node(false);
-            Edge e_1_0 := Edge(s, n_1_0);
+            Node n_0_0 := Node(true);
+            Node n_1_0 := Node(true);
             Node n_0_1 := Node(false);
             Edge e_0_1 := Edge(n_0_0, n_0_1);
             Node n_1_1 := Node(false);
@@ -8194,10 +8189,8 @@
             Edge e_1_2046 := Edge(n_1_2045, n_1_2046);
             Node n_0_2047 := Node(false);
             Edge e_0_2047 := Edge(n_0_2046, n_0_2047);
-            Edge e_0_2047_target := Edge(n_0_2047, t);
             Node n_1_2047 := Node(false);
             Edge e_1_2047 := Edge(n_1_2046, n_1_2047);
-            Edge e_1_2047_target := Edge(n_1_2047, t);
 
         }
     }
@@ -8210,5 +8203,5 @@
         }
     }
 
-    init < Fix(reachability) < Node.print
+    init < Fix(reachability)
     

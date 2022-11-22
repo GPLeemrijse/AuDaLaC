@@ -90,6 +90,8 @@ impl BasicScheduleManager<'_> {
 	fn print_schedule(&self, sched : &Schedule, indent_lvl : usize, res : &mut String) {
 		use crate::ast::Schedule::*;
 		let indent = " ".repeat(indent_lvl * 4);
+		let tpb = 32;
+
 		match sched {
 			StepCall(s, _) => {
 				let readies = self.program.structs.iter()
@@ -101,7 +103,7 @@ impl BasicScheduleManager<'_> {
 				for strct in self.step_to_structs.get(s).unwrap() {
 					res.push_str(&formatdoc!{"
 						{readies}
-						{indent}{strct}_{s}<<<1, {strct}_manager.nrof_active_structs>>>();
+						{indent}{strct}_{s}<<<({strct}_manager.nrof_active_structs + {tpb} - 1)/{tpb}, {tpb}>>>();
 						{indent}cudaDeviceSynchronize();
 					"});
 				}
@@ -119,7 +121,7 @@ impl BasicScheduleManager<'_> {
 
 				res.push_str(&formatdoc!{"
 					{readies}
-					{indent}{t}_{s}<<<1, {t}_manager.nrof_active_structs>>>();
+					{indent}{t}_{s}<<<({t}_manager.nrof_active_structs + {tpb} - 1)/{tpb}, {tpb}>>>();
 					{indent}cudaDeviceSynchronize();
 				"});
 			},

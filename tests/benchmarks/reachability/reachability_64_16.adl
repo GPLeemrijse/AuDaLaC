@@ -1,41 +1,22 @@
 
     struct Node (reachable : Bool) {
         init {
-            Node s := Node(true);
-            Node t := Node(false);
-
-            Node n_0_0 := Node(false);
-            Edge e_0_0 := Edge(s, n_0_0);
-            Node n_1_0 := Node(false);
-            Edge e_1_0 := Edge(s, n_1_0);
-            Node n_2_0 := Node(false);
-            Edge e_2_0 := Edge(s, n_2_0);
-            Node n_3_0 := Node(false);
-            Edge e_3_0 := Edge(s, n_3_0);
-            Node n_4_0 := Node(false);
-            Edge e_4_0 := Edge(s, n_4_0);
-            Node n_5_0 := Node(false);
-            Edge e_5_0 := Edge(s, n_5_0);
-            Node n_6_0 := Node(false);
-            Edge e_6_0 := Edge(s, n_6_0);
-            Node n_7_0 := Node(false);
-            Edge e_7_0 := Edge(s, n_7_0);
-            Node n_8_0 := Node(false);
-            Edge e_8_0 := Edge(s, n_8_0);
-            Node n_9_0 := Node(false);
-            Edge e_9_0 := Edge(s, n_9_0);
-            Node n_10_0 := Node(false);
-            Edge e_10_0 := Edge(s, n_10_0);
-            Node n_11_0 := Node(false);
-            Edge e_11_0 := Edge(s, n_11_0);
-            Node n_12_0 := Node(false);
-            Edge e_12_0 := Edge(s, n_12_0);
-            Node n_13_0 := Node(false);
-            Edge e_13_0 := Edge(s, n_13_0);
-            Node n_14_0 := Node(false);
-            Edge e_14_0 := Edge(s, n_14_0);
-            Node n_15_0 := Node(false);
-            Edge e_15_0 := Edge(s, n_15_0);
+            Node n_0_0 := Node(true);
+            Node n_1_0 := Node(true);
+            Node n_2_0 := Node(true);
+            Node n_3_0 := Node(true);
+            Node n_4_0 := Node(true);
+            Node n_5_0 := Node(true);
+            Node n_6_0 := Node(true);
+            Node n_7_0 := Node(true);
+            Node n_8_0 := Node(true);
+            Node n_9_0 := Node(true);
+            Node n_10_0 := Node(true);
+            Node n_11_0 := Node(true);
+            Node n_12_0 := Node(true);
+            Node n_13_0 := Node(true);
+            Node n_14_0 := Node(true);
+            Node n_15_0 := Node(true);
             Node n_0_1 := Node(false);
             Edge e_0_1 := Edge(n_0_0, n_0_1);
             Node n_1_1 := Node(false);
@@ -2022,52 +2003,36 @@
             Edge e_15_62 := Edge(n_15_61, n_15_62);
             Node n_0_63 := Node(false);
             Edge e_0_63 := Edge(n_0_62, n_0_63);
-            Edge e_0_63_target := Edge(n_0_63, t);
             Node n_1_63 := Node(false);
             Edge e_1_63 := Edge(n_1_62, n_1_63);
-            Edge e_1_63_target := Edge(n_1_63, t);
             Node n_2_63 := Node(false);
             Edge e_2_63 := Edge(n_2_62, n_2_63);
-            Edge e_2_63_target := Edge(n_2_63, t);
             Node n_3_63 := Node(false);
             Edge e_3_63 := Edge(n_3_62, n_3_63);
-            Edge e_3_63_target := Edge(n_3_63, t);
             Node n_4_63 := Node(false);
             Edge e_4_63 := Edge(n_4_62, n_4_63);
-            Edge e_4_63_target := Edge(n_4_63, t);
             Node n_5_63 := Node(false);
             Edge e_5_63 := Edge(n_5_62, n_5_63);
-            Edge e_5_63_target := Edge(n_5_63, t);
             Node n_6_63 := Node(false);
             Edge e_6_63 := Edge(n_6_62, n_6_63);
-            Edge e_6_63_target := Edge(n_6_63, t);
             Node n_7_63 := Node(false);
             Edge e_7_63 := Edge(n_7_62, n_7_63);
-            Edge e_7_63_target := Edge(n_7_63, t);
             Node n_8_63 := Node(false);
             Edge e_8_63 := Edge(n_8_62, n_8_63);
-            Edge e_8_63_target := Edge(n_8_63, t);
             Node n_9_63 := Node(false);
             Edge e_9_63 := Edge(n_9_62, n_9_63);
-            Edge e_9_63_target := Edge(n_9_63, t);
             Node n_10_63 := Node(false);
             Edge e_10_63 := Edge(n_10_62, n_10_63);
-            Edge e_10_63_target := Edge(n_10_63, t);
             Node n_11_63 := Node(false);
             Edge e_11_63 := Edge(n_11_62, n_11_63);
-            Edge e_11_63_target := Edge(n_11_63, t);
             Node n_12_63 := Node(false);
             Edge e_12_63 := Edge(n_12_62, n_12_63);
-            Edge e_12_63_target := Edge(n_12_63, t);
             Node n_13_63 := Node(false);
             Edge e_13_63 := Edge(n_13_62, n_13_63);
-            Edge e_13_63_target := Edge(n_13_63, t);
             Node n_14_63 := Node(false);
             Edge e_14_63 := Edge(n_14_62, n_14_63);
-            Edge e_14_63_target := Edge(n_14_63, t);
             Node n_15_63 := Node(false);
             Edge e_15_63 := Edge(n_15_62, n_15_63);
-            Edge e_15_63_target := Edge(n_15_63, t);
 
         }
     }
@@ -2080,5 +2045,5 @@
         }
     }
 
-    init < Fix(reachability) < Node.print
+    init < Fix(reachability)
     

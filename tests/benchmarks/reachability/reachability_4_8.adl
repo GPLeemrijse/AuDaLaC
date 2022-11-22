@@ -1,0 +1,73 @@
+
+    struct Node (reachable : Bool) {
+        init {
+            Node n_0_0 := Node(true);
+            Node n_1_0 := Node(true);
+            Node n_2_0 := Node(true);
+            Node n_3_0 := Node(true);
+            Node n_4_0 := Node(true);
+            Node n_5_0 := Node(true);
+            Node n_6_0 := Node(true);
+            Node n_7_0 := Node(true);
+            Node n_0_1 := Node(false);
+            Edge e_0_1 := Edge(n_0_0, n_0_1);
+            Node n_1_1 := Node(false);
+            Edge e_1_1 := Edge(n_1_0, n_1_1);
+            Node n_2_1 := Node(false);
+            Edge e_2_1 := Edge(n_2_0, n_2_1);
+            Node n_3_1 := Node(false);
+            Edge e_3_1 := Edge(n_3_0, n_3_1);
+            Node n_4_1 := Node(false);
+            Edge e_4_1 := Edge(n_4_0, n_4_1);
+            Node n_5_1 := Node(false);
+            Edge e_5_1 := Edge(n_5_0, n_5_1);
+            Node n_6_1 := Node(false);
+            Edge e_6_1 := Edge(n_6_0, n_6_1);
+            Node n_7_1 := Node(false);
+            Edge e_7_1 := Edge(n_7_0, n_7_1);
+            Node n_0_2 := Node(false);
+            Edge e_0_2 := Edge(n_0_1, n_0_2);
+            Node n_1_2 := Node(false);
+            Edge e_1_2 := Edge(n_1_1, n_1_2);
+            Node n_2_2 := Node(false);
+            Edge e_2_2 := Edge(n_2_1, n_2_2);
+            Node n_3_2 := Node(false);
+            Edge e_3_2 := Edge(n_3_1, n_3_2);
+            Node n_4_2 := Node(false);
+            Edge e_4_2 := Edge(n_4_1, n_4_2);
+            Node n_5_2 := Node(false);
+            Edge e_5_2 := Edge(n_5_1, n_5_2);
+            Node n_6_2 := Node(false);
+            Edge e_6_2 := Edge(n_6_1, n_6_2);
+            Node n_7_2 := Node(false);
+            Edge e_7_2 := Edge(n_7_1, n_7_2);
+            Node n_0_3 := Node(false);
+            Edge e_0_3 := Edge(n_0_2, n_0_3);
+            Node n_1_3 := Node(false);
+            Edge e_1_3 := Edge(n_1_2, n_1_3);
+            Node n_2_3 := Node(false);
+            Edge e_2_3 := Edge(n_2_2, n_2_3);
+            Node n_3_3 := Node(false);
+            Edge e_3_3 := Edge(n_3_2, n_3_3);
+            Node n_4_3 := Node(false);
+            Edge e_4_3 := Edge(n_4_2, n_4_3);
+            Node n_5_3 := Node(false);
+            Edge e_5_3 := Edge(n_5_2, n_5_3);
+            Node n_6_3 := Node(false);
+            Edge e_6_3 := Edge(n_6_2, n_6_3);
+            Node n_7_3 := Node(false);
+            Edge e_7_3 := Edge(n_7_2, n_7_3);
+
+        }
+    }
+
+    struct Edge (n1 : Node, n2 : Node) {
+        reachability {
+            if n1.reachable then {
+                n2.reachable := true;
+            }
+        }
+    }
+
+    init < Fix(reachability)
+    

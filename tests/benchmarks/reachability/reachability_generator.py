@@ -1,12 +1,12 @@
 import math
 
-problem_sizes = [2**n for n in range(7, 15)];
+problem_sizes = [2**n for n in range(5, 14)];
 
 def format_program(body):
     return f"""
     struct Node (reachable : Bool) {{
         init {{
-            {body}
+{body}
         }}
     }}
 
@@ -18,20 +18,18 @@ def format_program(body):
         }}
     }}
 
-    init < Fix(reachability) < Node.print
+    init < Fix(reachability)
     """;
 
 def generate_body(n, m):
     indent = "            ";
-    result = f"Node s := Node(true);\n{indent}Node t := Node(false);\n\n";
+    result = "";
 
     for y in range(n):
         for x in range(m):
-            result += f"{indent}Node n_{x}_{y} := Node(false);\n";
-            prev = "s" if y == 0 else f"n_{x}_{y-1}";
-            result += f"{indent}Edge e_{x}_{y} := Edge({prev}, n_{x}_{y});\n";
-            if y == n - 1:
-                result += f"{indent}Edge e_{x}_{y}_target := Edge(n_{x}_{y}, t);\n";
+            result += f"{indent}Node n_{x}_{y} := Node({'true' if y==0 else 'false'});\n";
+            if y != 0:
+                result += f"{indent}Edge e_{x}_{y} := Edge(n_{x}_{y-1}, n_{x}_{y});\n";
     return result;
 
 
@@ -39,7 +37,7 @@ def generate_n_by_m_program(n, m):
     return format_program(generate_body(n, m));
 
 for i in problem_sizes:
-    for j in range(0, round(math.log2(i))+1):
+    for j in range(0, round(math.log2(i))):
         n = round(i / (2**j));
         m = 2**j;
         program = generate_n_by_m_program(n, m);

@@ -28,12 +28,14 @@ fn main() {
         (author: "GPLeemrijse <g.p.leemrijse@student.tue.nl>")
         (about: "Parses \"ADL\" programs")
         (@arg print_ast: -p --print-ast "Print the AST of the program")
+        (@arg nrofstructs: -n --nrofstructs +takes_value "nrof structs memory is allocated for.")
         (@arg output: -o --output +takes_value +required "Output .cu file")
         (@arg file: +required "\"ADL\" file")
     )
     .get_matches();
 
     let print_ast = args.is_present("print_ast");
+    let nrof_structs = if args.is_present("nrofstructs") { args.value_of("nrofstructs").unwrap().parse::<u64>().unwrap()} else {100};
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output").unwrap();
     let adl_program_text = fs::read_to_string(adl_file_loc).expect("Could not open file");
@@ -50,7 +52,7 @@ fn main() {
 
             if errors.is_empty() {
                 let schedule_manager = BasicScheduleManager::new(&program);
-                let struct_manager = BasicStructManager::new(&program);
+                let struct_manager = BasicStructManager::new(&program, nrof_structs);
                 let result = BasicCUDATranspiler::transpile(&schedule_manager, &struct_manager);
 
                 fs::write(output_file, result).expect("Unable to write output file.");
