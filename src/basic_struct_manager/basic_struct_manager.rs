@@ -76,7 +76,7 @@ impl StructManager for BasicStructManager<'_> {
 			}}
 
 			void destroy_struct_manager(StructManager* self){{
-			    cudaFree(self);
+			    cudaFree(self->structs);
 			}}
 
 			void ready_struct_manager(StructManager* self){{
