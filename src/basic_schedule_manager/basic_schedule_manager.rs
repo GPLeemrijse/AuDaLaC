@@ -90,7 +90,7 @@ impl BasicScheduleManager<'_> {
 	fn print_schedule(&self, sched : &Schedule, indent_lvl : usize, res : &mut String) {
 		use crate::ast::Schedule::*;
 		let indent = " ".repeat(indent_lvl * 4);
-		let tpb = 32;
+		let tpb = 512;
 
 		match sched {
 			StepCall(s, _) => {
