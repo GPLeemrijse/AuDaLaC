@@ -1,6 +1,6 @@
 import math
 
-problem_sizes = [2**n for n in range(5, 14)];
+problem_sizes = [2**n for n in range(5, 17)];
 
 def format_program(body):
     return f"""
@@ -36,11 +36,13 @@ def generate_body(n, m):
 def generate_n_by_m_program(n, m):
     return format_program(generate_body(n, m));
 
-for i in problem_sizes:
-    for j in range(0, round(math.log2(i))):
-        n = round(i / (2**j));
-        m = 2**j;
+# for i in problem_sizes:
+#     for j in range(0, round(math.log2(i))):
+#         n = round(i / (2**j));
+#         m = 2**j;
+for n in [2**n for n in range(0, 8)]:
+    for m in [2**n for n in range(1, 8)]:
         program = generate_n_by_m_program(n, m);
-        name = f"reachability_{n}_{m}.adl";
+        name = f"reachability_{n*m}_{n}_{m}.adl";
         with open(name, 'w') as f:
             f.write(program);
