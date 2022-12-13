@@ -71,17 +71,17 @@ impl StructManager for BasicStructManager<'_> {
 
 	fn function_defs(&self) -> String {
 		let mut res = indoc! {r#"
-			__host__ __device__ void print_struct_manager(StructManager* m){{
+			__host__ __device__ void print_struct_manager(StructManager* m){
 			    printf("active:%u, active_bl:%u\n", m->nrof_active_structs, m->nrof_active_structs_before_launch);
-			}}
+			}
 
-			void destroy_struct_manager(StructManager* self){{
+			void destroy_struct_manager(StructManager* self){
 			    cudaFree(self->structs);
-			}}
+			}
 
-			void ready_struct_manager(StructManager* self){{
+			void ready_struct_manager(StructManager* self){
 			    self->nrof_active_structs_before_launch = self->nrof_active_structs;
-			}}
+			}
 
 		"#}.to_string();
 
