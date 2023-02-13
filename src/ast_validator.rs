@@ -665,8 +665,19 @@ fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<
         Plus | Minus | Mult | Div | Mod => true,
         _ => false,
     };
-    let is_comparison = |o: &'ast BinOpcode| match o {
-        Equals | NotEquals | LessThanEquals | GreaterThanEquals | LessThan | GreaterThan => true,
+
+    let is_ordering = |o: &'ast BinOpcode| match o {
+        LessThanEquals | GreaterThanEquals | LessThan | GreaterThan => true,
+        _ => false,
+    };
+
+    let is_equality = |o: &'ast BinOpcode| match o {
+        Equals | NotEquals => true,
+        _ => false,
+    };
+
+    let is_boolean_logic = |o: &'ast BinOpcode| match o {
+        And | Or => true,
         _ => false,
     };
 
@@ -674,9 +685,13 @@ fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<
         (Nat, _, Nat) if is_arithmetic(op) => Some(Nat),
         (Int, _, Int) if is_arithmetic(op) => Some(Int),
         (Nat | Int, _, Nat | Int) if is_arithmetic(op) => Some(Int),
-        (Nat | Int, _, Nat | Int) if is_comparison(op) => Some(Bool),
-        (String, _, String) if is_comparison(op) => Some(Bool),
-        (Bool, _, Bool) if is_comparison(op) => Some(Bool),
+        (Nat | Int, _, Nat | Int) if is_ordering(op) => Some(Bool),
+        (Nat | Int, _, Nat | Int) if is_equality(op) => Some(Bool),
+
+        (String, _, String) if is_equality(op) => Some(Bool),
+        (Bool, _, Bool) if is_equality(op) => Some(Bool),
+        (Bool, _, Bool) if is_boolean_logic(op) => Some(Bool),
+        (Named(..), _, Named(..)) if is_equality(op) => Some(Bool),
         (..) => None,
     }
 }
