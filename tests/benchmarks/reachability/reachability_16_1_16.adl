@@ -1,0 +1,33 @@
+
+    struct Node (reachable : Bool) {
+        init {
+            Node n_0_0 := Node(true);
+            Node n_1_0 := Node(true);
+            Node n_2_0 := Node(true);
+            Node n_3_0 := Node(true);
+            Node n_4_0 := Node(true);
+            Node n_5_0 := Node(true);
+            Node n_6_0 := Node(true);
+            Node n_7_0 := Node(true);
+            Node n_8_0 := Node(true);
+            Node n_9_0 := Node(true);
+            Node n_10_0 := Node(true);
+            Node n_11_0 := Node(true);
+            Node n_12_0 := Node(true);
+            Node n_13_0 := Node(true);
+            Node n_14_0 := Node(true);
+            Node n_15_0 := Node(true);
+
+        }
+    }
+
+    struct Edge (n1 : Node, n2 : Node) {
+        reachability {
+            if n1.reachable then {
+                n2.reachable := true;
+            }
+        }
+    }
+
+    init < Fix(reachability)
+    
