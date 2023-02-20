@@ -16,8 +16,14 @@ struct Node (reachable : Bool, reachable: Bool) {
         Nat test_nat_not_negative := -1;
 
         String t := 1;
-        Int t2 := "ad";
         Node t3 := this;
+
+        String my_string := "content";
+        String other_string := "test";
+
+        if my_string < other_string then {
+            t := t + 1;
+        }
     }
 }
 

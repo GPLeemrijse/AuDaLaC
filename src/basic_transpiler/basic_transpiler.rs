@@ -66,7 +66,7 @@ impl Transpiler for BasicCUDATranspiler {
 
 				gettimeofday(&t2, 0);
 				double time = (1000000.0*(t2.tv_sec-t1.tv_sec) + t2.tv_usec-t1.tv_usec)/1000.0;
-				fprintf(stderr, \"%3.1f ms\", time);
+				fprintf(stderr, \"%3.1f ms\\n\", time);
 			}}
 		"}
 	}
