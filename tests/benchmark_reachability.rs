@@ -1,9 +1,22 @@
 use std::time::Instant;
 use std::fs;
 use std::str;
+use std::env;
+
+fn run_benchmarks() -> bool {
+    if let Ok(v) = env::var("CI") {
+        return v != "true";
+    }
+    return true;
+}
 
 #[test]
 fn test_reachability_benchmarks() {
+    if !run_benchmarks() {
+        println!("Skipping benchmarks...");
+        return;
+    }
+
     let mut paths : Vec<String> = fs::read_dir("tests/benchmarks/reachability").unwrap().map(|p| p.as_ref().unwrap().path().display().to_string()).collect();
     let mut measurements : Vec<(u32, u32, f64, u32, u64, u64)> = Vec::new();
     let nrof_files = paths.len();
@@ -40,22 +53,6 @@ fn test_reachability_benchmarks() {
         csv.push_str(&format!("{},{},{},{},{},{}\n", m.0, m.1, m.2, m.3, m.4, m.5));
     }
     fs::write("tests/benchmarks/reachability/results.csv", csv).expect("Unable to write csv file.");
-}
-
-#[test]
-fn test_different_optimisations() {
-    let (std_time, std_time_min, std_time_max) = time_binary("./profile_app_no_advises", 100);
-    let (std_both_adv, std_both_adv_min, std_both_adv_max) = time_binary("./profile_app_with_both_advises", 100);
-    let (std_prefetch_no_mng, std_prefetch_no_mng_min, std_prefetch_no_mng_max) = time_binary("./profile_app_no_adv_but_prefetching", 100);
-    let (std_prefetch_all, std_prefetch_all_min, std_prefetch_all_max) = time_binary("./profile_app_prefetch_data_stack_and_managers", 100);
-    let (std_ready_moved_up, std_ready_moved_up_min, std_ready_moved_up_max) = time_binary("./profile_app_moved_ready_up", 100);
-
-    println!("Standard: {} ms {} ms {} ms", std_time, std_time_min, std_time_max);
-    println!("Both adv: {} ms {} ms {} ms", std_both_adv, std_both_adv_min, std_both_adv_max);
-    println!("Prefetch no adv but prefetch: {} ms {} ms {} ms", std_prefetch_no_mng, std_prefetch_no_mng_min, std_prefetch_no_mng_max);
-    println!("Prefetch all: {} ms {} ms {} ms", std_prefetch_all, std_prefetch_all_min, std_prefetch_all_max);
-    println!("Ready moved: {} ms {} ms {} ms", std_ready_moved_up, std_ready_moved_up_min, std_ready_moved_up_max);
-
 }
 
 fn time_binary(file : &str, n : u32) -> (f64, f64, f64) {
