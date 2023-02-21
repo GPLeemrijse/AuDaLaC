@@ -463,66 +463,57 @@ fn check_ifthen<'ast>(
     context.pop_var_scope();
 }
 
+
 /// Returns the type of a `Var`: part1.part2.part3, and the location of the original definition
 fn get_var_type<'ast>(
     parts: &'ast Vec<String>,
     context: &mut BlockEvaluationContext<'ast>,
     loc: &'ast Loc,
 ) -> Option<(Type, Loc)> {
-    debug_assert!(
-        !parts.is_empty(),
-        "The length of `parts` should be at least 1."
-    );
-
+    // Get type of first part by looking in the current context 
     let mut found_type: Option<(Type, Loc)>;
-    if parts[0] == "this" {
-        found_type = Some((
-            Type::Named(context.current_struct_name.unwrap().clone()),
-            (0, 0),
-        ));
-    } else {
-        found_type = get_type_from_context(&parts[0], context);
+    found_type = get_type_from_context(&parts[0], context);
+    
+    let mut idx = 1; // start at 1 as first part is already done
+    while idx < parts.len() {
+        let id = &parts[idx];
+        if let Some((Type::Named(s), _)) = found_type {
+            found_type = get_type_from_scope(
+                id,
+                &context
+                .structs
+                .iter()
+                .find(|st| st.name == *s)
+                .unwrap()
+                .parameters
+            );
+        } else {
+            break
+        }
+        idx += 1;
     }
 
-    if parts.len() == 1 {
-        return match found_type {
-            None => {
-                context.errors.push(ValidationError {
-                    error_type: ValidationErrorType::UndefinedType(parts[0].clone()),
-                    context: ErrorContext::from_block_context(context),
-                    loc: *loc,
-                });
-                None
-            }
-            Some(t) => Some(t),
-        };
-    }
-    for (idx, id) in parts[1..].iter().enumerate() {
-        match found_type {
-            Some((Type::Named(s), _)) => {
-                found_type = get_type_from_scope(
-                    id,
-                    &context
-                        .structs
-                        .iter()
-                        .find(|st| st.name == *s)
-                        .unwrap()
-                        .parameters,
-                );
-            }
-            _ => {
-                context.errors.push(ValidationError {
-                    error_type: ValidationErrorType::UndefinedField(
-                        parts[idx - 1].clone(),
-                        parts[idx].clone(),
-                    ),
-                    context: ErrorContext::from_block_context(context),
-                    loc: *loc,
-                });
-            }
+    if let None = found_type {
+        if idx == 1 { // i.e. first part was None type hence idx not incremented
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::UndefinedType(parts[0].clone()),
+                context: ErrorContext::from_block_context(context),
+                loc: *loc,
+            });
+        } else {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::UndefinedField(
+                    parts[idx-2].clone(),
+                    parts[idx-1].clone(),
+                ),
+                context: ErrorContext::from_block_context(context),
+                loc: *loc,
+            });
         }
     }
-    found_type
+
+
+    return found_type
 }
 
 fn type_is_defined<'ast>(t: &Type, context: &mut BlockEvaluationContext<'ast>, loc: Loc) -> bool {
@@ -845,6 +836,70 @@ mod tests {
                     step_name: None,
                 },
                 loc: (22, 33)
+            }
+        );
+    }
+
+
+    #[test]
+    fn test_validate_var_type_undef_first_part() {
+        let program_string = r#"struct A(a : Int, b : A){init{b.a := 1; c.a := 2;}} init"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let validation_errors = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: UndefinedType("c".to_string()),
+                context: ErrorContext {
+                    struct_name: Some("A".to_string()),
+                    step_name: Some("init".to_string())
+                },
+                loc: (40, 49)
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_var_type_undef_second_part() {
+        let program_string = r#"struct A(a : Int, b : A){init{b.a := 1; b.c := 2;}} init"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let validation_errors = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: UndefinedField("b".to_string(), "c".to_string()),
+                context: ErrorContext {
+                    struct_name: Some("A".to_string()),
+                    step_name: Some("init".to_string())
+                },
+                loc: (40, 49)
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_var_type_undef_third_part() {
+        let program_string = r#"struct A(a : Int, b : A){init{b.a := 1; b.b.c := 2;}} init"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let validation_errors = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: UndefinedField("b".to_string(), "c".to_string()),
+                context: ErrorContext {
+                    struct_name: Some("A".to_string()),
+                    step_name: Some("init".to_string())
+                },
+                loc: (40, 51)
             }
         );
     }
