@@ -365,70 +365,102 @@ fn check_statement_block<'ast>(
 
         match stmt {
             Declaration(decl_type, id, exp, loc) => {
-                if type_is_defined(decl_type, context, *loc) {
-                    // Make sure id is not used before
-                    if let Some((_, l)) = get_type_from_context(id, context) {
-                        context.errors.push(ValidationError {
-                            error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone(), l),
-                            context: ErrorContext::from_block_context(context),
-                            loc: *loc,
-                        });
-                    } else {
-                        // t is defined and id has not been used before
-                        if let Some(exp_type) =
-                            get_expr_type(exp, &Some(decl_type.clone()), context)
-                        {
-                            if !exp_type.can_be_coerced_to_type(decl_type) {
-                                context.errors.push(ValidationError {
-                                    error_type: ValidationErrorType::TypeMismatch(
-                                        decl_type.clone(),
-                                        exp_type,
-                                    ),
-                                    context: ErrorContext::from_block_context(context),
-                                    loc: *loc,
-                                });
-                            } else {
-                                context.add_to_var_scope(id, decl_type, loc);
-                            }
-                        } // else: type of expression could not be deduced
-                    }
-                }
+                check_declaration(decl_type, id, exp, loc, context);
             }
             Assignment(parts, exp, loc) => {
-                if let Some((var_type, _)) = get_var_type(parts, context, loc) {
-                    if let Some(exp_type) = get_expr_type(exp, &Some(var_type.clone()), context) {
-                        if !exp_type.can_be_coerced_to_type(&var_type) {
-                            context.errors.push(ValidationError {
-                                error_type: ValidationErrorType::TypeMismatch(var_type, exp_type),
-                                context: ErrorContext::from_block_context(context),
-                                loc: *loc,
-                            });
-                        }
-                    } // else: type of expression could not be deduced
-                }
+                check_assignment(parts, exp, loc, context);
             }
             IfThen(cond, statements, cond_loc) => {
-                if let Some(cond_type) = get_expr_type(cond, &Some(Type::Bool), context) {
-                    // Booleans have no Null value
-                    if cond_type != Type::Bool {
-                        context.errors.push(ValidationError {
-                            error_type: ValidationErrorType::TypeMismatch(
-                                Type::Bool,
-                                cond_type,
-                            ),
-                            context: ErrorContext::from_block_context(context),
-                            loc: *cond_loc,
-                        });
-                    }
-                }
-
-                // Regardless of if the guard is of boolean type, we check the statements
-                context.push_var_scope();
-                check_statement_block(statements, context);
-                context.pop_var_scope();
+                check_ifthen(cond, statements, cond_loc, context);
             }
         }
     }
+}
+
+fn check_declaration<'ast>(
+    decl_type : &'ast Type,
+    id : &'ast String,
+    exp : &'ast Box<Exp>,
+    loc : &'ast (usize, usize),
+    context: &mut BlockEvaluationContext<'ast>
+    ){
+    if type_is_defined(decl_type, context, *loc) {
+        // Make sure id is not used before
+        if let Some((_, l)) = get_type_from_context(id, context) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::VariableAlreadyDeclared(id.clone(), l),
+                context: ErrorContext::from_block_context(context),
+                loc: *loc,
+            });
+        } else {
+            // t is defined and id has not been used before
+            if let Some(exp_type) =
+                get_expr_type(exp, &Some(decl_type.clone()), context)
+            {
+                if !exp_type.can_be_coerced_to_type(decl_type) {
+                    context.errors.push(ValidationError {
+                        error_type: ValidationErrorType::TypeMismatch(
+                            decl_type.clone(),
+                            exp_type,
+                        ),
+                        context: ErrorContext::from_block_context(context),
+                        loc: *loc,
+                    });
+                } else {
+                    // everything is okay
+                    context.add_to_var_scope(id, decl_type, loc);
+                }
+            } // else: type of expression could not be deduced
+        }
+    }
+}
+
+fn check_assignment<'ast>(
+    parts : &'ast Vec<String>,
+    exp : &'ast Box<Exp>,
+    loc : &'ast Loc,
+    context: &mut BlockEvaluationContext<'ast>
+    ){
+    // Can the type of LHS be determined?
+    if let Some((var_type, _)) = get_var_type(parts, context, loc) {
+        // Can the type of RHS be determined?
+        if let Some(exp_type) = get_expr_type(exp, &Some(var_type.clone()), context) {
+            // Can RHS be converted to LHS?
+            if !exp_type.can_be_coerced_to_type(&var_type) {
+                context.errors.push(ValidationError {
+                    error_type: ValidationErrorType::TypeMismatch(var_type, exp_type),
+                    context: ErrorContext::from_block_context(context),
+                    loc: *loc,
+                });
+            }
+        } // else: type of expression could not be deduced
+    }
+}
+
+fn check_ifthen<'ast>(
+    cond : &'ast Box<Exp>,
+    statements : &'ast Vec<Stat>,
+    cond_loc : &'ast Loc,
+    context: &mut BlockEvaluationContext<'ast>
+    ){
+    if let Some(cond_type) = get_expr_type(cond, &Some(Type::Bool), context) {
+        // Booleans have no Null value
+        if cond_type != Type::Bool {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::TypeMismatch(
+                    Type::Bool,
+                    cond_type,
+                ),
+                context: ErrorContext::from_block_context(context),
+                loc: *cond_loc,
+            });
+        }
+    }
+
+    // Regardless of if the guard is of boolean type, we check the statements
+    context.push_var_scope();
+    check_statement_block(statements, context);
+    context.pop_var_scope();
 }
 
 /// Returns the type of a `Var`: part1.part2.part3, and the location of the original definition
