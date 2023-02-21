@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::ast::*;
 use codespan_reporting::diagnostic::Diagnostic;
 use codespan_reporting::diagnostic::Label;
@@ -127,7 +128,7 @@ impl ValidationError {
             NoNullLiteralForType(Some(t)) => {
                 format!("The null literal is not defined for type {}.", t)
             }
-            &ReservedKeyword(_) => todo!()
+            ReservedKeyword(kw) => format!("The token '{}' is a reserved keyword.", kw)
         }
     }
 
@@ -145,7 +146,7 @@ impl ValidationError {
             TypeMismatch(..) => "An invalid type has been given.",
             InvalidTypesForOperator(..) => "Operator can not be applied to given types.",
             NoNullLiteralForType(..) => "The null literal is not defined in this context.",
-            ReservedKeyword(_) => todo!(),
+            ReservedKeyword(_) => "Used a reserved keyword.",
         }
     }
 }
@@ -173,6 +174,62 @@ impl ErrorContext {
         }
     }
 }
+
+fn is_reserved<'ast>(name : &String) -> bool {
+    let reserved_keywords = HashSet::from([
+        "fprintf",
+        "printf",
+    ].map(|e| e.to_string()));
+
+    return reserved_keywords.contains(name);
+}
+    
+fn check_no_reserved_keywords_structs<'ast>(
+    structs: &'ast Vec<ADLStruct>,    
+    context: &mut BlockEvaluationContext<'ast>
+){
+    for s in structs {
+        if is_reserved(&s.name) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::ReservedKeyword(s.name.clone()),
+                context: ErrorContext::from_block_context(context),
+                loc: s.loc,
+            });
+        }
+    }
+}
+
+
+fn check_no_reserved_keywords_parameters<'ast>(
+    params: &'ast [(String, Type, Loc)],
+    context: &mut BlockEvaluationContext<'ast>,
+){
+    for (n, _, l) in params {
+        if is_reserved(n) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::ReservedKeyword(n.clone()),
+                context: ErrorContext::from_block_context(context),
+                loc: *l,
+            });
+        }
+    }
+}
+
+fn check_no_reserved_keywords_steps<'ast>(
+    steps: &'ast Vec<Step>,
+    context: &mut BlockEvaluationContext<'ast>,
+){
+    for s in steps {
+        if is_reserved(&s.name) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::ReservedKeyword(s.name.clone()),
+                context: ErrorContext::from_block_context(context),
+                loc: s.loc,
+            });
+        }
+    }
+}
+
 
 #[derive(Debug)]
 struct BlockEvaluationContext<'ast> {
@@ -215,18 +272,21 @@ pub fn validate_ast(ast: &Program) -> Vec<ValidationError> {
         errors: Vec::new(),
     };
 
-    // All Structs must have a unique name
+    // All Structs must have a unique name and not reserved keywords
     check_uniqueness_of_structs(&ast.structs, &mut context);
+    check_no_reserved_keywords_structs(&ast.structs, &mut context);
 
     // Test each struct
     for s in &ast.structs {
         context.current_struct_name = Some(&s.name);
 
-        // Test if all parameters are unique
+        // Test if all parameters are unique and not reserved keywords
         check_uniqueness_of_parameters(&s.parameters, &mut context);
+        check_no_reserved_keywords_parameters(&s.parameters, &mut context);
 
-        // Test if all steps are unique
+        // Test if all steps are unique and not reserved keywords
         check_uniqueness_of_steps(&s.steps, &mut context);
+        check_no_reserved_keywords_steps(&s.steps, &mut context);
 
         // Create a fresh scope for the Struct's parameters
         context.push_var_scope();
@@ -384,6 +444,8 @@ fn check_declaration<'ast>(
     loc : &'ast (usize, usize),
     context: &mut BlockEvaluationContext<'ast>
     ){
+
+    // Throws an error if decl_type is undefined
     if type_is_defined(decl_type, context, *loc) {
         // Make sure id is not used before
         if let Some((_, l)) = get_type_from_context(id, context) {
@@ -393,7 +455,7 @@ fn check_declaration<'ast>(
                 loc: *loc,
             });
         } else {
-            // t is defined and id has not been used before
+            // check type of exp
             if let Some(exp_type) =
                 get_expr_type(exp, &Some(decl_type.clone()), context)
             {
@@ -407,8 +469,16 @@ fn check_declaration<'ast>(
                         loc: *loc,
                     });
                 } else {
-                    // everything is okay
-                    context.add_to_var_scope(id, decl_type, loc);
+                    if is_reserved(id) {
+                        context.errors.push(ValidationError {
+                            error_type: ValidationErrorType::ReservedKeyword(id.clone()),
+                            context: ErrorContext::from_block_context(context),
+                            loc: *loc,
+                        });
+                    } else {
+                        // Everything is okay
+                        context.add_to_var_scope(id, decl_type, loc);
+                    }
                 }
             } // else: type of expression could not be deduced
         }
@@ -900,6 +970,90 @@ mod tests {
                     step_name: Some("init".to_string())
                 },
                 loc: (40, 51)
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_reserved_structs() {
+        let program_string = r#"struct printf(a : Int, b : A){init{}} init"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let validation_errors = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: ReservedKeyword("printf".to_string()),
+                context: ErrorContext {
+                    struct_name: Some("printf".to_string()),
+                    step_name: None
+                },
+                loc: (0, 37)
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_reserved_params() {
+        let program_string = r#"struct A(fprintf : Int){init{}} init"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let validation_errors = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: ReservedKeyword("fprintf".to_string()),
+                context: ErrorContext {
+                    struct_name: Some("A".to_string()),
+                    step_name: None
+                },
+                loc: (9, 22)
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_reserved_steps() {
+        let program_string = r#"struct A(b : Int){printf{}} printf"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let validation_errors = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: ReservedKeyword("printf".to_string()),
+                context: ErrorContext {
+                    struct_name: Some("A".to_string()),
+                    step_name: Some("printf".to_string())
+                },
+                loc: (18, 26)
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_reserved_vars() {
+        let program_string = r#"struct A(b : Int){init{ Int printf := 1;}} init"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let validation_errors = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: ReservedKeyword("printf".to_string()),
+                context: ErrorContext {
+                    struct_name: Some("A".to_string()),
+                    step_name: Some("init".to_string())
+                },
+                loc: (24, 40)
             }
         );
     }
