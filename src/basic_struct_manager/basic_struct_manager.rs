@@ -26,6 +26,18 @@ impl StructManager for BasicStructManager<'_> {
 
 	fn struct_typedef(&self) -> String {
 		let mut res = String::new();
+
+		// Add declarations
+		for strct in &self.program.structs {
+			let n = &strct.name;
+			res.push_str(
+				&formatdoc!{"
+					struct {n};
+				"}
+			);
+		}
+
+		// Add implementations
 		for strct in &self.program.structs {
 			let n = &strct.name;
 			let params = strct.parameters.iter()
