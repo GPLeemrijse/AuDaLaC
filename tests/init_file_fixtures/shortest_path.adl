@@ -1,0 +1,25 @@
+struct Node (dist : Int, in : Edge) {
+    init {
+        Node n1 := Node(0, null);
+        Node n2 := Node(-1, null);
+        Node n3 := Node(-1, null);
+        Edge e1 := Edge(n1, n3, 1);
+        Edge e2 := Edge(n1, n3, 2);
+        Edge e3 := Edge(n1, n2, 3);
+        Edge e4 := Edge(n2, n1, 1);
+    }
+}
+
+struct Edge (s : Node, t : Node, w: Nat) {
+    race {
+        if s.dist != -1 && (t.dist == -1 || s.dist + w < t.dist) then {
+            t.in := this;
+        }
+    }
+    compute {
+        if t.in == this then {
+            t.dist := s.dist + w;
+        }
+    }
+}
+init < Fix(race < compute) < Node.print
