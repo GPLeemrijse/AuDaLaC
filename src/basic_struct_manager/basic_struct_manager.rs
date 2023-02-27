@@ -198,6 +198,7 @@ impl StructManager for BasicStructManager<'_> {
 		}
 		res
 	}
+
 	fn kernels(&self) -> std::string::String {
 		let mut res = String::new();
 
@@ -241,7 +242,7 @@ impl BasicStructManager<'_> {
 			res.push_str(
 				&match stmt {
 					IfThen(e, stmts, _) => {
-						let cond = e.as_c_expression(&is_param);
+						let cond = e.as_c_expression(self.program, &is_param, None);
 						let body = self.make_body(&stmts, parameters);
 						formatdoc!{"
 							if {cond} {{
@@ -249,22 +250,22 @@ impl BasicStructManager<'_> {
 							}}
 						"}
 					},
-				    Declaration(t, n, e, _) => {
-				    	let t_comp = t.as_c_type();
-				    	let e_comp = e.as_c_expression(&is_param);
-				    	format!("{t_comp} {n} = {e_comp};\n")
-				    },
-				    Assignment(parts, e, _) => {
-				    	let p = parts.join("->");
-				    	let e_comp = e.as_c_expression(&is_param);
+					Declaration(t, n, e, _) => {
+						let t_comp = t.as_c_type();
+						let e_comp = e.as_c_expression(self.program, &is_param, None);
+						format!("{t_comp} {n} = {e_comp};\n")
+					},
+					Assignment(parts, e, _) => {
+						let p = parts.join("->");
+						let e_comp = e.as_c_expression(self.program, &is_param, None);
 
-				    	if is_param(&parts[0]) {
-				    		let p_type = self.get_param_type(parts, parameters).as_c_type();
-				    		format!("SET_PARAM(i, {p_type}, self->{p}, {e_comp});\n")
-				    	} else {
-				    		format!("{p} = {e_comp};\n")
-				    	}
-				    },
+						if is_param(&parts[0]) {
+							let p_type = self.get_param_type(parts, parameters).as_c_type();
+							format!("SET_PARAM(i, {p_type}, self->{p}, {e_comp});\n")
+						} else {
+							format!("{p} = {e_comp};\n")
+						}
+					},
 				}
 			);
 		}
@@ -288,4 +289,87 @@ impl BasicStructManager<'_> {
 
 #[cfg(test)]
 mod tests {
+	use crate::BasicStructManager;
+	use crate::ast::*;
+	use crate::ast::Schedule::*;
+	use crate::ast::Type::*;
+	use crate::ast::Stat::*;
+	use crate::ast::Exp::*;
+	use crate::ast::Literal::*;
+
+	#[test]
+	fn test_nested_constructors(){
+		let mut program : Program = Program {
+		    structs: Vec::new(),
+		    schedule: Box::new(StepCall("test".to_string(), (1, 2))),
+		};
+
+		let step1 = Step {
+			name: "step1".to_string(),
+			statements: vec![
+				Declaration(
+					Named("strctA".to_string()),
+					"e1".to_string(),
+					Box::new(
+						Constructor(
+							"strctA".to_string(),
+							vec![
+								Lit(NullLit, (0,0)),
+								Constructor(
+									"strctB".to_string(),
+									vec![
+										Lit(NullLit, (0,0)),
+										Lit(NullLit, (0,0))
+									],
+									(0, 0)
+								)
+							],
+							(0, 0)
+						)
+					),
+					(0, 0)
+				),
+			],
+			loc: (0, 0),
+		};
+
+		let strct_a = ADLStruct {
+			name: "strctA".to_string(),
+			parameters: vec![
+				("P1".to_string(), Named("strctA".to_string()), (0, 0)),
+				("P2".to_string(), Named("strctB".to_string()), (0, 0))
+			],
+			steps: vec![
+				step1.clone()
+			],
+		    loc: (0, 0),
+		};
+
+		let strct_b = ADLStruct {
+		    name: "strctB".to_string(),
+		    parameters: vec![
+		    	("P1".to_string(), Named("strctA".to_string()), (0, 0)),
+		    	("P2".to_string(), Named("strctB".to_string()), (0, 0))
+		    ],
+		    steps: vec![
+		    	step1.clone()
+		    ],
+		    loc: (0, 0),
+		};
+
+		program.structs.push(strct_a);
+		program.structs.push(strct_b);
+		
+		let basic_sm : BasicStructManager = BasicStructManager::new(&program, 10);
+
+
+
+		let body = basic_sm.make_body(&program.structs[0].steps[0].statements, &program.structs[0].parameters);
+		assert_eq!(
+			"strctA* e1 = create_strctA(&strctA_manager, (strctA*)strctA_manager.structs, create_strctB(&strctB_manager, (strctA*)strctA_manager.structs, (strctB*)strctB_manager.structs));\n", body);
+
+		let body = basic_sm.make_body(&program.structs[1].steps[0].statements, &program.structs[1].parameters);
+		assert_eq!(
+			"strctA* e1 = create_strctA(&strctA_manager, (strctA*)strctA_manager.structs, create_strctB(&strctB_manager, (strctA*)strctA_manager.structs, (strctB*)strctB_manager.structs));\n", body);
+	}
 }

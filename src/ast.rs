@@ -28,7 +28,7 @@ impl Schedule {
     }
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub struct Step {
     pub name: String,
     pub statements: Vec<Stat>,
@@ -43,7 +43,7 @@ pub struct ADLStruct {
     pub loc: Loc,
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Exp {
     BinOp(Box<Exp>, BinOpcode, Box<Exp>, Loc),
     UnOp(UnOpcode, Box<Exp>, Loc),
@@ -53,22 +53,32 @@ pub enum Exp {
 }
 
 impl Exp {
-    pub fn as_c_expression<F: Fn(&String) -> bool>(&self, is_param: &F) -> String {
+    pub fn as_c_expression<F: Fn(&String) -> bool>(&self, program : &Program, is_param: &F, type_name : Option<&String>) -> String {
         use crate::ast::Exp::*;
         match self {
             BinOp(e1, c, e2, _) => {
-                let e1_comp = e1.as_c_expression(is_param);
-                let e2_comp = e2.as_c_expression(is_param);
+                let e1_comp = e1.as_c_expression(program, is_param, type_name);
+                let e2_comp = e2.as_c_expression(program, is_param, type_name);
 
                 format!("({e1_comp} {c} {e2_comp})")
             },
             UnOp(c, e, _) => {
-                let e_comp = e.as_c_expression(is_param);
+                let e_comp = e.as_c_expression(program, is_param, type_name);
                 format!("({c}{e_comp})")
             },
             Constructor(n, args, _) => {
+                let n_struct = program.structs.iter().find(|s| s.name == *n).unwrap();
+                let arg_types : Vec<Option<&String>> = n_struct.parameters.iter()
+                                                                          .map(|(_, t, _)|
+                                                                                if let Type::Named(t_name) = t {
+                                                                                    Some(t_name)
+                                                                                } else {
+                                                                                    None
+                                                                                })
+                                                                           .collect();
                 let args_comp = args.iter()
-                        .map(|e| e.as_c_expression(is_param))
+                        .enumerate()
+                        .map(|(idx, e)| e.as_c_expression(program, is_param, arg_types[idx]))
                         .reduce(|acc: String, nxt| acc + ", " + &nxt).unwrap();
 
                 format!("create_{n}(&{n}_manager, {args_comp})")
@@ -79,12 +89,12 @@ impl Exp {
 
                 format!("({is_p}{p})")
             },
-            Lit(l, _) => l.as_c_literal(),
+            Lit(l, _) => l.as_c_literal(type_name),
         }
     }
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Stat {
     IfThen(Box<Exp>, Vec<Stat>, Loc),
     Declaration(Type, String, Box<Exp>, Loc),
@@ -152,7 +162,7 @@ impl Display for Type {
     }
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Literal {
     NatLit(u32),
     IntLit(i32),
@@ -163,14 +173,20 @@ pub enum Literal {
 }
 
 impl Literal {
-    pub fn as_c_literal(&self) -> String {
+    pub fn as_c_literal(&self, type_name : Option<&String>) -> String {
         use crate::ast::Literal::*;
         match self {
             NatLit(n) => format!("{}", n),
             IntLit(i) => format!("{}", i),
             BoolLit(b) => format!("{}", if *b {"true"} else {"false"}),
             StringLit(s) => format!("\"{}\"", s),
-            NullLit => "NULL".to_string(),
+            NullLit => {
+                if let Some(name) = type_name {
+                    format!("({}*){}_manager.structs", name, name)
+                } else {
+                    panic!("Need type information to express this in c.");
+                }
+            },
             ThisLit => "self".to_string(),
         }
     }
@@ -214,7 +230,7 @@ impl Display for BinOpcode {
     }
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub enum UnOpcode {
     Negation,
 }
