@@ -7,7 +7,7 @@ use indoc::formatdoc;
 
 pub fn generate_init_file(ast: &Program, writer : &mut BufWriter<File>) {
 	let nrof_structs = ast.structs.len();
-	let struct_decls = ast.structs.iter().map(|s| {
+	let mut struct_decls_vec : Vec<String> = ast.structs.iter().map(|s| {
 		format!(
 			"{} {}",
 			s.name,
@@ -16,12 +16,17 @@ pub fn generate_init_file(ast: &Program, writer : &mut BufWriter<File>) {
 					    .reduce(|acc: String, nxt| acc + " " + &nxt)
 					    .unwrap()
 		).to_string()
-	}).reduce(|acc: String, nxt| acc + "\n" + &nxt)
-	  .unwrap();
+	}).collect();
+
+	struct_decls_vec.sort();
+
+	let struct_decls_str : String = struct_decls_vec.into_iter()
+										   .reduce(|acc: String, nxt| acc + "\n" + &nxt)
+										   .unwrap();
 
 	writer.write(formatdoc!(
 		"ADL structures {nrof_structs}
-		{struct_decls}
+		{struct_decls_str}
 		"
 	).as_bytes()).expect("Could not write to writer!");
 
@@ -35,8 +40,8 @@ pub fn generate_init_file(ast: &Program, writer : &mut BufWriter<File>) {
 
 	let statements = &steps[0].statements;
 
-	// instance name -> (paramater values, instance number, struct num)
-	let mut insts : HashMap<&String, (Vec<i64>, usize, usize)> = HashMap::with_capacity(statements.len());
+	// instance name -> (paramater values, instance number, struct name)
+	let mut insts : HashMap<&String, (Vec<i64>, usize, &String)> = HashMap::with_capacity(statements.len());
 	//							  name ->  (nrof_instances, struct_nr)
 	let mut struct_info : HashMap<&String, (usize, usize)> = HashMap::with_capacity(structs.len());
 
@@ -59,12 +64,12 @@ pub fn generate_init_file(ast: &Program, writer : &mut BufWriter<File>) {
 				if t1 != t2 {
 					panic!("Invalid type @{:?}.", constr_loc)
 				}
-				let (inst_count, struct_num) = struct_info.get_mut(t1).unwrap();
+				let (inst_count, _) = struct_info.get_mut(t1).unwrap();
 
 				// See if id is already in map
 				if !insts.contains_key(id) {
 					// If not, insert blank instance
-					insts.insert(id, (Vec::with_capacity(param_exprs.len()), *inst_count, *struct_num));
+					insts.insert(id, (Vec::with_capacity(param_exprs.len()), *inst_count, t1));
 					*inst_count += 1;
 				} else {
 					panic!("Double usage of id {}.", id);
@@ -116,12 +121,12 @@ pub fn generate_init_file(ast: &Program, writer : &mut BufWriter<File>) {
 		}
 	}
 
-	let mut instances : Vec<(Vec<i64>, usize, usize)> = insts.into_values().collect();
+	let mut instances : Vec<(Vec<i64>, usize, &String)> = insts.into_values().collect();
 
 	// Add null-instances
-	for (s_idx, s) in structs.iter().enumerate() {
+	for s in structs {
 		instances.push(
-			(vec![0; s.parameters.len()], 0, s_idx)
+			(vec![0; s.parameters.len()], 0, &s.name)
 		);
 	}
 	instances.sort_by(|a, b| (a.2, a.1).cmp(&(b.2, b.1)));
@@ -132,8 +137,8 @@ pub fn generate_init_file(ast: &Program, writer : &mut BufWriter<File>) {
 			writer.write(
 				format!{
 					"{} instances {}\n",
-					structs[instances[idx].2].name,
-					struct_info.get(&structs[instances[idx].2].name).unwrap().0
+					instances[idx].2,
+					struct_info.get(&instances[idx].2).unwrap().0
 				}.as_bytes()
 			).expect("Failed to write.");
 		}

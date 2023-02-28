@@ -3,77 +3,77 @@ use indoc::formatdoc;
 
 #[test]
 fn test_generate_init_file_shortest_path() {
-	let output_loc = "/tmp/shortest_path";
+	let output_loc = "tests/init_file_fixtures/shortest_path.init";
 	generate_init_file("tests/init_file_fixtures/shortest_path.adl", output_loc);
 	let result = fs::read_to_string(output_loc).expect("Could not open init file.");
 	assert_eq!(result,
 		formatdoc!(
 			"ADL structures 2
-			Node Int Edge
 			Edge Node Node Nat
-			Node instances 4
-			0 0
-			0 0
-			-1 0
-			-1 0
+			Node Int Edge
 			Edge instances 5
 			0 0 0
 			1 3 1
 			1 3 2
 			1 2 3
 			2 1 1
+			Node instances 4
+			0 0
+			0 0
+			-1 0
+			-1 0
 			")
 	);
 }
 
 #[test]
 fn test_generate_init_file_reachability() {
-	let output_loc = "/tmp/reachability_init_file";
+	let output_loc = "tests/init_file_fixtures/reachability.init";
 	generate_init_file("tests/ast_fixtures/reachability", output_loc);
 	let result = fs::read_to_string(output_loc).expect("Could not open init file.");
 	assert_eq!(result,
 		formatdoc!(
 			"ADL structures 2
-			Node Bool
 			Edge Node Node
+			Node Bool
+			Edge instances 5
+			0 0
+			1 3
+			4 3
+			2 4
+			3 4
 			Node instances 5
 			0
 			1
 			0
 			0
 			0
-			Edge instances 5
-			0 0
-			1 3
-			4 3
-			2 4
-			3 4
 			")
 	);
 }
 
 #[test]
 fn test_generate_init_file_circular() {
-	let output_loc = "/tmp/circular_init";
+	let output_loc = "tests/init_file_fixtures/circular_dependency.init";
 	generate_init_file("tests/init_file_fixtures/circular_dependency.adl", output_loc);
 	let result = fs::read_to_string(output_loc).expect("Could not open init file.");
 	assert_eq!(result,
 		formatdoc!(
 			"ADL structures 2
-			Node Bool Node
 			Edge Node Node
-			Node instances 5
-			0 0
-			1 1
-			0 3
-			0 0
-			0 2
+			Node Bool Node
 			Edge instances 5
 			0 0
 			1 3
 			4 3
 			2 4
 			3 4
+			Node instances 5
+			0 0
+			1 1
+			0 3
+			0 0
+			0 2
 			")
 	);
 }
