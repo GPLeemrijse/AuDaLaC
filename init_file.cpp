@@ -20,7 +20,7 @@ namespace InitFile {
         if (t == Int) return sizeof(int32_t);
         if (t == Nat) return sizeof(uint32_t);
         if (t == Bool) return sizeof(bool);
-        return sizeof(uint32_t); // We use indexes instead of pointers
+        return sizeof(uint32_t); // We use indices instead of pointers
     }
 
 
@@ -149,7 +149,7 @@ namespace InitFile {
 
                     } else {
                         uint32_t* par_array = (uint32_t*)s_info->parameter_data[p];
-                        par_array[inst] = par_value; // Refs as indexes
+                        par_array[inst] = par_value; // Refs as indices
                     }
                 }
             } 
