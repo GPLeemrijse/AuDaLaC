@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 pub trait Transpiler {
-    fn transpile(schedule_manager: &impl ScheduleManager, struct_manager: &impl StructManager) -> String;
+    fn transpile(schedule_manager: Box<impl ScheduleManager + ?Sized>, struct_manager: Box<impl StructManager + ?Sized>) -> String;
 }
 
 

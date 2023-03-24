@@ -1,11 +1,11 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::transpilation_traits::*;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::Write;
-use crate::basic_transpiler::BasicCUDATranspiler;
-use crate::basic_schedule_manager::BasicScheduleManager;
-use crate::basic_struct_manager::BasicStructManager;
+use crate::basic_compiler::*;
+use crate::coalesced_compiler::*;
 use crate::transpilation_traits::Transpiler;
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
@@ -20,9 +20,8 @@ use clap::clap_app;
 mod ast;
 mod ast_validator;
 mod transpilation_traits;
-mod basic_transpiler;
-mod basic_schedule_manager;
-mod basic_struct_manager;
+mod basic_compiler;
+mod coalesced_compiler;
 mod init_file_generator;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
@@ -34,7 +33,8 @@ fn main() {
         (about: "Parses \"ADL\" programs")
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
-        (@arg nrofstructs: -n --nrofstructs +takes_value "nrof structs memory is allocated for.")
+        (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") default_value("coalesced") "Which compiler to use.")
+        (@arg nrofstructs: -n --nrofstructs +takes_value default_value("100") value_parser(clap::value_parser!(u64)) "nrof structs memory is allocated for.")
         (@arg output: -o --output +takes_value +required "Output file")
         (@arg file: +required "\"ADL\" file")
     )
@@ -42,9 +42,10 @@ fn main() {
 
     let print_ast = args.is_present("print_ast");
     let init_file = args.is_present("init_file");
-    let nrof_structs = if args.is_present("nrofstructs") { args.value_of("nrofstructs").unwrap().parse::<u64>().unwrap()} else {100};
+    let nrof_structs : u64 = *args.get_one("nrofstructs").unwrap();
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output").unwrap();
+    let compiler : &str = args.value_of("compiler").unwrap();
 
     let adl_program_text = fs::read_to_string(adl_file_loc).expect("Could not open ADL file.");
     let mut output_writer = BufWriter::new(
@@ -71,9 +72,24 @@ fn main() {
                 let errors = validate_ast(&program);
 
                 if errors.is_empty() {
-                    let schedule_manager = BasicScheduleManager::new(&program);
-                    let struct_manager = BasicStructManager::new(&program, nrof_structs);
-                    let result = BasicCUDATranspiler::transpile(&schedule_manager, &struct_manager);
+                    let schedule_manager : Box<dyn ScheduleManager>;
+                    let struct_manager : Box<dyn StructManager>;
+                    let result : String;
+
+                    match compiler {
+                        "basic" => {
+                            schedule_manager = Box::new(BasicScheduleManager::new(&program));
+                            struct_manager = Box::new(BasicStructManager::new(&program, nrof_structs));
+                            result = BasicCUDATranspiler::transpile(schedule_manager, struct_manager);
+                        },
+                        "coalesced" => {
+                            schedule_manager = Box::new(CoalescedScheduleManager::new(&program));
+                            struct_manager = Box::new(CoalescedStructManager::new(&program, nrof_structs));
+                            result = CoalescedCUDATranspiler::transpile(schedule_manager, struct_manager);
+                        },
+                        _ => unreachable!()
+                    }
+                    
 
                     output_writer.write(result.as_bytes()).expect("Could not write to output file.");
                 } else { // Print errors

@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
 use crate::ast::*;
+use crate::basic_compiler::*;
 use indoc::{indoc, formatdoc};
 
 
@@ -41,7 +42,7 @@ impl StructManager for BasicStructManager<'_> {
 		for strct in &self.program.structs {
 			let n = &strct.name;
 			let params = strct.parameters.iter()
-						.map(|(s, t, _)| format!("    {} {s};", t.as_c_type()))
+						.map(|(s, t, _)| format!("    {} {s};", as_c_type(t)))
 						.reduce(|acc: String, nxt| acc + "\n" + &nxt).unwrap();
 
 			res.push_str(
@@ -101,13 +102,13 @@ impl StructManager for BasicStructManager<'_> {
 			let n = &strct.name;
 			let n_cap : String = n.chars().map(|c| c.to_uppercase().collect::<String>()).collect::<String>();
 			let params = strct.parameters.iter()
-						.map(|(s, t, _)| format!(", {} {s}", t.as_c_type()))
+						.map(|(s, t, _)| format!(", {} {s}", as_c_type(t)))
 						.reduce(|acc: String, nxt| acc + &nxt).unwrap();
 			let set_params = strct.parameters.iter()
 						.map(|(s, _, _)| format!("    result->{s} = {s};\n"))
 						.reduce(|acc: String, nxt| acc + &nxt).unwrap();			
 			let fmt = strct.parameters.iter()
-						.map(|(s, t, _)| format!(", {s}={}", t.as_printf()))
+						.map(|(s, t, _)| format!(", {s}={}", as_printf(t)))
 						.reduce(|acc: String, nxt| acc + &nxt).unwrap();
 			let cast_params = strct.parameters.iter()
 						.map(|(s, _, _)| format!(", m->{s}"))
@@ -165,7 +166,7 @@ impl StructManager for BasicStructManager<'_> {
 		for strct in &self.program.structs {
 			let n = &strct.name;
 			let param_defaults = strct.parameters.iter()
-				.map(|(_, t, _)| format!(", {}", t.as_c_default()))
+				.map(|(_, t, _)| format!(", {}", as_c_default(t)))
 				.reduce(|acc: String, nxt| acc + &nxt).unwrap();
 
 			res.push_str(&formatdoc!{"
@@ -237,12 +238,14 @@ impl BasicStructManager<'_> {
 		let mut res = String::new();
 		let is_param = |p : &String| parameters.iter().any(|(s, _, _)| s == p);
 		
+		println!("{:#?}", statements);
+
 		for stmt in statements {
 			use crate::ast::Stat::*;
 			res.push_str(
 				&match stmt {
 					IfThen(e, stmts, _) => {
-						let cond = e.as_c_expression(self.program, &is_param, None);
+						let cond = as_c_expression(e, self.program, &is_param, None);
 						let body = self.make_body(&stmts, parameters);
 						formatdoc!{"
 							if {cond} {{
@@ -251,16 +254,16 @@ impl BasicStructManager<'_> {
 						"}
 					},
 					Declaration(t, n, e, _) => {
-						let t_comp = t.as_c_type();
-						let e_comp = e.as_c_expression(self.program, &is_param, None);
+						let t_comp = as_c_type(t);
+						let e_comp = as_c_expression(e, self.program, &is_param, None);
 						format!("{t_comp} {n} = {e_comp};\n")
 					},
 					Assignment(parts, e, _) => {
 						let p = parts.join("->");
-						let e_comp = e.as_c_expression(self.program, &is_param, None);
+						let e_comp = as_c_expression(e, self.program, &is_param, None);
 
 						if is_param(&parts[0]) {
-							let p_type = self.get_param_type(parts, parameters).as_c_type();
+							let p_type = as_c_type(&self.get_param_type(parts, parameters));
 							format!("SET_PARAM(i, {p_type}, self->{p}, {e_comp});\n")
 						} else {
 							format!("{p} = {e_comp};\n")

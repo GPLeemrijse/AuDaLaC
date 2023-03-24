@@ -6,25 +6,13 @@
 #include <vector>
 #include <new>
 #include <inttypes.h>
+#include "ADL.h"
 
 namespace InitFile {
 
-    struct_info_t::ParameterType struct_info_t::parse_type_string(std::string s) {
-        if (s == "Int") return Int;
-        if (s == "Nat") return Nat;
-        if (s == "Bool") return Bool;
-        return Ref;
-    }
-
-    constexpr size_t struct_info_t::size_of_type(ParameterType t) {
-        if (t == Int) return sizeof(int32_t);
-        if (t == Nat) return sizeof(uint32_t);
-        if (t == Bool) return sizeof(bool);
-        return sizeof(uint32_t); // We use indices instead of pointers
-    }
 
 
-    void struct_info_t::print_info(){
+    void StructInfo::print_info(){
         std::cout << this->name << "(";
         for(auto t : this->parameter_types){
             std::cout << t << ", ";
@@ -33,17 +21,17 @@ namespace InitFile {
 
         for(int i = 0; i < this->nrof_instances; i++){
             for (int p = 0; p < this->parameter_types.size(); p++){
-                if (this->parameter_types[p] == struct_info_t::Int){
+                if (this->parameter_types[p] == ADL::Int){
                     int32_t* par_value_ptr = (int32_t*)this->parameter_data[p];
                     int32_t par_value = par_value_ptr[i];
                     std::cout << std::to_string(par_value) << " ";
 
-                } else if (this->parameter_types[p] == struct_info_t::Nat){
+                } else if (this->parameter_types[p] == ADL::Nat){
                     uint32_t* par_value_ptr = (uint32_t*)this->parameter_data[p];
                     uint32_t par_value = par_value_ptr[i];
                     std::cout << std::to_string(par_value) << " ";
 
-                } else if (this->parameter_types[p] == struct_info_t::Bool){
+                } else if (this->parameter_types[p] == ADL::Bool){
                     bool* par_value_ptr = (bool*)this->parameter_data[p];
                     bool par_value = par_value_ptr[i];
                     std::cout << std::to_string(par_value) << " ";
@@ -58,7 +46,7 @@ namespace InitFile {
         }
     }
 
-    std::vector<struct_info_t> parse(const char* init_file) {
+    std::vector<StructInfo> parse(const char* init_file) {
         std::ifstream infile(init_file);
 
         std::string line;
@@ -74,7 +62,7 @@ namespace InitFile {
         }
 
         /* Allocate space for structs */
-        std::vector<struct_info_t> struct_info(nrof_structs);
+        std::vector<StructInfo> struct_info(nrof_structs);
 
 
         /* Parse the structure parameter declarations */
@@ -86,13 +74,13 @@ namespace InitFile {
 
             std::string par_name;
             while(iss >> par_name){
-                struct_info[s].parameter_types.push_back(struct_info_t::parse_type_string(par_name));
+                struct_info[s].parameter_types.push_back(ADL::parse_type_string(par_name));
             }
         }
 
         /* Parse the structure instance declarations */
         for (int strct = 0; strct < nrof_structs; strct++){
-            struct_info_t* s_info = &struct_info[strct];
+            StructInfo* s_info = &struct_info[strct];
             std::getline(infile, line);
             
             std::string name;
@@ -117,7 +105,7 @@ namespace InitFile {
 
             std::vector<size_t> param_sizes(nrof_params);
             for (int p = 0; p < nrof_params; p++){
-                size_t param_size = struct_info_t::size_of_type(s_info->parameter_types[p]);
+                size_t param_size = ADL::size_of_type(s_info->parameter_types[p]);
                 void* data_ptr = malloc(nrof_instances * param_size);
 
                 if (data_ptr == NULL){
@@ -135,15 +123,15 @@ namespace InitFile {
                 for (int p = 0; p < nrof_params; p++){
                     iss >> par_value;
 
-                    if (s_info->parameter_types[p] == struct_info_t::Int){
+                    if (s_info->parameter_types[p] == ADL::Int){
                         int32_t* par_array = (int32_t*)s_info->parameter_data[p];
                         par_array[inst] = par_value;
 
-                    } else if (s_info->parameter_types[p] == struct_info_t::Nat){
+                    } else if (s_info->parameter_types[p] == ADL::Nat){
                         uint32_t* par_array = (uint32_t*)s_info->parameter_data[p];
                         par_array[inst] = par_value;
 
-                    } else if (s_info->parameter_types[p] == struct_info_t::Bool){
+                    } else if (s_info->parameter_types[p] == ADL::Bool){
                         bool* par_array = (bool*)s_info->parameter_data[p];
                         par_array[inst] = par_value;
 
@@ -153,10 +141,6 @@ namespace InitFile {
                     }
                 }
             } 
-        }
-
-        for(auto s : struct_info) {
-            s.print_info();
         }
 
         return struct_info;

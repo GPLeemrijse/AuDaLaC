@@ -457,7 +457,7 @@ fn check_declaration<'ast>(
         } else {
             // check type of exp
             if let Some(exp_type) =
-                get_expr_type(exp, &Some(decl_type.clone()), context)
+                get_expr_type(exp, context)
             {
                 if !exp_type.can_be_coerced_to_type(decl_type) {
                     context.errors.push(ValidationError {
@@ -494,7 +494,7 @@ fn check_assignment<'ast>(
     // Can the type of LHS be determined?
     if let Some((var_type, _)) = get_var_type(parts, context, loc) {
         // Can the type of RHS be determined?
-        if let Some(exp_type) = get_expr_type(exp, &Some(var_type.clone()), context) {
+        if let Some(exp_type) = get_expr_type(exp, context) {
             // Can RHS be converted to LHS?
             if !exp_type.can_be_coerced_to_type(&var_type) {
                 context.errors.push(ValidationError {
@@ -513,7 +513,7 @@ fn check_ifthen<'ast>(
     cond_loc : &'ast Loc,
     context: &mut BlockEvaluationContext<'ast>
     ){
-    if let Some(cond_type) = get_expr_type(cond, &Some(Type::Bool), context) {
+    if let Some(cond_type) = get_expr_type(cond, context) {
         // Booleans have no Null value
         if cond_type != Type::Bool {
             context.errors.push(ValidationError {
@@ -628,7 +628,6 @@ fn get_type_from_scope<'ast>(
 
 fn get_expr_type<'ast>(
     expr: &'ast Exp,
-    preferred_type: &Option<Type>,
     context: &mut BlockEvaluationContext<'ast>,
 ) -> Option<Type> {
     use crate::ast::Exp::*;
@@ -637,8 +636,8 @@ fn get_expr_type<'ast>(
 
     match expr {
         BinOp(l, code, r, loc) => {
-            let l_type: Option<Type> = get_expr_type(l, preferred_type, context);
-            let r_type: Option<Type> = get_expr_type(r, preferred_type, context);
+            let l_type: Option<Type> = get_expr_type(l, context);
+            let r_type: Option<Type> = get_expr_type(r, context);
 
             if l_type == None || r_type == None {
                 return None;
@@ -660,7 +659,7 @@ fn get_expr_type<'ast>(
         }
         UnOp(code, e, loc) => match code {
             UnOpcode::Negation => {
-                let e_type = get_expr_type(e, &Some(Bool), context);
+                let e_type = get_expr_type(e, context);
                 if let Some(ref t) = e_type {
                     if t != &Bool {
                         context.errors.push(ValidationError {
@@ -700,7 +699,7 @@ fn get_expr_type<'ast>(
                 }
 
                 for ((_, p_type, _), e) in params.iter().zip(exps) {
-                    if let Some(exp_type) = get_expr_type(e, &Some(p_type.clone()), context) {
+                    if let Some(exp_type) = get_expr_type(e, context) {
                         if !exp_type.can_be_coerced_to_type(p_type) {
                             context.errors.push(ValidationError {
                                 error_type: ValidationErrorType::TypeMismatch(
@@ -722,28 +721,13 @@ fn get_expr_type<'ast>(
             }
         }
         Var(parts, loc) => get_var_type(parts, context, loc).map(|(t, _)| t),
-        Lit(lit, loc) => {
+        Lit(lit, _) => {
             match lit {
                 NatLit(_) => Some(Nat),
                 IntLit(_) => Some(Int),
                 BoolLit(_) => Some(Bool),
                 StringLit(_) => Some(String),
-                NullLit => {
-                    // Only named types have null literals
-                    match preferred_type {
-                        Some(Named(s)) => Some(Named(s.clone())),
-                        t => {
-                            context.errors.push(ValidationError {
-                                error_type: ValidationErrorType::NoNullLiteralForType(
-                                    t.as_ref().cloned(),
-                                ),
-                                context: ErrorContext::from_block_context(context),
-                                loc: *loc,
-                            });
-                            None
-                        }
-                    }
-                }
+                NullLit => Some(Null),
                 ThisLit => Some(Named(context.current_struct_name.unwrap().clone())),
             }
         }
@@ -784,7 +768,7 @@ fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<
         (String, _, String) if is_equality(op) => Some(Bool),
         (Bool, _, Bool) if is_equality(op) => Some(Bool),
         (Bool, _, Bool) if is_boolean_logic(op) => Some(Bool),
-        (Named(..), _, Named(..)) if is_equality(op) => Some(Bool),
+        (Named(..)|Null, _, Named(..)|Null) if is_equality(op) => Some(Bool),
         (..) => None,
     }
 }

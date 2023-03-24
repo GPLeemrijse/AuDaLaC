@@ -52,48 +52,6 @@ pub enum Exp {
     Lit(Literal, Loc),
 }
 
-impl Exp {
-    pub fn as_c_expression<F: Fn(&String) -> bool>(&self, program : &Program, is_param: &F, type_name : Option<&String>) -> String {
-        use crate::ast::Exp::*;
-        match self {
-            BinOp(e1, c, e2, _) => {
-                let e1_comp = e1.as_c_expression(program, is_param, type_name);
-                let e2_comp = e2.as_c_expression(program, is_param, type_name);
-
-                format!("({e1_comp} {c} {e2_comp})")
-            },
-            UnOp(c, e, _) => {
-                let e_comp = e.as_c_expression(program, is_param, type_name);
-                format!("({c}{e_comp})")
-            },
-            Constructor(n, args, _) => {
-                let n_struct = program.structs.iter().find(|s| s.name == *n).unwrap();
-                let arg_types : Vec<Option<&String>> = n_struct.parameters.iter()
-                                                                          .map(|(_, t, _)|
-                                                                                if let Type::Named(t_name) = t {
-                                                                                    Some(t_name)
-                                                                                } else {
-                                                                                    None
-                                                                                })
-                                                                           .collect();
-                let args_comp = args.iter()
-                        .enumerate()
-                        .map(|(idx, e)| e.as_c_expression(program, is_param, arg_types[idx]))
-                        .reduce(|acc: String, nxt| acc + ", " + &nxt).unwrap();
-
-                format!("create_{n}(&{n}_manager, {args_comp})")
-            },
-            Var(parts, _) => {
-                let is_p = if is_param(&parts[0]) {"self->"} else {""};
-                let p = parts.join("->");
-
-                format!("({is_p}{p})")
-            },
-            Lit(l, _) => l.as_c_literal(type_name),
-        }
-    }
-}
-
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Stat {
     IfThen(Box<Exp>, Vec<Stat>, Loc),
@@ -108,44 +66,17 @@ pub enum Type {
     Nat,
     Int,
     Bool,
+    Null
 }
 
 impl Type {
     pub fn can_be_coerced_to_type(&self, t: &Type) -> bool {
-        self == t || (*t == Type::Int && *self == Type::Nat)
-    }
-
-    pub fn as_c_type(&self) -> String {
-        use Type::*;
-        match self {
-            Named(s) => format!("{s}*").to_string(),
-            String => "string".to_string(),
-            Nat => "unsigned int".to_string(),
-            Int => "int".to_string(),
-            Bool => "bool".to_string(),
-        }
-    }
-
-    pub fn as_printf(&self) -> String {
-        use Type::*;
-        match self {
-            Named(_) => "%p",
-            String => "%s",
-            Nat => "%u",
-            Int => "%d",
-            Bool => "%u",
-        }.to_string()
-    }
-
-    pub fn as_c_default(&self) -> String {
-        use Type::*;
-        match self {
-            Named(_) => "NULL",
-            String => "\"\"",
-            Nat => "0",
-            Int => "0",
-            Bool => "false",
-        }.to_string()
+        // Types match
+        self == t ||
+        // Nat can be changed to Int
+        (*self == Type::Nat && *t == Type::Int) ||
+        // NullType can be changed to named
+        (*self == Type::Null && matches!(*t, Type::Named(..)))
     }
 }
 
@@ -158,6 +89,7 @@ impl Display for Type {
             Nat => write!(f, "Nat"),
             Int => write!(f, "Int"),
             Bool => write!(f, "Bool"),
+            Null => write!(f, "NullType")
         }
     }
 }
@@ -170,26 +102,6 @@ pub enum Literal {
     StringLit(String),
     NullLit,
     ThisLit,
-}
-
-impl Literal {
-    pub fn as_c_literal(&self, type_name : Option<&String>) -> String {
-        use crate::ast::Literal::*;
-        match self {
-            NatLit(n) => format!("{}", n),
-            IntLit(i) => format!("{}", i),
-            BoolLit(b) => format!("{}", if *b {"true"} else {"false"}),
-            StringLit(s) => format!("\"{}\"", s),
-            NullLit => {
-                if let Some(name) = type_name {
-                    format!("({}*){}_manager.structs", name, name)
-                } else {
-                    panic!("Need type information to express this in c.");
-                }
-            },
-            ThisLit => "self".to_string(),
-        }
-    }
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
