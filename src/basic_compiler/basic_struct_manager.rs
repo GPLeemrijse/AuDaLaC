@@ -223,6 +223,12 @@ impl StructManager for BasicStructManager<'_> {
 		}
 		res
 	}
+
+	fn kernel_parameters(&self, _: &ADLStruct, _: &Step) -> Vec<String> { todo!() }
+	fn kernel_arguments(&self, _: &ADLStruct, _: &Step) -> Vec<String> { todo!() }
+	fn kernel_name(&self, strct: &ADLStruct, step: &Step) -> String {
+		format!("{}_{}", strct.name, step.name)
+	}
 }
 
 

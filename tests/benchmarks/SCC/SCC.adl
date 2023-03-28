@@ -1,0 +1,79 @@
+struct NodeSet(pivot : Node,
+			   scc : Bool,
+			   f_and_b : NodeSet,
+			   not_f_and_b : NodeSet,
+			   f_and_not_b : NodeSet){
+	
+	divide_into_sets_reset_pivot {
+		pivot := null;
+	}
+
+
+	pivot_win_allocate_sets {
+		if pivot == null then {
+			scc := true;
+		}
+
+		if pivot != null then {
+			pivot.fwd := true;
+			pivot.bwd := true;
+		}
+
+		if !scc then {
+			NodeSet intermediate := NodeSet(null, false, null, null, null);
+			intermediate.scc := true;
+			f_and_b := intermediate;
+			f_and_not_b := NodeSet(null, false, null, null, null);
+			not_f_and_b := NodeSet(null, false, null, null, null);
+		}
+	}
+}
+
+struct Node(set : NodeSet,
+			fwd : Bool,
+			bwd : Bool
+			){
+
+	pivot_nominate {
+		if !set.scc then {
+			set.pivot := this;
+		}
+	}
+
+	divide_into_sets_reset_pivot {
+		if fwd && bwd then {
+			set := set.f_and_b; 
+		}
+		if !fwd && bwd then {
+			set := set.not_f_and_b;
+		}
+		if fwd && !bwd then {
+			set := set.f_and_not_b;
+		}
+		
+		fwd := false;
+		bwd := false;
+	}
+}
+
+struct Edge(s : Node, t : Node){
+	compute_fwd_bwd {
+		if t.set == s.set then {
+			if s.fwd then {
+				t.fwd := true;
+			}
+
+			
+			if t.bwd then {
+				s.bwd := true;
+			}
+		}
+	}
+}
+
+
+Fix(pivot_nominate <
+	pivot_win_allocate_sets <
+	Fix(compute_fwd_bwd) <
+	divide_into_sets_reset_pivot
+)

@@ -9,6 +9,19 @@ pub struct Program {
     pub schedule: Box<Schedule>,
 }
 
+impl Program {
+    pub fn struct_by_name(&self, name : &String) -> Option<&ADLStruct>{
+        self.structs.iter()
+                    .find(|s| &s.name == name)
+    }
+
+    pub fn step_by_name(&self, struct_name : &String, step_name : &String) -> Option<&Step>{
+        self.structs.iter()
+                    .find(|s| &s.name == struct_name)?
+                    .step_by_name(step_name)
+    }
+}
+
 #[derive(Eq, PartialEq, Debug)]
 pub enum Schedule {
     StepCall(String, Loc),
@@ -35,12 +48,73 @@ pub struct Step {
     pub loc: Loc,
 }
 
+fn remove_duplicates<T: Ord>(vec : &mut Vec<T>){
+    vec.sort();
+    vec.dedup();
+}
+
+impl Step {
+    /* Performs 'f_expr' on all expressions and 'f_stmt' on all statements.
+       Collects all unique results.
+    */
+    pub fn visit<'a, T: 'a + Ord>(&'a self, f_stmt: fn(&'a Stat) -> Vec<T>, f_exp: fn(&'a Exp) -> Vec<T>) -> Vec<T> {
+        let mut results = self.statements.iter()
+                                     .map(|s| s.visit(f_stmt, f_exp))
+                                     .flatten()
+                                     .collect::<Vec<T>>();
+
+        remove_duplicates(&mut results);
+        return results;
+    }
+
+    // Returns a unique vector of possibly constructed struct types
+    pub fn constructors(&self) -> Vec<&String> {
+        use Exp::*;
+        self.visit::<&String>(
+            |_| Vec::new(),
+            |e| {
+                if let Constructor(s, _, _) = e {
+                    vec![&s]
+                } else {
+                    Vec::new()
+                }
+            }
+        )
+    }
+
+    pub fn declarations(&self) -> Vec<(&String, &Type)> {
+        use Stat::*;
+        self.visit::<(&String, &Type)>(
+            |stat| {
+                if let Declaration(t, s, _, _) = stat {
+                    vec![(&s, &t)]
+                } else {
+                    Vec::new()
+                }
+            },
+            |_| Vec::new()
+        )
+    }
+}
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct ADLStruct {
     pub name: String,
     pub parameters: Vec<(String, Type, Loc)>,
     pub steps: Vec<Step>,
     pub loc: Loc,
+}
+
+impl ADLStruct {
+    pub fn step_by_name(&self, name : &String) -> Option<&Step> {
+        self.steps.iter()
+                  .find(|s| &s.name == name)
+    }
+
+    pub fn parameter_by_name(&self, name : &String) -> Option<&(String, Type, Loc)> {
+        self.parameters.iter()
+                  .find(|p| &p.0 == name)
+    }
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -52,6 +126,31 @@ pub enum Exp {
     Lit(Literal, Loc),
 }
 
+impl Exp {
+    pub fn visit<'a, T: 'a + Ord>(&'a self, f_exp: fn(&'a Exp) -> Vec<T>) -> Vec<T> {
+        use Exp::*;
+        let mut result = f_exp(self);
+        match self {
+            BinOp(e1, _, e2, _) => {
+                result.append(&mut e1.visit(f_exp));
+                result.append(&mut e2.visit(f_exp));
+            },
+            UnOp(_, e, _) => {
+                result.append(&mut e.visit(f_exp));
+            },
+            Constructor(_, exps, _) => {
+                result.append(&mut exps.iter()
+                                       .map(|e| e.visit(f_exp))
+                                       .flatten()
+                                       .collect()
+                );
+            },
+            _ => ()
+        }
+        result
+    }
+}
+
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Stat {
     IfThen(Box<Exp>, Vec<Stat>, Loc),
@@ -59,7 +158,29 @@ pub enum Stat {
     Assignment(Vec<String>, Box<Exp>, Loc),
 }
 
-#[derive(Eq, PartialEq, Debug, Clone)]
+impl Stat {
+    pub fn visit<'a, T: 'a + Ord>(&'a self, f_stmt: fn(&'a Stat) -> Vec<T>, f_exp: fn(&'a Exp) -> Vec<T>) -> Vec<T> {
+        use Stat::*;
+        let mut result = f_stmt(self);
+
+        match self {
+            IfThen(cond, stmts, _) => {
+                result.append(&mut stmts.iter()
+                                   .map(|s| s.visit(f_stmt, f_exp))
+                                   .flatten()
+                                   .chain(cond.visit(f_exp))
+                                   .collect::<Vec<T>>()
+                );
+            },
+            Declaration(_, _, e, _)|Assignment(_, e, _) => {
+                result.append(&mut e.visit(f_exp));
+            }
+        }
+        result
+    }
+}
+
+#[derive(Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
 pub enum Type {
     Named(String),
     String,
@@ -77,6 +198,13 @@ impl Type {
         (*self == Type::Nat && *t == Type::Int) ||
         // NullType can be changed to named
         (*self == Type::Null && matches!(*t, Type::Named(..)))
+    }
+
+    pub fn name(&self) -> Option<&String> {
+        match self {
+            Type::Named(s) => Some(s),
+            _ => None
+        }
     }
 }
 

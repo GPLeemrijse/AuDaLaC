@@ -2,13 +2,23 @@
 #define ADL_H
 #include <string>
 
+
+#define MAX_FP_DEPTH 16
+
 #define CHECK(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+__host__ __device__ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
    if (code != cudaSuccess) 
    {
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
+      #ifdef __CUDA_ARCH__
+         // Device version
+         printf("CUDA KERNEL ERROR: %s %s %d\n", cudaGetErrorString(code), file, line);
+         if (abort) assert(0);
+      #else
+         // Host version
+         fprintf(stderr,"CUDA HOST ERROR: %s %s %d\n", cudaGetErrorString(code), file, line);
+         if (abort) exit(code);
+      #endif
    }
 }
 

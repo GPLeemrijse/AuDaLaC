@@ -72,10 +72,6 @@ impl ScheduleManager for BasicScheduleManager<'_> {
 		self.print_schedule(&self.program.schedule, 1, &mut result);
 		result
 	}
-
-	fn call_set_dirty(&self) -> String {
-		"clear_stability_stack();".to_string()
-	}
 }
 
 

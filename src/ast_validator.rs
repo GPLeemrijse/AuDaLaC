@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 use crate::ast::*;
 use codespan_reporting::diagnostic::Diagnostic;
@@ -263,7 +264,7 @@ impl<'eval, 'ast> BlockEvaluationContext<'ast> {
     }
 }
 
-pub fn validate_ast(ast: &Program) -> Vec<ValidationError> {
+pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
     let mut context = BlockEvaluationContext {
         current_struct_name: None,
         current_step_name: None,
@@ -498,7 +499,7 @@ fn check_assignment<'ast>(
             // Can RHS be converted to LHS?
             if !exp_type.can_be_coerced_to_type(&var_type) {
                 context.errors.push(ValidationError {
-                    error_type: ValidationErrorType::TypeMismatch(var_type, exp_type),
+                    error_type: ValidationErrorType::TypeMismatch(var_type.clone(), exp_type),
                     context: ErrorContext::from_block_context(context),
                     loc: *loc,
                 });

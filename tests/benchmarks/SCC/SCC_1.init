@@ -1,0 +1,35 @@
+ADL structures 3
+Edge Node Node
+Node NodeSet Bool Bool
+NodeSet Node Bool NodeSet NodeSet NodeSet
+Edge instances 17
+9 3
+7 9
+3 7
+2 0
+0 2
+7 2
+8 4
+4 6
+8 6
+6 4
+6 1
+5 1
+1 5
+5 4
+6 5
+5 8
+3 5
+Node instances 10
+1 0 0
+1 0 0
+1 0 0
+1 0 0
+1 0 0
+1 0 0
+1 0 0
+1 0 0
+1 0 0
+1 0 0
+NodeSet instances 1
+0 0 0 0 0

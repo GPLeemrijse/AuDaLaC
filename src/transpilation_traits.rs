@@ -1,7 +1,8 @@
 use std::collections::BTreeSet;
+use crate::ast::{ADLStruct, Step};
 
 pub trait Transpiler {
-    fn transpile(schedule_manager: Box<impl ScheduleManager + ?Sized>, struct_manager: Box<impl StructManager + ?Sized>) -> String;
+    fn transpile(schedule_manager: &dyn ScheduleManager, struct_manager: &dyn StructManager) -> String;
 }
 
 
@@ -12,7 +13,6 @@ pub trait ScheduleManager {
     fn globals(&self) -> String;
     fn function_defs(&self) -> String;
     fn run_schedule(&self) -> String;
-    fn call_set_dirty(&self) -> String;
 }
 
 pub trait StructManager {
@@ -24,4 +24,8 @@ pub trait StructManager {
     fn kernels(&self) -> String;
     fn pre_main(&self) -> String;
     fn post_main(&self) -> String;
+
+    fn kernel_parameters(&self, strct: &ADLStruct, step: &Step) -> Vec<String>;
+    fn kernel_arguments(&self, strct: &ADLStruct, step: &Step) -> Vec<String>;
+    fn kernel_name(&self, strct: &ADLStruct, step: &Step) -> String;
 }

@@ -22,15 +22,28 @@ public:
 
 	__host__ void* to_device(void);
 
-private:
+	// other gets values of this
+	__host__ __device__ void sync_nrof_instances(Struct* other);
+
+	__host__ __device__ inst_size nrof_instances(void);
+
+protected:
 	virtual size_t child_size(void) = 0;
 
+	// Keep sequential in memory
 	inst_size active_instances; // How many are part of the current iteration?
 	inst_size instantiated_instances; // How many have been created in total?
 
 	inst_size capacity; // For how many is space allocated?
 
-	__host__ __device__ inline RefType claim_instance(void);
+	__host__ __device__ inline RefType claim_instance(void) {
+		#ifdef __CUDA_ARCH__
+		    ADL::RefType slot = atomicInc(&instantiated_instances, capacity);
+		#else
+		    ADL::RefType slot = instantiated_instances++;
+		#endif
+		return slot;
+	}
 
 	bool is_initialised;
 

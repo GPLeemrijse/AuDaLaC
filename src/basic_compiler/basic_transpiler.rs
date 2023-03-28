@@ -8,7 +8,7 @@ pub struct BasicCUDATranspiler {
 }
 
 impl Transpiler for BasicCUDATranspiler {
-	fn transpile(schedule_manager : Box<impl ScheduleManager + ?Sized>, struct_manager : Box<impl StructManager + ?Sized>) -> String {
+	fn transpile(schedule_manager : &dyn ScheduleManager, struct_manager : &dyn StructManager) -> String {
 		let mut includes = String::new();
 		let mut defines = String::new();
 		let mut typedefs = String::new();

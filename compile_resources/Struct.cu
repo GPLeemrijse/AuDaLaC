@@ -16,15 +16,6 @@ __host__ void Struct::free(void) {
 	}
 }
 
-__host__ __device__ inline ADL::RefType Struct::claim_instance(void) {
-	#ifdef __CUDA_ARCH__
-	    ADL::RefType slot = atomicInc(&instantiated_instances, capacity);
-	#else
-	    ADL::RefType slot = instantiated_instances++;
-	#endif
-	return slot;
-}
-
 __host__ __device__ bool Struct::is_active(RefType instance){
 	return instance < active_instances;
 }
@@ -83,4 +74,33 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 	active_instances = info->nrof_instances + 1;
 	capacity = capacity;
 	is_initialised = true;
+}
+
+__host__ __device__ inst_size Struct::nrof_instances(void){
+	return active_instances;
+}
+
+/* Sets own active instances to all instantiated instances.
+   Then copies own values to 'other'.
+*/
+__host__ __device__ void Struct::sync_nrof_instances(Struct* other) {
+	// First sync own active instances
+	active_instances = instantiated_instances;
+
+	#ifdef __CUDA_ARCH__
+	    memcpy(
+			&other->active_instances, // dst
+			&active_instances,
+	    	sizeof(inst_size) * 2
+		);
+	#else
+	    CHECK(
+			cudaMemcpy(
+				&other->active_instances, // dst
+				&active_instances,
+		    	sizeof(inst_size) * 2,
+		    	cudaMemcpyHostToDevice
+			)
+		);
+	#endif
 }

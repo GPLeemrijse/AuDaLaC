@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate lalrpop_util;
-use crate::transpilation_traits::*;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::Write;
@@ -72,25 +71,22 @@ fn main() {
                 let errors = validate_ast(&program);
 
                 if errors.is_empty() {
-                    let schedule_manager : Box<dyn ScheduleManager>;
-                    let struct_manager : Box<dyn StructManager>;
                     let result : String;
 
                     match compiler {
                         "basic" => {
-                            schedule_manager = Box::new(BasicScheduleManager::new(&program));
-                            struct_manager = Box::new(BasicStructManager::new(&program, nrof_structs));
-                            result = BasicCUDATranspiler::transpile(schedule_manager, struct_manager);
+                            let struct_manager = BasicStructManager::new(&program, nrof_structs);
+                            let schedule_manager = BasicScheduleManager::new(&program);
+                            result = BasicCUDATranspiler::transpile(&schedule_manager, &struct_manager);
                         },
                         "coalesced" => {
-                            schedule_manager = Box::new(CoalescedScheduleManager::new(&program));
-                            struct_manager = Box::new(CoalescedStructManager::new(&program, nrof_structs));
-                            result = CoalescedCUDATranspiler::transpile(schedule_manager, struct_manager);
+                            let struct_manager = CoalescedStructManager::new(&program, nrof_structs);
+                            let schedule_manager = CoalescedScheduleManager::new(&program, &struct_manager);
+                            result = CoalescedCUDATranspiler::transpile(&schedule_manager, &struct_manager);
                         },
                         _ => unreachable!()
                     }
                     
-
                     output_writer.write(result.as_bytes()).expect("Could not write to output file.");
                 } else { // Print errors
                     let file = SimpleFile::new(adl_file_loc, adl_program_text);
