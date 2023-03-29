@@ -75,5 +75,5 @@ struct Edge(s : Node, t : Node){
 Fix(pivot_nominate <
 	pivot_win_allocate_sets <
 	Fix(compute_fwd_bwd) <
-	divide_into_sets_reset_pivot
+	divide_into_sets_reset_pivot 
 ) < Node.print

@@ -240,7 +240,11 @@ impl CoalescedStructManager<'_> {
 			__global__ void {kernel_name}({kernel_parameters}){{
 				RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 				if(!{s_name_lwr}->is_active(self)) {{ return; }}
-				printf(\"{s_name}(%u): {params_as_fmt}\\n\", self{params_as_expr});
+				if (self == 0) {{
+					printf(\"{s_name}(0): ---------------------------\\n\");
+				}} else {{
+					printf(\"{s_name}(%u): {params_as_fmt}\\n\", self{params_as_expr});
+				}}
 			}}
 		"}
 	}

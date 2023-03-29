@@ -217,19 +217,31 @@ __global__ void Edge_compute_fwd_bwd(FPManager* FP, NodeSet* const nodeset, Node
 __global__ void NodeSet_print(NodeSet* nodeset){
 	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 	if(!nodeset->is_active(self)) { return; }
-	printf("NodeSet(%u): pivot=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, nodeset->pivot[self], nodeset->scc[self], nodeset->f_and_b[self], nodeset->not_f_and_b[self], nodeset->f_and_not_b[self]);
+	if (self == 0) {
+		printf("NodeSet(0): ---------------------------\n");
+	} else {
+		printf("NodeSet(%u): pivot=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, nodeset->pivot[self], nodeset->scc[self], nodeset->f_and_b[self], nodeset->not_f_and_b[self], nodeset->f_and_not_b[self]);
+	}
 }
 
 __global__ void Node_print(Node* node){
 	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 	if(!node->is_active(self)) { return; }
-	printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, node->set[self], node->fwd[self], node->bwd[self]);
+	if (self == 0) {
+		printf("Node(0): ---------------------------\n");
+	} else {
+		printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, node->set[self], node->fwd[self], node->bwd[self]);
+	}
 }
 
 __global__ void Edge_print(Edge* edge){
 	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 	if(!edge->is_active(self)) { return; }
-	printf("Edge(%u): s=%u, t=%u\n", self, edge->s[self], edge->t[self]);
+	if (self == 0) {
+		printf("Edge(0): ---------------------------\n");
+	} else {
+		printf("Edge(%u): s=%u, t=%u\n", self, edge->s[self], edge->t[self]);
+	}
 }
 
 
