@@ -1,8 +1,5 @@
-use crate::CoalescedStructManager;
-use crate::ast::Loc;
 use crate::ast::Type;
 use crate::ast::Literal;
-use crate::ast::Exp;
 
 pub fn as_c_type(t : &Type) -> String {
     use Type::*;
@@ -35,7 +32,7 @@ pub fn as_printf(t : &Type) -> String {
         String => "%s",
         Nat => "%u",
         Int => "%d",
-        Bool => "%s",
+        Bool => "%u",
         Null => "%u",
     }.to_string()
 }

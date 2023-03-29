@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::collections::HashSet;
 use crate::ast::*;
 use codespan_reporting::diagnostic::Diagnostic;

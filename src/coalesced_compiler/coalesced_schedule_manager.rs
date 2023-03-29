@@ -8,13 +8,15 @@ use indoc::{formatdoc};
 pub struct CoalescedScheduleManager<'a> {
 	program : &'a Program,
 	step_to_structs : HashMap<&'a String, Vec<&'a ADLStruct>>,
-	struct_manager: &'a dyn StructManager
+	struct_manager: &'a dyn StructManager,
+	tpb: usize
 }
 
 impl ScheduleManager for CoalescedScheduleManager<'_> {
 	fn add_includes(&self, set: &mut BTreeSet<std::string::String>) {
 		set.insert("<stdio.h>".to_string());
 		set.insert("\"fp_manager.h\"".to_string());
+		set.insert("<cooperative_groups.h>".to_string());
 	}
 	fn defines(&self) -> std::string::String {
 		format!("#define FP_DEPTH {}\n", self.program.schedule.fixpoint_depth())
@@ -45,25 +47,24 @@ impl CoalescedScheduleManager<'_> {
 		CoalescedScheduleManager {
 			program,
 			step_to_structs : CoalescedScheduleManager::get_step_to_structs(program),
-			struct_manager
+			struct_manager,
+			tpb: 512
 		}
 	}
 
 	fn step_call_as_c(&self, strct: &ADLStruct, step: &Step, indent_lvl : usize) -> String {
 		let indent = "\t".repeat(indent_lvl);
 		let strct_name = &strct.name;
-		let step_name = &step.name;
-		let tpb = 512;
+		let tpb = self.tpb;
 
 		let arg_array = self.struct_manager.kernel_arguments(strct, step)
-										   .iter()
-										   .fold("".to_string(), |acc: String, nxt| acc + &format!(",\n\t{indent}") + &nxt);
+										   .join(&format!(",\n{indent}\t"));
 		let kernel_name = self.struct_manager.kernel_name(strct, step);
 
 		formatdoc!("
 			{indent}void* {kernel_name}_args[] = {{
-				{arg_array}
-			}};
+			{indent}	{arg_array}
+			{indent}}};
 			{indent}CHECK(
 			{indent}	cudaLaunchCooperativeKernel(
 			{indent}		(void*){kernel_name},
@@ -72,6 +73,17 @@ impl CoalescedScheduleManager<'_> {
 			{indent}		{kernel_name}_args
 			{indent}	)
 			{indent});
+			{indent}CHECK(cudaDeviceSynchronize());
+		")
+	}
+
+	fn call_print_as_c(&self, struct_name: &String, indent_lvl : usize) -> String {
+		let indent = "\t".repeat(indent_lvl);
+		let tpb = self.tpb;
+		let kernel_name = format!("{struct_name}_print");
+
+		formatdoc!("
+			{indent}{kernel_name}<<<(host_{struct_name}.nrof_instances() + {tpb} - 1)/{tpb}, {tpb}>>>(gm_{struct_name});
 			{indent}CHECK(cudaDeviceSynchronize());
 		")
 	}
@@ -98,12 +110,17 @@ impl CoalescedScheduleManager<'_> {
 			},
 			TypedStepCall(struct_name, step_name, _) => {
 				let strct = self.program.struct_by_name(struct_name).unwrap();
-				let step = strct.step_by_name(step_name).unwrap();
-				self.step_call_as_c(
-					strct,
-					step,
-					indent_lvl
-				)
+				match strct.step_by_name(step_name) {
+					Some(step) => self.step_call_as_c(
+						strct,
+						step,
+						indent_lvl
+					),
+					None => {
+						debug_assert!(step_name == "print");
+						self.call_print_as_c(struct_name, indent_lvl)
+					}
+				}
 			},
 			Fixpoint(s, _) => {
 				let sched = self.schedule_as_c(s, indent_lvl + 1);

@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
 use crate::ast::*;
-use indoc::{formatdoc};
+use indoc::{formatdoc, indoc};
 use crate::coalesced_compiler::*;
 
 pub struct CoalescedStructManager<'a> {
@@ -14,10 +14,15 @@ impl StructManager for CoalescedStructManager<'_> {
 		set.insert("\"ADL.h\"".to_string());
 		set.insert("\"init_file.h\"".to_string());
 		set.insert("\"Struct.h\"".to_string());
+		set.insert("<cooperative_groups.h>".to_string());
 	}
 	
-	fn defines(&self) -> std::string::String {
-		return "#define SET_PARAM(P, V, T, I) ({if (I != 0) { T read_val = P; T write_val = V; if (read_val != write_val) {P = write_val; FP->set();}}})\n".to_string();
+	fn defines(&self) -> String {
+		indoc!("
+			using namespace cooperative_groups;
+
+			#define SET_PARAM(P, V, T, I) ({if (I != 0) { T read_val = P; T write_val = V; if (read_val != write_val) {P = write_val; FP->set();}}})
+		").to_string()
 	}
 
 	fn struct_typedef(&self) -> String {
@@ -85,18 +90,26 @@ impl StructManager for CoalescedStructManager<'_> {
 	}
 
 	fn kernels(&self) -> String {
-		self.program.structs.iter()
-							.map(|strct|
-								strct.steps.iter()
-										   .map(|step| self.step_as_c(strct, step))
-							)
-							.flatten()
-							.fold("".to_string(), |acc: String, nxt| acc + "\n" + &nxt)
+		let step_kernels : Vec<String> = self.program.structs.iter()
+															 .map(|strct|
+															 	strct.steps.iter()
+																		   .map(|step| self.step_as_c(strct, step))
+															 )
+															 .flatten()
+															 .collect();
+		let print_kernels : Vec<String> = self.program.structs.iter()
+												.map(|strct|
+													self.print_kernel_as_c(strct)
+												)
+												.collect();
+		return step_kernels.join("\n") + &print_kernels.join("\n")
 	}
 
 	fn pre_main(&self) -> String {
 		let mut res = String::new();
 		let mut constr = String::new();
+		let mut ptrs = String::new();
+		let mut registers = String::new();
 		let mut inits = String::new();
 		let mut to_device = String::new();
 
@@ -104,13 +117,17 @@ impl StructManager for CoalescedStructManager<'_> {
 		struct_names.sort();
 
 		for (idx, struct_name) in struct_names.iter().enumerate() {
-			constr.push_str(&format!{"	{struct_name} host_{struct_name} = {struct_name}();\n"});
-			inits.push_str(&format!{"	host_{struct_name}.initialise(&structs[{idx}], {});\n", self.nrof_structs});
-			to_device.push_str(&format!{"	{struct_name}* gm_{struct_name} = ({struct_name}*)host_{struct_name}.to_device();\n"});
+			constr.push_str(&format!{"\t{struct_name} host_{struct_name} = {struct_name}();\n"});
+			ptrs.push_str(&format!{"\t{struct_name}* host_{struct_name}_ptr = &host_{struct_name};\n"});
+			registers.push_str(&format!{"\tCHECK(cudaHostRegister(&host_{struct_name}, sizeof({struct_name}), cudaHostRegisterDefault));\n"});
+			inits.push_str(&format!{"\thost_{struct_name}.initialise(&structs[{idx}], {});\n", self.nrof_structs});
+			to_device.push_str(&format!{"\t{struct_name}* gm_{struct_name} = ({struct_name}*)host_{struct_name}.to_device();\n"});
 		}
 
 		res.push_str(&formatdoc!{"
 			{constr}
+			{ptrs}
+			{registers}
 			{inits}
 				CHECK(cudaDeviceSynchronize());
 
@@ -140,8 +157,20 @@ impl StructManager for CoalescedStructManager<'_> {
 		result
 	}
 
-	fn kernel_arguments(&self, _: &ADLStruct, _: &Step) -> Vec<String> {
-		vec!["".to_string()]
+	fn kernel_arguments(&self, _strct: &ADLStruct, step: &Step) -> Vec<String> {
+		let mut result : Vec<String> = vec!["&device_FP".to_string()];
+
+		result.append(&mut self.program.structs.iter()
+											   .map(|s| format!("&gm_{}", s.name))
+											   .collect()
+		);
+		
+		let mut constructed_types : Vec<String> = step.constructors()
+													  .iter()
+													  .map(|c| format!("&host_{c}_ptr"))
+													  .collect();
+		result.append(&mut constructed_types);
+		result
 	}
 	fn kernel_name(&self, strct: &ADLStruct, step: &Step) -> String {
 		format!("{}_{}", strct.name, step.name)
@@ -193,6 +222,28 @@ impl CoalescedStructManager<'_> {
 		", strct.name.to_lowercase()}
 	}
 
+	fn print_kernel_as_c(&self, strct: &ADLStruct) -> String {
+		let kernel_name = format!("{}_print", strct.name);
+		let s_name = &strct.name;
+		let s_name_lwr = strct.name.to_lowercase();
+		let kernel_parameters = format!("{s_name}* {s_name_lwr}");
+		let params_as_fmt = strct.parameters.iter()
+											.map(|(n, t, _)| format!("{n}={}", as_printf(t)))
+											.reduce(|a, n| a + ", " + &n)
+											.unwrap();
+		let params_as_expr = strct.parameters.iter()
+											.map(|(n, _, _)| format!(", {s_name_lwr}->{n}[self]"))
+											.reduce(|a, n| a + &n)
+											.unwrap();
+
+		formatdoc!{"
+			__global__ void {kernel_name}({kernel_parameters}){{
+				RefType self = blockDim.x * blockIdx.x + threadIdx.x;
+				if(!{s_name_lwr}->is_active(self)) {{ return; }}
+				printf(\"{s_name}(%u): {params_as_fmt}\\n\", self{params_as_expr});
+			}}
+		"}
+	}
 
 	fn statements_as_c(&self, statements: &Vec<Stat>, strct: &ADLStruct, step: &Step, indent_lvl: usize) -> String {
 		let indent = String::from("\t").repeat(indent_lvl);
@@ -317,20 +368,30 @@ impl CoalescedStructManager<'_> {
 	        	let types = self.get_part_types(parts, strct, step);
 
 	        	let mut previous_c_expr : String;
+	        	let mut previous_c_type : &String;
 	        	let start_idx;
 	        	if is_parameter {
 	        		previous_c_expr = "self".to_string();
+	        		previous_c_type = &strct.name;
 	        		start_idx = 0;
 	        	} else {
 	        		previous_c_expr = parts[0].clone();
+	        		previous_c_type = match types[0].name() {
+	        			Some(t_name) => t_name,
+	        			None => unreachable!()
+	        		};
+
 	        		start_idx = 1;
 	        	}
 
 	        	for (t, p) in zip(types[start_idx..].iter(), parts[start_idx..].iter()) {
-	        		previous_c_expr = format!("{}->{p}[{previous_c_expr}]", t.to_string().to_lowercase());
+	        		previous_c_expr = format!("{}->{p}[{previous_c_expr}]", previous_c_type.to_lowercase());
+	        		if t.name().is_some() {
+	        			previous_c_type = t.name().unwrap();
+	        		}
 	        	}
 
-	            return previous_c_expr.to_string();
+	            return format!("({previous_c_expr})");
 	        },
 	        Lit(l, _) => as_c_literal(l),
 	    }

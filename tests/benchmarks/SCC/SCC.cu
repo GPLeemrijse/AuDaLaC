@@ -2,11 +2,14 @@
 #include "Struct.h"
 #include "fp_manager.h"
 #include "init_file.h"
+#include <cooperative_groups.h>
 #include <stdio.h>
 #include <vector>
 
 
 #define FP_DEPTH 2
+using namespace cooperative_groups;
+
 #define SET_PARAM(P, V, T, I) ({if (I != 0) { T read_val = P; T write_val = V; if (read_val != write_val) {P = write_val; FP->set();}}})
 
 
@@ -133,13 +136,12 @@ public:
 
 
 
-
 __global__ void NodeSet_divide_into_sets_reset_pivot(FPManager* FP, NodeSet* const nodeset, Node* const node, Edge* const edge){
 	grid_group grid = this_grid();
 	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 	if(!nodeset->is_active(self)) { return; }
 
-	SET_PARAM(node->pivot[self], 0, RefType, self);
+	SET_PARAM((nodeset->pivot[self]), 0, RefType, self);
 }
 
 __global__ void NodeSet_pivot_win_allocate_sets(FPManager* FP, NodeSet* const nodeset, Node* const node, Edge* const edge, NodeSet* const host_nodeset){
@@ -147,19 +149,19 @@ __global__ void NodeSet_pivot_win_allocate_sets(FPManager* FP, NodeSet* const no
 	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 	if(!nodeset->is_active(self)) { return; }
 
-	if (node->pivot[self] == 0) {
-		SET_PARAM(bool->scc[self], true, BoolType, self);
+	if ((nodeset->pivot[self]) == 0) {
+		SET_PARAM((nodeset->scc[self]), true, BoolType, self);
 	}
-	if (node->pivot[self] != 0) {
-		SET_PARAM(bool->fwd[node->pivot[self]], true, BoolType, node->pivot[self]);
-		SET_PARAM(bool->bwd[node->pivot[self]], true, BoolType, node->pivot[self]);
+	if ((nodeset->pivot[self]) != 0) {
+		SET_PARAM((node->fwd[nodeset->pivot[self]]), true, BoolType, (nodeset->pivot[self]));
+		SET_PARAM((node->bwd[nodeset->pivot[self]]), true, BoolType, (nodeset->pivot[self]));
 	}
-	if (!bool->scc[self]) {
+	if (!(nodeset->scc[self])) {
 		RefType intermediate = nodeset->create_instance(0, false, 0, 0, 0);
-		bool->scc[intermediate] = true;
-		SET_PARAM(nodeset->f_and_b[self], intermediate, RefType, self);
-		SET_PARAM(nodeset->f_and_not_b[self], nodeset->create_instance(0, false, 0, 0, 0), RefType, self);
-		SET_PARAM(nodeset->not_f_and_b[self], nodeset->create_instance(0, false, 0, 0, 0), RefType, self);
+		(nodeset->scc[intermediate]) = true;
+		SET_PARAM((nodeset->f_and_b[self]), (intermediate), RefType, self);
+		SET_PARAM((nodeset->f_and_not_b[self]), nodeset->create_instance(0, false, 0, 0, 0), RefType, self);
+		SET_PARAM((nodeset->not_f_and_b[self]), nodeset->create_instance(0, false, 0, 0, 0), RefType, self);
 	}
 
 	grid.sync();
@@ -175,8 +177,8 @@ __global__ void Node_pivot_nominate(FPManager* FP, NodeSet* const nodeset, Node*
 	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 	if(!node->is_active(self)) { return; }
 
-	if (!bool->scc[nodeset->set[self]]) {
-		SET_PARAM(node->pivot[nodeset->set[self]], self, RefType, nodeset->set[self]);
+	if (!(nodeset->scc[node->set[self]])) {
+		SET_PARAM((nodeset->pivot[node->set[self]]), self, RefType, (node->set[self]));
 	}
 }
 
@@ -185,17 +187,17 @@ __global__ void Node_divide_into_sets_reset_pivot(FPManager* FP, NodeSet* const 
 	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 	if(!node->is_active(self)) { return; }
 
-	if (bool->fwd[self] && bool->bwd[self]) {
-		SET_PARAM(nodeset->set[self], nodeset->f_and_b[nodeset->set[self]], RefType, self);
+	if ((node->fwd[self]) && (node->bwd[self])) {
+		SET_PARAM((node->set[self]), (nodeset->f_and_b[node->set[self]]), RefType, self);
 	}
-	if ((!bool->fwd[self]) && bool->bwd[self]) {
-		SET_PARAM(nodeset->set[self], nodeset->not_f_and_b[nodeset->set[self]], RefType, self);
+	if ((!(node->fwd[self])) && (node->bwd[self])) {
+		SET_PARAM((node->set[self]), (nodeset->not_f_and_b[node->set[self]]), RefType, self);
 	}
-	if (bool->fwd[self] && (!bool->bwd[self])) {
-		SET_PARAM(nodeset->set[self], nodeset->f_and_not_b[nodeset->set[self]], RefType, self);
+	if ((node->fwd[self]) && (!(node->bwd[self]))) {
+		SET_PARAM((node->set[self]), (nodeset->f_and_not_b[node->set[self]]), RefType, self);
 	}
-	SET_PARAM(bool->fwd[self], false, BoolType, self);
-	SET_PARAM(bool->bwd[self], false, BoolType, self);
+	SET_PARAM((node->fwd[self]), false, BoolType, self);
+	SET_PARAM((node->bwd[self]), false, BoolType, self);
 }
 
 __global__ void Edge_compute_fwd_bwd(FPManager* FP, NodeSet* const nodeset, Node* const node, Edge* const edge){
@@ -203,14 +205,31 @@ __global__ void Edge_compute_fwd_bwd(FPManager* FP, NodeSet* const nodeset, Node
 	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 	if(!edge->is_active(self)) { return; }
 
-	if (nodeset->set[node->t[self]] == nodeset->set[node->s[self]]) {
-		if bool->fwd[node->s[self]] {
-			SET_PARAM(bool->fwd[node->t[self]], true, BoolType, node->t[self]);
+	if ((node->set[edge->t[self]]) == (node->set[edge->s[self]])) {
+		if (node->fwd[edge->s[self]]) {
+			SET_PARAM((node->fwd[edge->t[self]]), true, BoolType, (edge->t[self]));
 		}
-		if bool->bwd[node->t[self]] {
-			SET_PARAM(bool->bwd[node->s[self]], true, BoolType, node->s[self]);
+		if (node->bwd[edge->t[self]]) {
+			SET_PARAM((node->bwd[edge->s[self]]), true, BoolType, (edge->s[self]));
 		}
 	}
+}
+__global__ void NodeSet_print(NodeSet* nodeset){
+	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
+	if(!nodeset->is_active(self)) { return; }
+	printf("NodeSet(%u): pivot=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, nodeset->pivot[self], nodeset->scc[self], nodeset->f_and_b[self], nodeset->not_f_and_b[self], nodeset->f_and_not_b[self]);
+}
+
+__global__ void Node_print(Node* node){
+	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
+	if(!node->is_active(self)) { return; }
+	printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, node->set[self], node->fwd[self], node->bwd[self]);
+}
+
+__global__ void Edge_print(Edge* edge){
+	RefType self = blockDim.x * blockIdx.x + threadIdx.x;
+	if(!edge->is_active(self)) { return; }
+	printf("Edge(%u): s=%u, t=%u\n", self, edge->s[self], edge->t[self]);
 }
 
 
@@ -224,6 +243,14 @@ int main(int argc, char **argv) {
 	Edge host_Edge = Edge();
 	Node host_Node = Node();
 	NodeSet host_NodeSet = NodeSet();
+
+	Edge* host_Edge_ptr = &host_Edge;
+	Node* host_Node_ptr = &host_Node;
+	NodeSet* host_NodeSet_ptr = &host_NodeSet;
+
+	CHECK(cudaHostRegister(&host_Edge, sizeof(Edge), cudaHostRegisterDefault));
+	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
+	CHECK(cudaHostRegister(&host_NodeSet, sizeof(NodeSet), cudaHostRegisterDefault));
 
 	host_Edge.initialise(&structs[0], 100);
 	host_Node.initialise(&structs[1], 100);
@@ -245,9 +272,11 @@ int main(int argc, char **argv) {
 		host_FP.reset();
 		host_FP.copy_to(device_FP);
 		void* Node_pivot_nominate_args[] = {
-	,
-			
-};
+			&device_FP,
+			&gm_NodeSet,
+			&gm_Node,
+			&gm_Edge
+		};
 		CHECK(
 			cudaLaunchCooperativeKernel(
 				(void*)Node_pivot_nominate,
@@ -259,9 +288,12 @@ int main(int argc, char **argv) {
 		CHECK(cudaDeviceSynchronize());
 
 		void* NodeSet_pivot_win_allocate_sets_args[] = {
-	,
-			
-};
+			&device_FP,
+			&gm_NodeSet,
+			&gm_Node,
+			&gm_Edge,
+			&host_NodeSet_ptr
+		};
 		CHECK(
 			cudaLaunchCooperativeKernel(
 				(void*)NodeSet_pivot_win_allocate_sets,
@@ -277,9 +309,11 @@ int main(int argc, char **argv) {
 			host_FP.reset();
 			host_FP.copy_to(device_FP);
 			void* Edge_compute_fwd_bwd_args[] = {
-	,
-				
-};
+				&device_FP,
+				&gm_NodeSet,
+				&gm_Node,
+				&gm_Edge
+			};
 			CHECK(
 				cudaLaunchCooperativeKernel(
 					(void*)Edge_compute_fwd_bwd,
@@ -297,9 +331,11 @@ int main(int argc, char **argv) {
 		host_FP.pop();
 
 		void* NodeSet_divide_into_sets_reset_pivot_args[] = {
-	,
-			
-};
+			&device_FP,
+			&gm_NodeSet,
+			&gm_Node,
+			&gm_Edge
+		};
 		CHECK(
 			cudaLaunchCooperativeKernel(
 				(void*)NodeSet_divide_into_sets_reset_pivot,
@@ -310,9 +346,11 @@ int main(int argc, char **argv) {
 		);
 		CHECK(cudaDeviceSynchronize());
 		void* Node_divide_into_sets_reset_pivot_args[] = {
-	,
-			
-};
+			&device_FP,
+			&gm_NodeSet,
+			&gm_Node,
+			&gm_Edge
+		};
 		CHECK(
 			cudaLaunchCooperativeKernel(
 				(void*)Node_divide_into_sets_reset_pivot,
@@ -328,6 +366,9 @@ int main(int argc, char **argv) {
 	}
 	while(!host_FP.done());
 	host_FP.pop();
+
+	Node_print<<<(host_Node.nrof_instances() + 512 - 1)/512, 512>>>(gm_Node);
+	CHECK(cudaDeviceSynchronize());
 
 
 
