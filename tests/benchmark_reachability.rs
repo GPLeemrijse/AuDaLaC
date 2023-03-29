@@ -4,10 +4,10 @@ use std::str;
 use std::env;
 
 fn run_benchmarks() -> bool {
-    if let Ok(v) = env::var("CI") {
-        return v != "true";
+    if let Ok(v) = env::var("BENCHMARK") {
+        return v == "true";
     }
-    return true;
+    return false;
 }
 
 #[test]
