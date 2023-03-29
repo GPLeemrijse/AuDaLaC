@@ -56,7 +56,7 @@ impl StructManager for CoalescedStructManager<'_> {
 						}};
 					}};
 
-					void assertCorrectInfo(InitFile::StructInfo* info) {{
+					void assert_correct_info(InitFile::StructInfo* info) {{
 						assert (info->name == \"{struct_name}\");
 						assert (info->parameter_types.size() == {nrof_params});
 						{param_type_assertions}

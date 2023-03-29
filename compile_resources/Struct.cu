@@ -36,7 +36,7 @@ __host__ void* Struct::to_device(void) {
 }
 
 __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity){
-	assertCorrectInfo(info);
+	assert_correct_info(info);
 	assert (info->nrof_instances < capacity);
 
 	void** params = get_parameters();

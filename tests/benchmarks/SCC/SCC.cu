@@ -28,7 +28,7 @@ public:
 		};
 	};
 
-	void assertCorrectInfo(InitFile::StructInfo* info) {
+	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "NodeSet");
 		assert (info->parameter_types.size() == 5);
 		assert (info->parameter_types[0] == ADL::Ref);
@@ -70,7 +70,7 @@ public:
 		};
 	};
 
-	void assertCorrectInfo(InitFile::StructInfo* info) {
+	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "Node");
 		assert (info->parameter_types.size() == 3);
 		assert (info->parameter_types[0] == ADL::Ref);
@@ -107,7 +107,7 @@ public:
 		};
 	};
 
-	void assertCorrectInfo(InitFile::StructInfo* info) {
+	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "Edge");
 		assert (info->parameter_types.size() == 2);
 		assert (info->parameter_types[0] == ADL::Ref);

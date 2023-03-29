@@ -16,7 +16,7 @@ public:
 
 	virtual void** get_parameters(void) = 0;
 
-	virtual void assertCorrectInfo(InitFile::StructInfo* info) = 0;
+	virtual void assert_correct_info(InitFile::StructInfo* info) = 0;
 
 	__host__ __device__ bool is_active(RefType instance);
 
