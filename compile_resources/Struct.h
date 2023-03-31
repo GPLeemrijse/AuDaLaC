@@ -3,6 +3,7 @@
 
 #include "ADL.h"
 #include "init_file.h"
+#include <assert.h>
 
 using namespace ADL;
 
@@ -39,8 +40,10 @@ protected:
 	__host__ __device__ inline RefType claim_instance(void) {
 		#ifdef __CUDA_ARCH__
 		    ADL::RefType slot = atomicInc(&instantiated_instances, capacity);
+		    assert(slot != 0);
 		#else
 		    ADL::RefType slot = instantiated_instances++;
+		    assert(slot < capacity);
 		#endif
 		return slot;
 	}
