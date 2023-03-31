@@ -188,7 +188,13 @@ impl CoalescedStructManager<'_> {
 
 	fn step_as_c(&self, strct: &ADLStruct, step: &Step) -> String {
 		let kernel_name = self.kernel_name(strct, step);
-		let kernel_parameters = self.kernel_parameters(strct, step).join(", ");
+		let part_before_params = format!("__global__ void {kernel_name}(");
+		let param_indent = format!(",\n{}{}",
+								   "\t".repeat(part_before_params.len() / 4),
+								   " ".repeat(part_before_params.len() % 4)
+								  ); 
+
+		let kernel_parameters = self.kernel_parameters(strct, step).join(&param_indent);
 
 		let kernel_body = self.statements_as_c(&step.statements, &strct, &step, 1);
 
@@ -211,9 +217,12 @@ impl CoalescedStructManager<'_> {
 		};
 
 
+		
+
+
 
 		formatdoc!{"
-			__global__ void {kernel_name}({kernel_parameters}){{
+			{part_before_params}{kernel_parameters}){{
 				grid_group grid = this_grid();
 				RefType self = blockDim.x * blockIdx.x + threadIdx.x;
 				if(!{}->is_active(self)) {{ return; }}
