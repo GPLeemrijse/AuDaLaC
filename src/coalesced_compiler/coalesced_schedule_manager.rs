@@ -68,8 +68,8 @@ impl CoalescedScheduleManager<'_> {
 			{indent}CHECK(
 			{indent}	cudaLaunchCooperativeKernel(
 			{indent}		(void*){kernel_name},
-			{indent}		(host_{strct_name}.nrof_instances() + {tpb} - 1)/{tpb},
-			{indent}		{tpb},
+			{indent}		dim3((host_{strct_name}.nrof_instances() + {tpb} - 1)/{tpb}),
+			{indent}		dim3({tpb}),
 			{indent}		{kernel_name}_args
 			{indent}	)
 			{indent});
