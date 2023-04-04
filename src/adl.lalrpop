@@ -22,6 +22,9 @@ match {
     r"(true|false)" => BOOL,
 } else {
     r"[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*" => ID,
+    r"\s*" => { }, // The default whitespace skipping is disabled if an `ignore pattern` is specified
+    r"//[^\n\r]*[\n\r]*" => { }, // Skip `// comments`
+    r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/" => { },  // Skip `/* comments */`
     _
 }
 
@@ -98,7 +101,7 @@ pub Steps: Vec<Step> = Step*;
 pub Structs: Vec<ADLStruct> = Struct+;
 
 pub Stat: Stat = {
-    "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Stat::IfThen(Box::new(e), s, (start, end)),
+    "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Stat::IfThen(Box::new(e), s, vec![], (start, end)),
     <start:@L> <t:Type> <id:SimpleID> ":=" <e:Exp> ";" <end:@R> => Stat::Declaration(t, id, Box::new(e), (start, end)),
     <start:@L> <v:Var> ":=" <e:Exp> ";" <end:@R> => Stat::Assignment(v, Box::new(e), (start, end)),
 }

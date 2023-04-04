@@ -244,19 +244,23 @@ impl BasicStructManager<'_> {
 		let mut res = String::new();
 		let is_param = |p : &String| parameters.iter().any(|(s, _, _)| s == p);
 		
-		println!("{:#?}", statements);
-
 		for stmt in statements {
 			use crate::ast::Stat::*;
 			res.push_str(
 				&match stmt {
-					IfThen(e, stmts, _) => {
+					IfThen(e, stmts_true, stmts_false, _) => {
 						let cond = as_c_expression(e, self.program, &is_param, None);
-						let body = self.make_body(&stmts, parameters);
+						let body_true = self.make_body(&stmts_true, parameters);
+						let body_false = self.make_body(&stmts_false, parameters);
+
+						let else_block = if body_false == "" { "".to_string()} else {
+							format!("else {{\n\t{body_false}\n}}")
+						};
+
 						formatdoc!{"
 							if {cond} {{
-								{body}
-							}}
+								{body_true}
+							}}{else_block}
 						"}
 					},
 					Declaration(t, n, e, _) => {

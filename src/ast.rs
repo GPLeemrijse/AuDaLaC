@@ -153,7 +153,7 @@ impl Exp {
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Stat {
-    IfThen(Box<Exp>, Vec<Stat>, Loc),
+    IfThen(Box<Exp>, Vec<Stat>, Vec<Stat>, Loc),
     Declaration(Type, String, Box<Exp>, Loc),
     Assignment(Vec<String>, Box<Exp>, Loc),
 }
@@ -164,8 +164,9 @@ impl Stat {
         let mut result = f_stmt(self);
 
         match self {
-            IfThen(cond, stmts, _) => {
-                result.append(&mut stmts.iter()
+            IfThen(cond, stmts1, strmts2, _) => {
+                result.append(&mut stmts1.iter()
+                                   .chain(strmts2.iter())
                                    .map(|s| s.visit(f_stmt, f_exp))
                                    .flatten()
                                    .chain(cond.visit(f_exp))
@@ -371,6 +372,7 @@ mod tests {
                         (31, 47),
                     ),
                 ],
+                vec![],
                 (3, 7),
             ),
         );

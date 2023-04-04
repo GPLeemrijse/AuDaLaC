@@ -1,12 +1,15 @@
+use crate::cuda_atomics::{MemOrder, Scope};
 use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
 use crate::ast::*;
-use indoc::{formatdoc, indoc};
+use indoc::{formatdoc};
 use crate::coalesced_compiler::*;
 
 pub struct CoalescedStructManager<'a> {
 	pub program : &'a Program,
-	pub nrof_structs : u64
+	pub nrof_structs : u64,
+	memorder : MemOrder,
+	scope : Scope,
 }
 
 impl StructManager for CoalescedStructManager<'_> {
@@ -15,34 +18,45 @@ impl StructManager for CoalescedStructManager<'_> {
 		set.insert("\"init_file.h\"".to_string());
 		set.insert("\"Struct.h\"".to_string());
 		set.insert("<cooperative_groups.h>".to_string());
+		set.insert("<cuda/atomic>".to_string());
 	}
 	
 	fn defines(&self) -> String {
-		indoc!("
-			using namespace cooperative_groups;
-
-			#define SET_PARAM(P, V, T, I) ({if (I != 0) { T read_val = P; T write_val = V; if (read_val != write_val) {P = write_val; FP->set();}}})
-		").to_string()
+		"".to_string()
 	}
 
 	fn struct_typedef(&self) -> String {
-		let mut res = String::new();
+		let mut res = "using namespace cooperative_groups;\n".to_string();
 		for strct in &self.program.structs {
 			let struct_name = &strct.name;
 			let nrof_params = strct.parameters.len();
+
 			let param_decls = strct.parameters.iter()
-								.map(|(s, t, _)| format!("ADL::{}* {s};", as_c_type(t)))
+								.map(|(s, t, _)| format!("{}* {s};", self.type_as_c(t)))
 								.reduce(|acc: String, nxt| acc + "\n			" + &nxt).unwrap();
 			let param_type_assertions = strct.parameters.iter()
 								.enumerate()
 								.map(|(idx, (_, t, _))| format!("assert (info->parameter_types[{idx}] == ADL::{});", as_type_enum(t)))
 								.reduce(|acc: String, nxt| acc + "\n		" + &nxt).unwrap();
 			let params_args = strct.parameters.iter()
-								.map(|(s, t, _)| format!("ADL::{} _{s}", as_c_type(t)))
+								.map(|(s, t, _)| format!("{} _{s}", self.basic_type_as_c(t)))
 								.reduce(|acc: String, nxt| acc + ", " + &nxt).unwrap();
-			let assignments = strct.parameters.iter()
+			let param_sizes = strct.parameters.iter()
+								.map(|(_, t, _)| format!("sizeof({})", self.type_as_c(t)))
+								.collect::<Vec<String>>()
+								.join(",\n\t\t\t");
+
+			let assignments;
+			if self.memorder.is_strong() {
+				let order = self.memorder.as_cuda_order();
+				assignments = strct.parameters.iter()
+								.map(|(s, _, _)| format!("{s}[slot].store(_{s}, {order});"))
+								.reduce(|acc: String, nxt| acc + "\n		" + &nxt).unwrap();
+			} else {
+				assignments = strct.parameters.iter()
 								.map(|(s, _, _)| format!("{s}[slot] = _{s};"))
 								.reduce(|acc: String, nxt| acc + "\n		" + &nxt).unwrap();
+			}
 
 			res.push_str(&formatdoc!{"
 				class {struct_name} : public Struct {{
@@ -70,6 +84,13 @@ impl StructManager for CoalescedStructManager<'_> {
 						return sizeof({struct_name});
 					}}
 
+					size_t param_size(uint idx) {{
+						static size_t sizes[{nrof_params}] = {{
+							{param_sizes}
+						}};
+						return sizes[idx];
+					}}
+
 					__host__ __device__ RefType create_instance({params_args}) {{
 						RefType slot = claim_instance();
 						{assignments}
@@ -81,8 +102,29 @@ impl StructManager for CoalescedStructManager<'_> {
 		}
 		return res;
 	}
+
 	fn globals(&self) -> String {
-		return String::new();
+		let mut res = String::new();
+		let mut constr = String::new();
+		let mut ptrs = String::new();
+		let mut device_constr = String::new();
+
+		let mut struct_names : Vec<&String> = self.program.structs.iter().map(|s| &s.name).collect();
+		struct_names.sort();
+
+		for struct_name in struct_names {
+			constr.push_str(&format!{"{struct_name} host_{struct_name} = {struct_name}();\n"});
+			ptrs.push_str(&format!{"{struct_name}* host_{struct_name}_ptr = &host_{struct_name};\n"});
+			device_constr.push_str(&format!{"{struct_name}* gm_{struct_name};\n"});
+		}
+
+		res.push_str(&formatdoc!{"
+			{constr}
+			{ptrs}
+			{device_constr}
+		"});
+
+		return res;
 	}
 
 	fn function_defs(&self) -> String {
@@ -107,8 +149,6 @@ impl StructManager for CoalescedStructManager<'_> {
 
 	fn pre_main(&self) -> String {
 		let mut res = String::new();
-		let mut constr = String::new();
-		let mut ptrs = String::new();
 		let mut registers = String::new();
 		let mut inits = String::new();
 		let mut to_device = String::new();
@@ -117,16 +157,12 @@ impl StructManager for CoalescedStructManager<'_> {
 		struct_names.sort();
 
 		for (idx, struct_name) in struct_names.iter().enumerate() {
-			constr.push_str(&format!{"\t{struct_name} host_{struct_name} = {struct_name}();\n"});
-			ptrs.push_str(&format!{"\t{struct_name}* host_{struct_name}_ptr = &host_{struct_name};\n"});
 			registers.push_str(&format!{"\tCHECK(cudaHostRegister(&host_{struct_name}, sizeof({struct_name}), cudaHostRegisterDefault));\n"});
 			inits.push_str(&format!{"\thost_{struct_name}.initialise(&structs[{idx}], {});\n", self.nrof_structs});
-			to_device.push_str(&format!{"\t{struct_name}* gm_{struct_name} = ({struct_name}*)host_{struct_name}.to_device();\n"});
+			to_device.push_str(&format!{"\tgm_{struct_name} = ({struct_name}*)host_{struct_name}.to_device();\n"});
 		}
 
 		res.push_str(&formatdoc!{"
-			{constr}
-			{ptrs}
 			{registers}
 			{inits}
 				CHECK(cudaDeviceSynchronize());
@@ -142,7 +178,7 @@ impl StructManager for CoalescedStructManager<'_> {
 	}
 
 	fn kernel_parameters(&self, _strct: &ADLStruct, step: &Step) -> Vec<String> {
-		let mut result : Vec<String> = vec!["FPManager* FP".to_string()];
+		let mut result : Vec<String> = vec!["FPManager* FP".to_string(), "inst_size nrof_instances".to_string()];
 
 		result.append(&mut self.program.structs.iter()
 											   .map(|s| format!("{}* const {}", s.name, s.name.to_lowercase()))
@@ -158,7 +194,7 @@ impl StructManager for CoalescedStructManager<'_> {
 	}
 
 	fn kernel_arguments(&self, _strct: &ADLStruct, step: &Step) -> Vec<String> {
-		let mut result : Vec<String> = vec!["&device_FP".to_string()];
+		let mut result : Vec<String> = vec!["&device_FP".to_string(), format!("&nrof_instances")];
 
 		result.append(&mut self.program.structs.iter()
 											   .map(|s| format!("&gm_{}", s.name))
@@ -179,11 +215,37 @@ impl StructManager for CoalescedStructManager<'_> {
 }
 
 impl CoalescedStructManager<'_> {
-	pub fn new<'a>(program: &'a Program, nrof_structs: u64) -> CoalescedStructManager<'a> {
+	pub fn new<'a>(program: &'a Program, nrof_structs: u64, memorder: MemOrder, scope: Scope) -> CoalescedStructManager<'a> {
 		CoalescedStructManager {
 			program,
 			nrof_structs,
+			memorder,
+			scope
 		}
+	}
+
+	fn type_as_c(&self, t : &Type) -> String {
+		let basic_type = self.basic_type_as_c(t);
+
+		let scope = self.scope.as_cuda_scope();
+
+	    if !self.memorder.is_strong() {
+	    	basic_type
+	    } else {
+	    	format!("cuda::atomic<{basic_type}, {scope}>")
+	    }
+	}
+
+	fn basic_type_as_c(&self, t : &Type) -> String {
+		use Type::*;
+	    match t {
+	        Named(..) => "ADL::RefType".to_string(),
+	        String => "ADL::StringType".to_string(),
+	        Nat => "ADL::NatType".to_string(),
+	        Int => "ADL::IntType".to_string(),
+	        Bool => "ADL::BoolType".to_string(),
+	        Null => "ADL::RefType".to_string(),
+	    }
 	}
 
 	fn step_as_c(&self, strct: &ADLStruct, step: &Step) -> String {
@@ -192,70 +254,97 @@ impl CoalescedStructManager<'_> {
 		let param_indent = format!(",\n{}{}",
 								   "\t".repeat(part_before_params.len() / 4),
 								   " ".repeat(part_before_params.len() % 4)
-								  ); 
+								  );
 
 		let kernel_parameters = self.kernel_parameters(strct, step).join(&param_indent);
 
-		let kernel_body = self.statements_as_c(&step.statements, &strct, &step, 1);
+		let kernel_body = self.statements_as_c(&step.statements, &strct, &step, 2);
+
+		let pre_step_c = self.pre_step_c();
+		let post_step_c = self.post_step_c();
 
 		let constructs = step.constructors();
-
-		let sync_constructed = if constructs.is_empty() {
-			"".to_string()
+		let sync_prefix;
+		let sync_suffix;
+		if constructs.is_empty() {
+			sync_prefix = "".to_string();
+			sync_suffix = "".to_string();
 		} else {
+			sync_prefix = "grid_group grid = this_grid();\n\t".to_string();
 			let to_sync = constructs.iter()
 									.map(|i| format!("{}->sync_nrof_instances(host_{});", i.to_lowercase(), i.to_lowercase()))
 									.reduce(|acc, nxt| acc + "\n\t\t" + &nxt)
 									.unwrap();
-			formatdoc!{"\n
+			sync_suffix = formatdoc!{"\n
 				\tgrid.sync();
 
-				\tif (self == 0) {{
+				\tif (t_idx == 0) {{
 				\t\t{to_sync}
 				\t}}
 			"}
-		};
-
-
-		
-
-
+		}
 
 		formatdoc!{"
 			{part_before_params}{kernel_parameters}){{
-				grid_group grid = this_grid();
-				RefType self = blockDim.x * blockIdx.x + threadIdx.x;
-				if(!{}->is_active(self)) {{ return; }}
-			{kernel_body}{sync_constructed}
+				{sync_prefix}
+				{pre_step_c}
+				{kernel_body}
+				{post_step_c}
+				{sync_suffix}
 			}}
-		", strct.name.to_lowercase()}
+		"}
+	}
+
+	fn pre_step_c(&self) -> String {
+		formatdoc!{"
+			RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
+				inst_size num_threads = blockDim.x * gridDim.x;
+				RefType par_owner;
+				for(RefType self = t_idx; self < nrof_instances; self += num_threads){{"
+		}
+	}
+
+	fn post_step_c(&self) -> String {
+		"}".to_string()
 	}
 
 	fn print_kernel_as_c(&self, strct: &ADLStruct) -> String {
 		let kernel_name = format!("{}_print", strct.name);
+		let part_before_params = format!("__global__ void {kernel_name}(");
+		let param_indent = format!(",\n{}{}",
+								   "\t".repeat(part_before_params.len() / 4),
+								   " ".repeat(part_before_params.len() % 4)
+								  );
+
 		let s_name = &strct.name;
 		let s_name_lwr = strct.name.to_lowercase();
-		let kernel_parameters = format!("{s_name}* {s_name_lwr}");
+		let kernel_parameters = format!("{s_name}* {s_name_lwr}{param_indent}inst_size nrof_instances");
+
 		let params_as_fmt = strct.parameters.iter()
 											.map(|(n, t, _)| format!("{n}={}", as_printf(t)))
 											.reduce(|a, n| a + ", " + &n)
 											.unwrap();
+		
+
+		let load_suffix = self.load_suffix();
+
 		let params_as_expr = strct.parameters.iter()
-											.map(|(n, _, _)| format!(", {s_name_lwr}->{n}[self]"))
+											.map(|(n, _, _)| format!(", {s_name_lwr}->{n}[self]{load_suffix}"))
 											.reduce(|a, n| a + &n)
 											.unwrap();
 
+		let pre_step_c = self.pre_step_c();
+		let post_step_c = self.post_step_c();
+
 		formatdoc!{"
-			__global__ void {kernel_name}({kernel_parameters}){{
-				RefType self = blockDim.x * blockIdx.x + threadIdx.x;
-				if(!{s_name_lwr}->is_active(self)) {{ return; }}
-				if (self == 0) {{
-					printf(\"{s_name}(0): ---------------------------\\n\");
-				}} else {{
-					printf(\"{s_name}(%u): {params_as_fmt}\\n\", self{params_as_expr});
-				}}
+			{part_before_params}{kernel_parameters}){{
+				{pre_step_c}
+					if (self != 0) {{
+						printf(\"{s_name}(%u): {params_as_fmt}\\n\", self{params_as_expr});
+					}}
+				{post_step_c}
 			}}
-		"}
+		"}	
 	}
 
 	fn statements_as_c(&self, statements: &Vec<Stat>, strct: &ADLStruct, step: &Step, indent_lvl: usize) -> String {
@@ -266,10 +355,16 @@ impl CoalescedStructManager<'_> {
 			use crate::ast::Stat::*;
 
 			let statement_as_string = match stmt {
-				IfThen(e, stmts, _) => {
+				IfThen(e, stmts_true, stmts_false, _) => {
 					let cond = self.expression_as_c(e, strct, step);
-					let body = self.statements_as_c(stmts, strct, step, indent_lvl + 1);
-					format!{"{indent}if {cond} {{{body}\n{indent}}}"}
+					let body_true = self.statements_as_c(stmts_true, strct, step, indent_lvl + 1);
+					let body_false = self.statements_as_c(stmts_false, strct, step, indent_lvl + 1);
+					
+					let else_block = if body_false == "" { "".to_string()} else {
+						format!(" else {{{body_false}\n{indent}}}")
+					};
+
+					format!{"{indent}if {cond} {{{body_true}\n{indent}}}{else_block}"}
 				},
 				Declaration(t, n, e, _) => {
 					let t_as_c = as_c_type(t);
@@ -277,6 +372,8 @@ impl CoalescedStructManager<'_> {
 					format!("{indent}{t_as_c} {n} = {e_as_c};")
 				},
 				Assignment(parts, e, _) => {
+					debug_assert!(parts.len() > 0);
+
 					let types = self.get_part_types(parts, strct, step);
 					let e_as_c = self.expression_as_c(e, strct, step);
 					
@@ -299,9 +396,29 @@ impl CoalescedStructManager<'_> {
 					);
 
 					if strct.parameter_by_name(&parts[0]).is_some() {
-						let p_type = as_c_type(types.last().unwrap());
-						
-						format!("{indent}SET_PARAM({parts_as_c}, {e_as_c}, {p_type}, {owner});")
+						let param_type = self.basic_type_as_c(types.last().unwrap());
+						let param = parts.last().unwrap();
+						let owner_type = if parts.len() == 1 {
+							strct.name.to_lowercase()
+						} else {
+							types[types.len()-2].name().unwrap().to_string().to_lowercase()
+						};
+						let load_suffix = self.load_suffix();
+						let store_suffix = self.store_suffix("new_val");
+						let adl_parts = parts.join(".");
+
+						formatdoc!{"
+							{indent}/* {adl_parts} = {e_as_c} */
+							{indent}par_owner = {owner};
+							{indent}if(par_owner != 0){{
+							{indent}	{param_type} prev_val = {owner_type}->{param}[par_owner]{load_suffix};
+							{indent}	{param_type} new_val = {e_as_c};
+							{indent}	if (prev_val != new_val) {{
+							{indent}		{owner_type}->{param}[par_owner]{store_suffix};
+							{indent}		FP->set();
+							{indent}	}}
+							{indent}}}
+						"}
 					} else {
 						format!("{indent}{parts_as_c} = {e_as_c};")
 					}
@@ -379,26 +496,24 @@ impl CoalescedStructManager<'_> {
 	        	}
 	        	let is_parameter = strct.parameter_by_name(&parts[0]).is_some();
 	        	let types = self.get_part_types(parts, strct, step);
+	        	let load_suffix = self.load_suffix();
 
-	        	let mut previous_c_expr : String;
-	        	let mut previous_c_type : &String;
-	        	let start_idx;
-	        	if is_parameter {
-	        		previous_c_expr = "self".to_string();
-	        		previous_c_type = &strct.name;
-	        		start_idx = 0;
-	        	} else {
+	        	let mut previous_c_expr : String = "self".to_string();
+	        	let mut previous_c_type : &String = &strct.name;
+	        	let mut start_idx = 0;
+	        	
+	        	if !is_parameter {
 	        		previous_c_expr = parts[0].clone();
-	        		previous_c_type = match types[0].name() {
-	        			Some(t_name) => t_name,
-	        			None => unreachable!()
-	        		};
-
+	        		if let Some(t_name) = types[0].name() {
+	        			previous_c_type = t_name;
+	        		} else {
+	        			debug_assert!(parts.len() == 1);
+	        		}
 	        		start_idx = 1;
 	        	}
 
 	        	for (t, p) in zip(types[start_idx..].iter(), parts[start_idx..].iter()) {
-	        		previous_c_expr = format!("{}->{p}[{previous_c_expr}]", previous_c_type.to_lowercase());
+	        		previous_c_expr = format!("{}->{p}[{previous_c_expr}]{load_suffix}", previous_c_type.to_lowercase());
 	        		if t.name().is_some() {
 	        			previous_c_type = t.name().unwrap();
 	        		}
@@ -408,5 +523,23 @@ impl CoalescedStructManager<'_> {
 	        },
 	        Lit(l, _) => as_c_literal(l),
 	    }
+	}
+
+	fn load_suffix(&self) -> String {
+		if self.memorder.is_strong() {
+			let order = self.memorder.as_cuda_order();
+			format!(".load({order})")
+		} else {
+			"".to_string()
+		}
+	}
+
+	fn store_suffix(&self, val : &str) -> String {
+		if self.memorder.is_strong() {
+			let order = self.memorder.as_cuda_order();
+			format!(".store({val}, {order})")
+		} else {
+			format!(" = {val}")
+		}
 	}
 }

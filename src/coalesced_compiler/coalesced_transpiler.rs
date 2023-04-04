@@ -54,20 +54,25 @@ impl Transpiler for CoalescedCUDATranspiler {
 
 		let schedule = schedule_manager.run_schedule();
 		formatdoc! {"
-			{includes}
-
 			{defines}
+
+			{includes}
 
 			{typedefs}
 
 			{globals}
 
-			{functs}
-
 			{kernels}
+
+			{functs}
 
 			int main(int argc, char **argv) {{
 				{pre_main}
+
+				size_t printf_size;
+				cudaDeviceGetLimit(&printf_size, cudaLimitPrintfFifoSize);
+				cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 2 * printf_size);
+
 
 				{schedule}
 

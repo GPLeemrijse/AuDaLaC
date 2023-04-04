@@ -4,6 +4,7 @@
 #include "ADL.h"
 #include "init_file.h"
 #include <assert.h>
+#include <cuda/atomic>
 
 using namespace ADL;
 
@@ -19,8 +20,6 @@ public:
 
 	virtual void assert_correct_info(InitFile::StructInfo* info) = 0;
 
-	__host__ __device__ bool is_active(RefType instance);
-
 	__host__ void* to_device(void);
 
 	// other gets values of this
@@ -28,23 +27,22 @@ public:
 
 	__host__ __device__ inst_size nrof_instances(void);
 
+	__host__ __device__ inst_size difference(void);
+
 protected:
 	virtual size_t child_size(void) = 0;
 
+	virtual size_t param_size(uint idx) = 0;
+
 	// Keep sequential in memory
-	inst_size active_instances; // How many are part of the current iteration?
-	inst_size instantiated_instances; // How many have been created in total?
+	cuda::atomic<inst_size, cuda::thread_scope_device> active_instances; // How many are part of the current iteration?
+	cuda::atomic<inst_size, cuda::thread_scope_device> instantiated_instances; // How many have been created in total?
 
 	inst_size capacity; // For how many is space allocated?
 
 	__host__ __device__ inline RefType claim_instance(void) {
-		#ifdef __CUDA_ARCH__
-		    ADL::RefType slot = atomicInc(&instantiated_instances, capacity);
-		    assert(slot != 0);
-		#else
-		    ADL::RefType slot = instantiated_instances++;
-		    assert(slot < capacity);
-		#endif
+		ADL::RefType slot = instantiated_instances.fetch_add(1, cuda::memory_order_seq_cst);
+		assert(slot < capacity);
 		return slot;
 	}
 

@@ -1,8 +1,9 @@
 #include "Struct.h"
 #include "ADL.h"
 #include <assert.h>
+#include <cuda/atomic>
 
-__host__ Struct::Struct(void) : is_initialised(false) {}
+__host__ Struct::Struct(void) : is_initialised(false), active_instances(0), instantiated_instances(0), capacity(0), nrof_parameters(0) {}
 
 __host__ void Struct::free(void) {
 	if (is_initialised) {
@@ -14,10 +15,6 @@ __host__ void Struct::free(void) {
 			);
 		}
 	}
-}
-
-__host__ __device__ bool Struct::is_active(RefType instance){
-	return instance < active_instances;
 }
 
 __host__ void* Struct::to_device(void) {
@@ -40,44 +37,65 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 	assert (info->nrof_instances < capacity);
 
 	void** params = get_parameters();
-	nrof_parameters = info->parameter_data.size();
+	this->nrof_parameters = info->parameter_data.size();
 
-	for (int p = 0; p < nrof_parameters; p++){
-		size_t param_size = size_of_type(info->parameter_types[p]);
+	for (int p = 0; p < this->nrof_parameters; p++){
+		size_t info_param_size = size_of_type(info->parameter_types[p]);
+		size_t actual_param_size = this->param_size(p);
 
 		CHECK(
-			cudaMalloc(&params[p], param_size * capacity)
+			cudaMalloc(&params[p], actual_param_size * capacity)
 		);
 		
-		// Copy initial instances
-		CHECK(
-			cudaMemcpyAsync(
-				&((uint8_t*)params[p])[param_size], // free first slot for null instance
-				info->parameter_data[p],
-				param_size * info->nrof_instances,
-				cudaMemcpyHostToDevice
-			)
-		);
+		if (info_param_size == actual_param_size){
+			// Copy initial instances
+			CHECK(
+				cudaMemcpyAsync(
+					&((uint8_t*)params[p])[info_param_size], // free first slot for null instance
+					info->parameter_data[p],
+					info_param_size * info->nrof_instances,
+					cudaMemcpyHostToDevice
+				)
+			);
+		} else if (actual_param_size > info_param_size) {
+			fprintf(stderr, "Strided copy for param %d of %s\n", p, info->name.c_str());
+			for(int i = 0; i < info->nrof_instances; i++){
+				// Copy initial instances
+				CHECK(
+					cudaMemcpyAsync(
+						&((uint8_t*)params[p])[actual_param_size * i],
+						&((uint8_t*)info->parameter_data[p])[info_param_size * i],
+						info_param_size,
+						cudaMemcpyHostToDevice
+					)
+				);
+			}
+		} else {
+			throw std::bad_alloc();
+		}
 
-		// Copy null-instance
+		// zero null-instance
 		CHECK(
-			cudaMemcpyAsync(
+			cudaMemsetAsync(
 				params[p],
-				ADL::default_value(info->parameter_types[p]),
-				param_size,
-				cudaMemcpyHostToDevice
+				0,
+				actual_param_size
 			)
 		);
 	}
 
-	instantiated_instances = info->nrof_instances + 1; // null-instance
-	active_instances = info->nrof_instances + 1;
-	capacity = capacity;
-	is_initialised = true;
+	this->instantiated_instances = info->nrof_instances + 1; // null-instance
+	this->active_instances = info->nrof_instances + 1;
+	this->capacity = capacity;
+	this->is_initialised = true;
 }
 
 __host__ __device__ inst_size Struct::nrof_instances(void){
-	return active_instances;
+	return active_instances.load(cuda::memory_order_seq_cst);
+}
+
+__host__ __device__ inst_size Struct::difference(void){
+	return instantiated_instances.load(cuda::memory_order_seq_cst) - active_instances.load(cuda::memory_order_seq_cst);
 }
 
 /* Sets own active instances to all instantiated instances.
@@ -85,7 +103,7 @@ __host__ __device__ inst_size Struct::nrof_instances(void){
 */
 __host__ __device__ void Struct::sync_nrof_instances(Struct* other) {
 	// First sync own active instances
-	active_instances = instantiated_instances;
+	active_instances.store(instantiated_instances.load(cuda::memory_order_seq_cst), cuda::memory_order_seq_cst);
 
 	#ifdef __CUDA_ARCH__
 	    memcpy(

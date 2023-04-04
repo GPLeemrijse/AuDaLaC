@@ -430,8 +430,8 @@ fn check_statement_block<'ast>(
             Assignment(parts, exp, loc) => {
                 check_assignment(parts, exp, loc, context);
             }
-            IfThen(cond, statements, cond_loc) => {
-                check_ifthen(cond, statements, cond_loc, context);
+            IfThen(cond, statements1, statements2, cond_loc) => {
+                check_ifthen(cond, statements1, statements2, cond_loc, context);
             }
         }
     }
@@ -509,7 +509,8 @@ fn check_assignment<'ast>(
 
 fn check_ifthen<'ast>(
     cond : &'ast Box<Exp>,
-    statements : &'ast Vec<Stat>,
+    statements_true : &'ast Vec<Stat>,
+    statements_false : &'ast Vec<Stat>,
     cond_loc : &'ast Loc,
     context: &mut BlockEvaluationContext<'ast>
     ){
@@ -529,7 +530,11 @@ fn check_ifthen<'ast>(
 
     // Regardless of if the guard is of boolean type, we check the statements
     context.push_var_scope();
-    check_statement_block(statements, context);
+    check_statement_block(statements_true, context);
+    context.pop_var_scope();
+
+    context.push_var_scope();
+    check_statement_block(statements_false, context);
     context.pop_var_scope();
 }
 

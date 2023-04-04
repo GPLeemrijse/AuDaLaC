@@ -1,9 +1,16 @@
 #ifndef ADL_H
 #define ADL_H
 #include <string>
+#include <assert.h>
+#include <tuple>
 
 
 #define MAX_FP_DEPTH 16
+
+#ifndef THREADS_PER_BLOCK
+#define THREADS_PER_BLOCK 256
+#endif
+
 
 #define CHECK(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 __host__ __device__ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
@@ -38,6 +45,26 @@ namespace ADL {
 	    Bool,
 	    Ref
 	};
+
+   enum OccupancyStrategy {
+      MaxOccupancy = 0,
+      OneBlockPerSM = 1,
+   };
+
+   static std::tuple<dim3, dim3> get_launch_dims(inst_size nrof_instances, const void* kernel, OccupancyStrategy strat = MaxOccupancy){
+      assert(strat == MaxOccupancy);
+      int numBlocksPerSm = 0;
+      int numThreads = THREADS_PER_BLOCK;
+
+      cudaDeviceProp deviceProp;
+      cudaGetDeviceProperties(&deviceProp, 0);
+      cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, numThreads, 0);
+      
+      int max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
+      dim3 dimBlock(numThreads, 1, 1);
+      dim3 dimGrid( min(max_blocks, (nrof_instances + numThreads - 1)/numThreads), 1, 1);
+      return std::make_tuple(dimGrid, dimBlock);
+   }
 
 	static Type parse_type_string(std::string s) {
       if (s == "Int") return Int;
