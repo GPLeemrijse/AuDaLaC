@@ -1,0 +1,75 @@
+struct Edge(s : Node, t : Node){
+
+	propagate {
+		if !s.in_scc && !t.in_scc then {
+			// Forwards set
+			if s.fwd < t.fwd then {
+				t.fwd := s.fwd;
+			}
+
+			// Backwards set
+			if t.bwd < s.bwd then {
+				s.bwd := t.bwd;
+			}
+		}
+	}
+
+	determine_valid_frontier {
+		if !s.in_scc && !t.in_scc then {
+			if s.fwd != t.fwd then {
+				s.fwd.fwd_valid := false;
+			}
+
+			if s.bwd != t.bwd then {
+				t.bwd.bwd_valid := false;
+			}
+		}
+	}
+}
+
+struct Node(in_scc : Bool, fwd : Node, bwd : Node, fwd_valid : Bool, bwd_valid : Bool){
+
+	init {
+		in_scc := false;
+		fwd := this;
+		bwd := this;
+		fwd_valid := true;
+		bwd_valid := true;
+	}
+
+	remove_valid_sccs {
+		in_scc := (
+			fwd == bwd
+			&&
+			fwd.fwd_valid
+			&&
+			bwd.bwd_valid
+		);
+	}
+
+	reset_fwd_bwd {
+		fwd_valid := true;
+		bwd_valid := true;
+
+		/* If this node was 'won' by
+		   a now complete SCC but was
+		   not part of that SCC, we reset
+		   our fwd/bwd set. */
+		if !in_scc then {
+			if fwd.in_scc then {
+				fwd := this;
+			}
+			if bwd.in_scc then {
+				bwd := this;
+			}
+		}
+	}
+}
+
+init <
+Fix(
+	Fix(propagate) <
+	determine_valid_frontier <
+	remove_valid_sccs <
+	reset_fwd_bwd
+) < Node.print
