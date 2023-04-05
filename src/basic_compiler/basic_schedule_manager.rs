@@ -16,7 +16,7 @@ impl ScheduleManager for BasicScheduleManager<'_> {
 	}
 
 	fn defines(&self) -> String {
-		format!("#define FP_DEPTH {}\n", self.program.schedule.fixpoint_depth())
+		format!("#define FP_DEPTH {}\n", self.program.schedule.fixpoint_depth() + 1)
 	}
 
 	fn struct_typedef(&self) -> String {
