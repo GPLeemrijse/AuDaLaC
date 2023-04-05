@@ -100,25 +100,34 @@ __host__ __device__ inst_size Struct::difference(void){
 
 /* Sets own active instances to all instantiated instances.
    Then copies own values to 'other'.
+   Returns true iff there was a difference between active and instantiated instances.
 */
-__host__ __device__ void Struct::sync_nrof_instances(Struct* other) {
+__host__ __device__ bool Struct::sync_nrof_instances(Struct* other) {
 	// First sync own active instances
-	active_instances.store(instantiated_instances.load(cuda::memory_order_seq_cst), cuda::memory_order_seq_cst);
+	inst_size instantiated_instances = this->instantiated_instances.load(cuda::memory_order_seq_cst);
+	inst_size old_active_instances = this->active_instances.load(cuda::memory_order_seq_cst);
+	bool differ = instantiated_instances != old_active_instances;
+
+	if (differ) {
+		this->active_instances.store(instantiated_instances, cuda::memory_order_seq_cst);
+	}
 
 	#ifdef __CUDA_ARCH__
-	    memcpy(
+		memcpy(
 			&other->active_instances, // dst
-			&active_instances,
-	    	sizeof(inst_size) * 2
+			&this->active_instances,
+			sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>) * 2
 		);
 	#else
-	    CHECK(
+		CHECK(
 			cudaMemcpy(
 				&other->active_instances, // dst
-				&active_instances,
-		    	sizeof(inst_size) * 2,
-		    	cudaMemcpyHostToDevice
+				&this->active_instances,
+				sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>) * 2,
+				cudaMemcpyHostToDevice
 			)
 		);
 	#endif
+
+	return differ;
 }

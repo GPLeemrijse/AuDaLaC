@@ -272,14 +272,17 @@ impl CoalescedStructManager<'_> {
 		} else {
 			sync_prefix = "grid_group grid = this_grid();\n\t".to_string();
 			let to_sync = constructs.iter()
-									.map(|i| format!("{}->sync_nrof_instances(host_{});", i.to_lowercase(), i.to_lowercase()))
+									.map(|i| format!("created_instances |= {}->sync_nrof_instances(host_{});", i.to_lowercase(), i.to_lowercase()))
 									.reduce(|acc, nxt| acc + "\n\t\t" + &nxt)
 									.unwrap();
 			sync_suffix = formatdoc!{"\n
 				\tgrid.sync();
-
+				\tbool created_instances = false;
 				\tif (t_idx == 0) {{
 				\t\t{to_sync}
+				\t\tif (created_instances){{
+				\t\t\tFP->set();
+				\t\t}}
 				\t}}
 			"}
 		}

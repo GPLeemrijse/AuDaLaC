@@ -23,7 +23,7 @@ public:
 	__host__ void* to_device(void);
 
 	// other gets values of this
-	__host__ __device__ void sync_nrof_instances(Struct* other);
+	__host__ __device__ bool sync_nrof_instances(Struct* other);
 
 	__host__ __device__ inst_size nrof_instances(void);
 
