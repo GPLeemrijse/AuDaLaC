@@ -773,7 +773,7 @@ fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<
         (String, _, String) if is_equality(op) => Some(Bool),
         (Bool, _, Bool) if is_equality(op) => Some(Bool),
         (Bool, _, Bool) if is_boolean_logic(op) => Some(Bool),
-        (Named(..)|Null, _, Named(..)|Null) if is_equality(op) => Some(Bool),
+        (Named(..)|Null, _, Named(..)|Null) if is_equality(op) || is_ordering(op) => Some(Bool),
         (..) => None,
     }
 }
