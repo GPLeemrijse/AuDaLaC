@@ -197,9 +197,8 @@ __global__ void NodeSet_allocate_sets(FPManager* FP,
 									  NodeSet* const host_nodeset){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		if ((nodeset->pivot_f_b[self].load(cuda::memory_order_relaxed)) != 0) {
 			if ((nodeset->pivot_nf_nb[self].load(cuda::memory_order_relaxed)) == 0) {
@@ -331,9 +330,8 @@ __global__ void NodeSet_initialise_pivot_fwd_bwd(FPManager* FP,
 												 Edge* const edge){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		if (!(nodeset->scc[self].load(cuda::memory_order_relaxed))) {
 			/* pivot_f_b.fwd = true */
@@ -480,9 +478,8 @@ __global__ void Node_pivots_nominate(FPManager* FP,
 									 Edge* const edge){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		if (!(nodeset->scc[node->set[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) {
 			BoolType f = (node->fwd[self].load(cuda::memory_order_relaxed));
@@ -551,9 +548,8 @@ __global__ void Node_divide_into_sets_reset_fwd_bwd(FPManager* FP,
 													Edge* const edge){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		BoolType f = (node->fwd[self].load(cuda::memory_order_relaxed));
 		BoolType b = (node->bwd[self].load(cuda::memory_order_relaxed));
@@ -629,9 +625,8 @@ __global__ void Edge_compute_fwd_bwd(FPManager* FP,
 									 Edge* const edge){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		if ((node->set[edge->t[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) == (node->set[edge->s[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) {
 			if (node->fwd[edge->s[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) {
@@ -668,9 +663,8 @@ __global__ void NodeSet_print(NodeSet* nodeset,
 							  inst_size nrof_instances){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 		if (self != 0) {
 			printf("NodeSet(%u): pivot_f_b=%u, pivot_f_nb=%u, pivot_nf_b=%u, pivot_nf_nb=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, nodeset->pivot_f_b[self].load(cuda::memory_order_relaxed), nodeset->pivot_f_nb[self].load(cuda::memory_order_relaxed), nodeset->pivot_nf_b[self].load(cuda::memory_order_relaxed), nodeset->pivot_nf_nb[self].load(cuda::memory_order_relaxed), nodeset->scc[self].load(cuda::memory_order_relaxed), nodeset->f_and_b[self].load(cuda::memory_order_relaxed), nodeset->not_f_and_b[self].load(cuda::memory_order_relaxed), nodeset->f_and_not_b[self].load(cuda::memory_order_relaxed));
 		}
@@ -681,9 +675,8 @@ __global__ void Node_print(Node* node,
 						   inst_size nrof_instances){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 		if (self != 0) {
 			printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, node->set[self].load(cuda::memory_order_relaxed), node->fwd[self].load(cuda::memory_order_relaxed), node->bwd[self].load(cuda::memory_order_relaxed));
 		}
@@ -694,9 +687,8 @@ __global__ void Edge_print(Edge* edge,
 						   inst_size nrof_instances){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 		if (self != 0) {
 			printf("Edge(%u): s=%u, t=%u\n", self, edge->s[self].load(cuda::memory_order_relaxed), edge->t[self].load(cuda::memory_order_relaxed));
 		}

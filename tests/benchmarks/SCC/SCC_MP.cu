@@ -133,9 +133,8 @@ __global__ void Edge_propagate(FPManager* FP,
 							   Node* const node){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		if ((!(node->in_scc[edge->s[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) && (!(node->in_scc[edge->t[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)))) {
 			if ((node->fwd[edge->s[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) < (node->fwd[edge->t[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) {
@@ -175,9 +174,8 @@ __global__ void Edge_determine_valid_frontier(FPManager* FP,
 											  Node* const node){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		if ((!(node->in_scc[edge->s[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) && (!(node->in_scc[edge->t[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)))) {
 			if ((node->fwd[edge->s[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) != (node->fwd[edge->t[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) {
@@ -217,9 +215,8 @@ __global__ void Node_init(FPManager* FP,
 						  Node* const node){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		/* in_scc = false */
 		par_owner = self;
@@ -286,9 +283,8 @@ __global__ void Node_remove_valid_sccs(FPManager* FP,
 									   Node* const node){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		/* in_scc = ((((node->fwd[self].load(cuda::memory_order_relaxed)) == (node->bwd[self].load(cuda::memory_order_relaxed))) && (node->fwd_valid[node->fwd[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) && (node->bwd_valid[node->bwd[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) */
 		par_owner = self;
@@ -311,9 +307,8 @@ __global__ void Node_reset_fwd_bwd(FPManager* FP,
 								   Node* const node){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 	
 		/* fwd_valid = true */
 		par_owner = self;
@@ -372,9 +367,8 @@ __global__ void Edge_print(Edge* edge,
 						   inst_size nrof_instances){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 		if (self != 0) {
 			printf("Edge(%u): s=%u, t=%u\n", self, edge->s[self].load(cuda::memory_order_relaxed), edge->t[self].load(cuda::memory_order_relaxed));
 		}
@@ -385,9 +379,8 @@ __global__ void Node_print(Node* node,
 						   inst_size nrof_instances){
 	grid_group grid = this_grid();
 	RefType t_idx = grid.thread_rank();
-	inst_size num_threads = grid.size();
 	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
+	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
 		if (self != 0) {
 			printf("Node(%u): in_scc=%u, fwd=%u, bwd=%u, fwd_valid=%u, bwd_valid=%u\n", self, node->in_scc[self].load(cuda::memory_order_relaxed), node->fwd[self].load(cuda::memory_order_relaxed), node->bwd[self].load(cuda::memory_order_relaxed), node->fwd_valid[self].load(cuda::memory_order_relaxed), node->bwd_valid[self].load(cuda::memory_order_relaxed));
 		}

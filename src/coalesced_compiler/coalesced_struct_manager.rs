@@ -298,9 +298,8 @@ impl CoalescedStructManager<'_> {
 		formatdoc!{"
 			grid_group grid = this_grid();
 				RefType t_idx = grid.thread_rank();
-				inst_size num_threads = grid.size();
 				RefType par_owner;
-				for(RefType self = t_idx; self < nrof_instances; self += num_threads){{"
+				for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){{"
 		}
 	}
 
