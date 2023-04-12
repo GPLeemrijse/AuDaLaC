@@ -264,13 +264,10 @@ impl CoalescedStructManager<'_> {
 		let post_step_c = self.post_step_c();
 
 		let constructs = step.constructors();
-		let sync_prefix;
 		let sync_suffix;
 		if constructs.is_empty() {
-			sync_prefix = "".to_string();
 			sync_suffix = "".to_string();
 		} else {
-			sync_prefix = "grid_group grid = this_grid();\n\t".to_string();
 			let to_sync = constructs.iter()
 									.map(|i| format!("created_instances |= {}->sync_nrof_instances(host_{});", i.to_lowercase(), i.to_lowercase()))
 									.reduce(|acc, nxt| acc + "\n\t\t" + &nxt)
@@ -289,7 +286,6 @@ impl CoalescedStructManager<'_> {
 
 		formatdoc!{"
 			{part_before_params}{kernel_parameters}){{
-				{sync_prefix}
 				{pre_step_c}
 				{kernel_body}
 				{post_step_c}
@@ -300,10 +296,10 @@ impl CoalescedStructManager<'_> {
 
 	fn pre_step_c(&self) -> String {
 		formatdoc!{"
-			RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-				inst_size num_threads = blockDim.x * gridDim.x;
+			grid_group grid = this_grid();
+				RefType t_idx = grid.thread_rank();
 				RefType par_owner;
-				for(RefType self = t_idx; self < nrof_instances; self += num_threads){{"
+				for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){{"
 		}
 	}
 
