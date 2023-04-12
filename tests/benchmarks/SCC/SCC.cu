@@ -196,9 +196,8 @@ __global__ void NodeSet_allocate_sets(FPManager* FP,
 									  Edge* const edge,
 									  NodeSet* const host_nodeset){
 	grid_group grid = this_grid();
-	
-	RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-	inst_size num_threads = blockDim.x * gridDim.x;
+	RefType t_idx = grid.thread_rank();
+	inst_size num_threads = grid.size();
 	RefType par_owner;
 	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
 	
@@ -315,9 +314,12 @@ __global__ void NodeSet_allocate_sets(FPManager* FP,
 	
 
 	grid.sync();
-
+	bool created_instances = false;
 	if (t_idx == 0) {
-		nodeset->sync_nrof_instances(host_nodeset);
+		created_instances |= nodeset->sync_nrof_instances(host_nodeset);
+		if (created_instances){
+			FP->set();
+		}
 	}
 
 }
@@ -327,9 +329,9 @@ __global__ void NodeSet_initialise_pivot_fwd_bwd(FPManager* FP,
 												 NodeSet* const nodeset,
 												 Node* const node,
 												 Edge* const edge){
-	
-	RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-	inst_size num_threads = blockDim.x * gridDim.x;
+	grid_group grid = this_grid();
+	RefType t_idx = grid.thread_rank();
+	inst_size num_threads = grid.size();
 	RefType par_owner;
 	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
 	
@@ -476,9 +478,9 @@ __global__ void Node_pivots_nominate(FPManager* FP,
 									 NodeSet* const nodeset,
 									 Node* const node,
 									 Edge* const edge){
-	
-	RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-	inst_size num_threads = blockDim.x * gridDim.x;
+	grid_group grid = this_grid();
+	RefType t_idx = grid.thread_rank();
+	inst_size num_threads = grid.size();
 	RefType par_owner;
 	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
 	
@@ -547,9 +549,9 @@ __global__ void Node_divide_into_sets_reset_fwd_bwd(FPManager* FP,
 													NodeSet* const nodeset,
 													Node* const node,
 													Edge* const edge){
-	
-	RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-	inst_size num_threads = blockDim.x * gridDim.x;
+	grid_group grid = this_grid();
+	RefType t_idx = grid.thread_rank();
+	inst_size num_threads = grid.size();
 	RefType par_owner;
 	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
 	
@@ -625,9 +627,9 @@ __global__ void Edge_compute_fwd_bwd(FPManager* FP,
 									 NodeSet* const nodeset,
 									 Node* const node,
 									 Edge* const edge){
-	
-	RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-	inst_size num_threads = blockDim.x * gridDim.x;
+	grid_group grid = this_grid();
+	RefType t_idx = grid.thread_rank();
+	inst_size num_threads = grid.size();
 	RefType par_owner;
 	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
 	
@@ -664,8 +666,9 @@ __global__ void Edge_compute_fwd_bwd(FPManager* FP,
 }
 __global__ void NodeSet_print(NodeSet* nodeset,
 							  inst_size nrof_instances){
-	RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-	inst_size num_threads = blockDim.x * gridDim.x;
+	grid_group grid = this_grid();
+	RefType t_idx = grid.thread_rank();
+	inst_size num_threads = grid.size();
 	RefType par_owner;
 	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
 		if (self != 0) {
@@ -676,8 +679,9 @@ __global__ void NodeSet_print(NodeSet* nodeset,
 
 __global__ void Node_print(Node* node,
 						   inst_size nrof_instances){
-	RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-	inst_size num_threads = blockDim.x * gridDim.x;
+	grid_group grid = this_grid();
+	RefType t_idx = grid.thread_rank();
+	inst_size num_threads = grid.size();
 	RefType par_owner;
 	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
 		if (self != 0) {
@@ -688,8 +692,9 @@ __global__ void Node_print(Node* node,
 
 __global__ void Edge_print(Edge* edge,
 						   inst_size nrof_instances){
-	RefType t_idx = blockDim.x * blockIdx.x + threadIdx.x;
-	inst_size num_threads = blockDim.x * gridDim.x;
+	grid_group grid = this_grid();
+	RefType t_idx = grid.thread_rank();
+	inst_size num_threads = grid.size();
 	RefType par_owner;
 	for(RefType self = t_idx; self < nrof_instances; self += num_threads){
 		if (self != 0) {
@@ -822,9 +827,9 @@ int main(int argc, char **argv) {
 	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_NodeSet, sizeof(NodeSet), cudaHostRegisterDefault));
 
-	host_Edge.initialise(&structs[0], 100000);
-	host_Node.initialise(&structs[1], 100000);
-	host_NodeSet.initialise(&structs[2], 100000);
+	host_Edge.initialise(&structs[0], 100);
+	host_Node.initialise(&structs[1], 100);
+	host_NodeSet.initialise(&structs[2], 100);
 
 	CHECK(cudaDeviceSynchronize());
 
