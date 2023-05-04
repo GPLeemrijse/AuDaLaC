@@ -5,7 +5,6 @@ use std::fs::File;
 use std::io::Write;
 use crate::basic_compiler::*;
 use crate::coalesced_compiler::*;
-use crate::transpilation_traits::Transpiler;
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use codespan_reporting::term::{self};
@@ -24,6 +23,7 @@ mod transpilation_traits;
 mod basic_compiler;
 mod coalesced_compiler;
 mod init_file_generator;
+mod transpile;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
@@ -56,7 +56,7 @@ fn main() {
     let output_file = args.value_of("output").unwrap();
     let compiler : &str = args.value_of("compiler").unwrap();
     let memorder = MemOrder::from_str(args.value_of("memorder").unwrap());
-    let scope= Scope::from_str(args.value_of("scope").unwrap());
+    let scope = Scope::from_str(args.value_of("scope").unwrap());
     
 
     let adl_program_text = fs::read_to_string(adl_file_loc).expect("Could not open ADL file.");
@@ -90,13 +90,13 @@ fn main() {
                         "basic" => {
                             let struct_manager = BasicStructManager::new(&program, nrof_structs);
                             let schedule_manager = BasicScheduleManager::new(&program);
-                            result = BasicCUDATranspiler::transpile(&schedule_manager, &struct_manager);
+                            result = transpile::transpile(&schedule_manager, &struct_manager);
                         },
                         "coalesced" => {
                             let struct_manager = CoalescedStructManager::new(&program, nrof_structs, memorder, scope);
                             let schedule_manager = CoalescedScheduleManager::new(&program, &struct_manager, printnthinst, print_unstable);
-                            result = CoalescedCUDATranspiler::transpile(&schedule_manager, &struct_manager);
-                        },
+                            result = transpile::transpile(&schedule_manager, &struct_manager);
+                        }
                         _ => unreachable!()
                     }
                     

@@ -1,10 +1,6 @@
 use std::collections::BTreeSet;
 use crate::ast::{ADLStruct, Step};
 
-pub trait Transpiler {
-    fn transpile(schedule_manager: &dyn ScheduleManager, struct_manager: &dyn StructManager) -> String;
-}
-
 
 pub trait ScheduleManager {
     fn add_includes(&self, set: &mut BTreeSet<&str>);
