@@ -11,8 +11,8 @@ pub struct BasicScheduleManager<'a> {
 }
 
 impl ScheduleManager for BasicScheduleManager<'_> {
-	fn add_includes(&self, set: &mut BTreeSet<String>) {
-		set.insert("<stdio.h>".to_string());
+	fn add_includes(&self, set: &mut BTreeSet<&str>) {
+		set.insert("<stdio.h>");
 	}
 
 	fn defines(&self) -> String {

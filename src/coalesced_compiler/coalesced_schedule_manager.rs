@@ -15,10 +15,10 @@ pub struct CoalescedScheduleManager<'a> {
 }
 
 impl ScheduleManager for CoalescedScheduleManager<'_> {
-	fn add_includes(&self, set: &mut BTreeSet<String>) {
-		set.insert("<stdio.h>".to_string());
-		set.insert("\"fp_manager.h\"".to_string());
-		set.insert("<cooperative_groups.h>".to_string());
+	fn add_includes(&self, set: &mut BTreeSet<&str>) {
+		set.insert("<stdio.h>");
+		set.insert("\"fp_manager.h\"");
+		set.insert("<cooperative_groups.h>");
 	}
 
 	fn defines(&self) -> String {

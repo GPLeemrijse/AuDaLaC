@@ -11,8 +11,8 @@ pub struct BasicStructManager<'a> {
 }
 
 impl StructManager for BasicStructManager<'_> {
-	fn add_includes(&self, set: &mut BTreeSet<String>) {
-		set.insert("<stdarg.h>".to_string());
+	fn add_includes(&self, set: &mut BTreeSet<&str>) {
+		set.insert("<stdarg.h>");
 	}
 
 	fn defines(&self) -> String {

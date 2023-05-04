@@ -7,7 +7,7 @@ pub trait Transpiler {
 
 
 pub trait ScheduleManager {
-    fn add_includes(&self, set: &mut BTreeSet<String>);
+    fn add_includes(&self, set: &mut BTreeSet<&str>);
     fn defines(&self) -> String;
     fn struct_typedef(&self) -> String;
     fn globals(&self) -> String;
@@ -16,7 +16,7 @@ pub trait ScheduleManager {
 }
 
 pub trait StructManager {
-    fn add_includes(&self, set: &mut BTreeSet<String>);
+    fn add_includes(&self, set: &mut BTreeSet<&str>);
     fn defines(&self) -> String;
     fn struct_typedef(&self) -> String;
     fn globals(&self) -> String;

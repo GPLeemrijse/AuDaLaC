@@ -13,12 +13,12 @@ pub struct CoalescedStructManager<'a> {
 }
 
 impl StructManager for CoalescedStructManager<'_> {
-	fn add_includes(&self, set: &mut BTreeSet<std::string::String>) {
-		set.insert("\"ADL.h\"".to_string());
-		set.insert("\"init_file.h\"".to_string());
-		set.insert("\"Struct.h\"".to_string());
-		set.insert("<cooperative_groups.h>".to_string());
-		set.insert("<cuda/atomic>".to_string());
+	fn add_includes(&self, set: &mut BTreeSet<&str>) {
+		set.insert("\"ADL.h\"");
+		set.insert("\"init_file.h\"");
+		set.insert("\"Struct.h\"");
+		set.insert("<cooperative_groups.h>");
+		set.insert("<cuda/atomic>");
 	}
 	
 	fn defines(&self) -> String {
