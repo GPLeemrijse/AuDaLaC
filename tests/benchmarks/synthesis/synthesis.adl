@@ -1,4 +1,4 @@
-struct State(marked : Bool, initial : Bool, X_k : Bool, N : Bool, B : Bool, Y : Bool) {
+struct State(X_m : Bool, X_0 : Bool, X_k : Bool, N : Bool, B : Bool, Y : Bool) {
 
 	init_X_k {
 		// X_k = X
@@ -6,8 +6,8 @@ struct State(marked : Bool, initial : Bool, X_k : Bool, N : Bool, B : Bool, Y : 
 	}
 
 	init_N {
-		// N_0^k = marked ∩ X^k
-		N := marked && X_k;
+		// N_0^k = X_m ∩ X^k
+		N := X_m && X_k;
 	}
 
 	init_B {
@@ -22,7 +22,7 @@ struct State(marked : Bool, initial : Bool, X_k : Bool, N : Bool, B : Bool, Y : 
 
 	init_Y {
 		// Y_0 = X_0 ∩ X^k
-		Y := initial && X_k;
+		Y := X_0 && X_k;
 	}
 }
 
