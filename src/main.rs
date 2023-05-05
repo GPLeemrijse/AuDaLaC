@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::compilation_components::*;
+use crate::in_kernel_compiler::SingleKernelSchedule;
 use std::io::BufWriter;
 use std::fs::File;
 use std::io::Write;
@@ -25,6 +27,7 @@ mod coalesced_compiler;
 mod init_file_generator;
 mod transpile;
 mod compilation_components;
+mod in_kernel_compiler;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
@@ -37,7 +40,7 @@ fn main() {
         (about: "Parses \"ADL\" programs")
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
-        (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") default_value("coalesced") "Which compiler to use.")
+        (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") possible_value("in-kernel") default_value("coalesced") "Which compiler to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofstructs: -n --nrofstructs +takes_value default_value("100") value_parser(clap::value_parser!(u64)) "nrof structs memory is allocated for.")
@@ -106,7 +109,21 @@ fn main() {
                             let struct_manager = CoalescedStructManager::new(&program, nrof_structs, memorder, scope);
                             let schedule_manager = CoalescedScheduleManager::new(&program, &struct_manager, printnthinst, print_unstable);
                             result = transpile::transpile(&schedule_manager, &struct_manager);
-                        }
+                        },
+                        "in-kernel" => {
+                            result = transpile::transpile2(vec![
+                                &InitFileReader{},
+                                &StructManagers::new(
+                                    &program,
+                                    nrof_structs,
+                                    memorder,
+                                    scope
+                                ),
+                                &SingleKernelSchedule::new(
+                                    &program
+                                )
+                            ]);
+                        },
                         _ => unreachable!()
                     }
                     
