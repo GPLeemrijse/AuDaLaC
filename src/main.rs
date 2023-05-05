@@ -24,6 +24,7 @@ mod basic_compiler;
 mod coalesced_compiler;
 mod init_file_generator;
 mod transpile;
+mod compilation_components;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
