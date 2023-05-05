@@ -19,12 +19,12 @@ impl CompileComponent for InitFileReader {
 	
 	fn pre_main(&self) -> Option<String> {
 		Some(formatdoc!{"
-			if (argc != 2) {{
-				printf(\"Supply a .init file.\\n\");
-				exit(1);
-			}}
+			\tif (argc != 2) {{
+			\t\tprintf(\"Supply a .init file.\\n\");
+			\t\texit(1);
+			\t}}
 			
-			std::vector<InitFile::StructInfo> structs = InitFile::parse(argv[1]);
+			\tstd::vector<InitFile::StructInfo> structs = InitFile::parse(argv[1]);
 		"})
 	}
 	

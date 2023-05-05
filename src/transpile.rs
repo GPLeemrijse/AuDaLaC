@@ -119,11 +119,11 @@ pub fn transpile2(components : Vec<&dyn CompileComponent>) -> String {
 		{functs}
 
 		int main(int argc, char **argv) {{
-			{pre_main}
+		{pre_main}
 
-			{main}
+		{main}
 
-			{post_main}
+		{post_main}
 		}}
 	"}
 }
