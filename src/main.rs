@@ -43,7 +43,7 @@ fn main() {
         (@arg nrofstructs: -n --nrofstructs +takes_value default_value("100") value_parser(clap::value_parser!(u64)) "nrof structs memory is allocated for.")
         (@arg printnthinst: -d --printnthinst +takes_value default_value("0") value_parser(clap::value_parser!(usize)) "Print every n'th allocated instance.")
         (@arg printunstable: -u --printunstable "Print which step changed the stability stack.")
-        (@arg output: -o --output +takes_value +required "Output file")
+        (@arg output: -o --output +takes_value "Output file")
         (@arg file: +required "\"ADL\" file")
     )
     .get_matches();
@@ -54,17 +54,26 @@ fn main() {
     let nrof_structs : u64 = *args.get_one("nrofstructs").unwrap();
     let printnthinst : usize = *args.get_one("printnthinst").unwrap();
     let adl_file_loc = args.value_of("file").unwrap();
-    let output_file = args.value_of("output").unwrap();
+    let output_file = args.value_of("output");
     let compiler : &str = args.value_of("compiler").unwrap();
     let memorder = MemOrder::from_str(args.value_of("memorder").unwrap());
     let scope = Scope::from_str(args.value_of("scope").unwrap());
     
 
     let adl_program_text = fs::read_to_string(adl_file_loc).expect("Could not open ADL file.");
-    let mut output_writer = BufWriter::new(
-        File::create(output_file)
-        .expect("Could not open output file.")
-    );
+
+    let mut output_writer = match output_file {
+        Some(x) => {
+            Box::new(BufWriter::new(
+                File::create(x)
+                      .expect("Could not open output file.")
+            )) as Box<dyn Write>
+        },
+        None => Box::new(BufWriter::new(
+            std::io::stdout()
+        )) as Box<dyn Write>
+    };
+
 
     if print_ast && init_file {
         eprintln!("Use either --print-ast (-p) or --init-file (-i), not both.");
@@ -80,7 +89,7 @@ fn main() {
                     format!("{:#?}\n", program).as_bytes()
                 ).expect("Could not write to output file.");
             } else if init_file {
-                generate_init_file(&program, &mut output_writer);
+                generate_init_file(&program, output_writer);
             } else {
                 let errors = validate_ast(&program);
 

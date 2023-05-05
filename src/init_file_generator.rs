@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 use std::io::Write;
-use std::fs::File;
 use crate::ast::{Program, Step, Stat, Type, Exp};
-use std::io::BufWriter;
 use indoc::formatdoc;
 
-pub fn generate_init_file(ast: &Program, writer : &mut BufWriter<File>) {
+pub fn generate_init_file(ast: &Program, mut writer : Box<dyn Write>) {
 	let nrof_structs = ast.structs.len();
 	let mut struct_decls_vec : Vec<String> = ast.structs.iter().map(|s| {
 		format!(
