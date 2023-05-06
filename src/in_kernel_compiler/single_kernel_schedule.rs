@@ -1,3 +1,4 @@
+use crate::in_kernel_compiler::StepBodyTranspiler;
 use std::collections::HashMap;
 use crate::ast::*;
 use std::collections::BTreeSet;
@@ -8,18 +9,20 @@ pub struct SingleKernelSchedule<'a> {
 	program : &'a Program,
 	fp : &'a dyn FPStrategy,
 	step_to_structs : HashMap<&'a String, Vec<&'a ADLStruct>>,
-	instances_per_thread : usize
+	instances_per_thread : usize,
+	step_transpiler : &'a StepBodyTranspiler<'a>
 }
 
 impl SingleKernelSchedule<'_> {
 	const KERNEL_NAME : &str = "schedule_kernel";
 
-	pub fn new<'a>(program : &'a Program, fp : &'a dyn FPStrategy, instances_per_thread: usize) -> SingleKernelSchedule<'a> {
+	pub fn new<'a>(program : &'a Program, fp : &'a dyn FPStrategy, instances_per_thread: usize, step_transpiler : &StepBodyTranspiler) -> SingleKernelSchedule<'a> {
 		SingleKernelSchedule {
 			program,
 			fp,
 			step_to_structs: program.get_step_to_structs(),
-			instances_per_thread
+			instances_per_thread,
+			step_transpiler : step_transpiler,
 		}
 	}
 

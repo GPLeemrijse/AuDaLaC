@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::in_kernel_compiler::StepBodyTranspiler;
 use crate::fp_strategies::NaiveFixpoint;
 use crate::compilation_components::*;
 use crate::in_kernel_compiler::SingleKernelSchedule;
@@ -118,6 +119,7 @@ fn main() {
                             result = transpile::transpile(&schedule_manager, &struct_manager);
                         },
                         "in-kernel" => {
+                            let step_transpiler = StepBodyTranspiler::new(&type_info, memorder);
                             result = transpile::transpile2(vec![
                                 &InitFileReader{},
                                 &PrintbufferSizeAdjuster::new(buffer_size),
@@ -130,7 +132,8 @@ fn main() {
                                 &SingleKernelSchedule::new(
                                     &program,
                                     &NaiveFixpoint::new(),
-                                    instsperthread
+                                    instsperthread,
+                                    &step_transpiler
                                 )
                             ]);
                         },
