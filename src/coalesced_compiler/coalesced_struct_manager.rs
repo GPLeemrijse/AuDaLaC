@@ -370,7 +370,8 @@ impl CoalescedStructManager<'_> {
 					let e_as_c = self.expression_as_c(e, strct, step);
 					format!("{indent}{t_as_c} {n} = {e_as_c};")
 				},
-				Assignment(parts, e, _) => {
+				Assignment(parts_exp, e, _) => {
+					let parts = parts_exp.get_parts();
 					debug_assert!(parts.len() > 0);
 
 					let types = self.get_part_types(parts, strct, step);

@@ -486,7 +486,7 @@ fn check_declaration<'ast>(
 }
 
 fn check_assignment<'ast>(
-    parts : &'ast Vec<String>,
+    parts : &'ast Box<Exp>,
     exp : &'ast Box<Exp>,
     loc : &'ast Loc,
     context: &mut BlockEvaluationContext<'ast>
@@ -541,10 +541,13 @@ fn check_ifthen<'ast>(
 
 /// Returns the type of a `Var`: part1.part2.part3, and the location of the original definition
 fn get_var_type<'ast>(
-    parts: &'ast Vec<String>,
+    parts_exp: &'ast Exp,
     context: &mut BlockEvaluationContext<'ast>,
     loc: &'ast Loc,
 ) -> Option<(Type, Loc)> {
+    
+    let parts = parts_exp.get_parts();
+
     // Get type of first part by looking in the current context 
     let mut found_type: Option<(Type, Loc)>;
     found_type = get_type_from_context(&parts[0], context);
@@ -725,7 +728,7 @@ fn get_expr_type<'ast>(
                 None
             }
         }
-        Var(parts, loc) => get_var_type(parts, context, loc).map(|(t, _)| t),
+        Var(_, loc) => get_var_type(expr, context, loc).map(|(t, _)| t),
         Lit(lit, _) => {
             match lit {
                 NatLit(_) => Some(Nat),

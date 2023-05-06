@@ -179,13 +179,20 @@ impl Exp {
         }
         result
     }
+
+    pub fn get_parts(&self) -> &Vec<String>{
+        match self {
+            Exp::Var(parts, _) => parts,
+            _ => panic!()
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Stat {
     IfThen(Box<Exp>, Vec<Stat>, Vec<Stat>, Loc),
     Declaration(Type, String, Box<Exp>, Loc),
-    Assignment(Vec<String>, Box<Exp>, Loc),
+    Assignment(Box<Exp>, Box<Exp>, Loc),
 }
 
 impl Stat {
@@ -391,7 +398,7 @@ mod tests {
                 Box::new(Exp::Lit(Literal::BoolLit(true), (3, 7))),
                 vec![
                     Stat::Assignment(
-                        vec!["id".to_string(), "id2".to_string()],
+                        Box::new(Exp::Var(vec!["id".to_string(), "id2".to_string()], (1, 2))),
                         Box::new(Exp::Lit(Literal::NullLit, (25, 29))),
                         (15, 30),
                     ),

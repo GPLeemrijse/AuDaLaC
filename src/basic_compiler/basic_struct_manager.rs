@@ -268,7 +268,8 @@ impl BasicStructManager<'_> {
 						let e_comp = as_c_expression(e, self.program, &is_param, None);
 						format!("{t_comp} {n} = {e_comp};\n")
 					},
-					Assignment(parts, e, _) => {
+					Assignment(parts_exp, e, _) => {
+						let parts = parts_exp.get_parts();
 						let p = parts.join("->");
 						let e_comp = as_c_expression(e, self.program, &is_param, None);
 
