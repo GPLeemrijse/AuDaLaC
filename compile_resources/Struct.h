@@ -20,7 +20,7 @@ public:
 
 	virtual void assert_correct_info(InitFile::StructInfo* info) = 0;
 
-	__host__ void* to_device(void);
+	__host__ void* to_device(void* allocated_ptr);
 
 	// other gets values of this
 	__host__ __device__ bool sync_nrof_instances(Struct* other);

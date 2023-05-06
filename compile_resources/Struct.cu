@@ -17,13 +17,17 @@ __host__ void Struct::free(void) {
 	}
 }
 
-__host__ void* Struct::to_device(void) {
+__host__ void* Struct::to_device(void* allocated_ptr = NULL) {
 	void* device_ptr;
 	size_t s = child_size();
 
-	CHECK(
-		cudaMalloc(&device_ptr, s)
-	);
+	if (allocated_ptr != NULL) {
+		device_ptr = allocated_ptr;
+	} else {
+		CHECK(
+			cudaMalloc(&device_ptr, s)
+		);
+	}
 
 	CHECK(
 		cudaMemcpy(device_ptr, this, s, cudaMemcpyHostToDevice)

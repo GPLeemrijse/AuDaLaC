@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::fp_strategies::NaiveFixpoint;
 use crate::compilation_components::*;
 use crate::in_kernel_compiler::SingleKernelSchedule;
 use std::io::BufWriter;
@@ -28,6 +29,7 @@ mod init_file_generator;
 mod transpile;
 mod compilation_components;
 mod in_kernel_compiler;
+mod fp_strategies;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
@@ -42,8 +44,11 @@ fn main() {
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
         (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") possible_value("in-kernel") default_value("coalesced") "Which compiler to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
+        (@arg voting: -v --vote_strat possible_value("naive") possible_value("per-thread") possible_value("per-coalesced") possible_value("per-block") possible_value("hierarchical") possible_value("banks-reduced") possible_value("banks-32-writes") default_value("naive") "Which fixpoint stability voting strategy to use.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofstructs: -n --nrofstructs +takes_value default_value("100") value_parser(clap::value_parser!(u64)) "nrof structs memory is allocated for.")
+        (@arg buffersize: -b --buffersize +takes_value default_value("2048") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
+        (@arg instsperthread: --instsperthread +takes_value default_value("32") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
         (@arg printnthinst: -d --printnthinst +takes_value default_value("0") value_parser(clap::value_parser!(usize)) "Print every n'th allocated instance.")
         (@arg printunstable: -u --printunstable "Print which step changed the stability stack.")
         (@arg output: -o --output +takes_value "Output file")
@@ -55,6 +60,8 @@ fn main() {
     let init_file = args.is_present("init_file");
     let print_unstable = args.is_present("printunstable");
     let nrof_structs : u64 = *args.get_one("nrofstructs").unwrap();
+    let buffer_size : usize = *args.get_one("buffersize").unwrap();
+    let instsperthread : usize = *args.get_one("instsperthread").unwrap();
     let printnthinst : usize = *args.get_one("printnthinst").unwrap();
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output");
@@ -113,6 +120,7 @@ fn main() {
                         "in-kernel" => {
                             result = transpile::transpile2(vec![
                                 &InitFileReader{},
+                                &PrintbufferSizeAdjuster::new(buffer_size),
                                 &StructManagers::new(
                                     &program,
                                     nrof_structs,
@@ -120,7 +128,9 @@ fn main() {
                                     scope
                                 ),
                                 &SingleKernelSchedule::new(
-                                    &program
+                                    &program,
+                                    &NaiveFixpoint::new(),
+                                    instsperthread
                                 )
                             ]);
                         },

@@ -1,5 +1,6 @@
 pub type Loc = (usize, usize);
 
+use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Display;
 
@@ -19,6 +20,19 @@ impl Program {
         self.structs.iter()
                     .find(|s| &s.name == struct_name)?
                     .step_by_name(step_name)
+    }
+
+    pub fn get_step_to_structs(&self) -> HashMap<&String, Vec<&ADLStruct>> {
+        let mut s2s : HashMap<&String, Vec<&ADLStruct>> = HashMap::new();
+
+        for strct in &self.structs {
+            for step in &strct.steps {
+                s2s.entry(&step.name)
+                   .and_modify(|v| v.push(strct))
+                   .or_insert(vec![strct]);
+            }
+        }
+        return s2s
     }
 }
 
@@ -46,6 +60,7 @@ pub struct Step {
     pub name: String,
     pub statements: Vec<Stat>,
     pub loc: Loc,
+    //pub owner: Option<&'a ADLStruct<'a>>
 }
 
 fn remove_duplicates<T: Ord>(vec : &mut Vec<T>){
@@ -95,6 +110,21 @@ impl Step {
             |_| Vec::new()
         )
     }
+
+    // Returns a vector of (struct_name, parameter_name)
+    // pub fn written_parameters(&self) -> Vec<(&String, &String)> {
+    //     use Stat::*;
+    //     self.visit::<(&String, &String)>(
+    //         |stat| {
+    //             if let Assignment(parts, _, _) = stat {
+    //                 vec![(&s, &t)]
+    //             } else {
+    //                 Vec::new()
+    //             }
+    //         },
+    //         |_| Vec::new()
+    //     )
+    // }
 }
 
 #[derive(Eq, PartialEq, Debug)]

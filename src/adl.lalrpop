@@ -94,7 +94,7 @@ Pars = Comma<Par>;
 Par : (String, Type, Loc) = <start:@L> <id:SimpleID> ":" <t:Type> <end:@R> => (id, t, (start, end));
 
 Step: Step = {
-    <start:@L> <name:SimpleID> "{" <statements:Stats> "}" <end:@R> => Step {name : name, statements: statements, loc : (start, end)}
+    <start:@L> <name:SimpleID> "{" <statements:Stats> "}" <end:@R> => Step {name : name, statements: statements, loc : (start, end)/*, owner: None*/}
 }
 
 pub Steps: Vec<Step> = Step*;

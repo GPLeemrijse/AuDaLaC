@@ -29,6 +29,12 @@ __host__ __device__ inline void gpuAssert(cudaError_t code, const char *file, in
    }
 }
 
+#ifdef DEBUG
+   #define dbg_assert(pred) assert(pred)
+#else
+   #define dbg_assert(pred) 
+#endif
+
 
 namespace ADL {
 

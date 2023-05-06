@@ -93,7 +93,7 @@ impl CoalescedScheduleManager<'_> {
 	pub fn new<'a>(program: &'a Program, struct_manager : &'a dyn StructManager, printnthinst : usize, print_unstable: bool) -> CoalescedScheduleManager<'a> {
 		CoalescedScheduleManager {
 			program,
-			step_to_structs : CoalescedScheduleManager::get_step_to_structs(program),
+			step_to_structs : program.get_step_to_structs(),
 			struct_manager,
 			tpb: 512,
 			printnthinst,
@@ -245,16 +245,5 @@ impl CoalescedScheduleManager<'_> {
 				"};
 			}
 		}
-	}
-
-	fn get_step_to_structs(program: &Program) -> HashMap<&String, Vec<&ADLStruct>> {
-		let mut s2s : HashMap<&String, Vec<&ADLStruct>> = HashMap::new();
-
-		for strct in &program.structs {
-			for step in &strct.steps {
-				s2s.entry(&step.name).and_modify(|v| v.push(strct)).or_insert(vec![strct]);
-			}
-		}
-		return s2s
 	}
 }
