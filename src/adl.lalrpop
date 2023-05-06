@@ -103,7 +103,11 @@ pub Structs: Vec<ADLStruct> = Struct+;
 pub Stat: Stat = {
     "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Stat::IfThen(Box::new(e), s, vec![], (start, end)),
     <start:@L> <t:Type> <id:SimpleID> ":=" <e:Exp> ";" <end:@R> => Stat::Declaration(t, id, Box::new(e), (start, end)),
-    <start:@L> <v:Var> ":=" <e:Exp> ";" <end:@R> => Stat::Assignment(Box::new(Exp::Var(v, (0, 0))), Box::new(e), (start, end)),
+    <start:@L> <v:Var_Exp> ":=" <e:Exp> ";" <end:@R> => Stat::Assignment(Box::new(v), Box::new(e), (start, end)),
+}
+
+Var_Exp: Exp = {
+    <start:@L> <v:Var> <end:@R> => Exp::Var(v, (start, end))
 }
 
 Stats = Stat*;

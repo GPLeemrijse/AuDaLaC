@@ -101,7 +101,7 @@ fn main() {
             } else if init_file {
                 generate_init_file(&program, output_writer);
             } else {
-                let errors = validate_ast(&program);
+                let (errors, type_info) = validate_ast(&program);
 
                 if errors.is_empty() {
                     let result : String;

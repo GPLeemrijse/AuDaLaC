@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 use crate::ast::*;
 use codespan_reporting::diagnostic::Diagnostic;
@@ -96,7 +97,7 @@ impl ValidationError {
             ParameterDefinedTwice(p, _) => format!("Parameter {} defined twice.", p),
             VariableAlreadyDeclared(v, _) => format!("Variable {} defined twice.", v),
             UndefinedType(t) => format!("Undefined type {}.", t),
-            UndefinedField(f, t) => format!("Undefined field {} of {}.", f, t),
+            UndefinedField(f, t) => format!("Undefined field {} of {}.", t, f),
             UndefinedStep => {
                 if let Some(n) = &self.context.struct_name {
                     format!(
@@ -235,9 +236,10 @@ fn check_no_reserved_keywords_steps<'ast>(
 struct BlockEvaluationContext<'ast> {
     current_struct_name: Option<&'ast String>,
     current_step_name: Option<&'ast String>,
-    structs: &'ast Vec<ADLStruct>,
+    program: &'ast Program,
     vars: Vec<Vec<(String, Type, Loc)>>,
     errors: Vec<ValidationError>,
+    var_exp_type_info: HashMap<*const Exp, Vec<Type>>
 }
 
 impl<'eval, 'ast> BlockEvaluationContext<'ast> {
@@ -263,13 +265,14 @@ impl<'eval, 'ast> BlockEvaluationContext<'ast> {
     }
 }
 
-pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
+pub fn validate_ast<'ast>(ast: &'ast Program) -> (Vec<ValidationError>, HashMap<*const Exp, Vec<Type>>) {
     let mut context = BlockEvaluationContext {
         current_struct_name: None,
         current_step_name: None,
-        structs: &ast.structs,
+        program: ast,
         vars: Vec::new(),
         errors: Vec::new(),
+        var_exp_type_info: HashMap::new()
     };
 
     // All Structs must have a unique name and not reserved keywords
@@ -315,7 +318,7 @@ pub fn validate_ast<'ast>(ast: &'ast Program) -> Vec<ValidationError> {
     // Make sure the schedule is well defined
     check_schedule(&ast.schedule, &mut context);
 
-    context.errors
+    (context.errors, context.var_exp_type_info)
 }
 
 fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationContext<'ast>) {
@@ -323,9 +326,8 @@ fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationC
     match schedule {
         StepCall(step_name, loc) => {
             if !context
-                .structs
-                .iter()
-                .any(|strct| strct.steps.iter().any(|stp| stp.name == *step_name))
+                .program
+                .has_any_step_by_name(step_name)
             {
                 context.errors.push(ValidationError {
                     error_type: ValidationErrorType::UndefinedStep,
@@ -338,9 +340,9 @@ fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationC
             }
         }
         TypedStepCall(struct_name, step_name, loc) => {
-            let strct = context.structs.iter().find(|s| s.name == *struct_name);
+            let strct = context.program.struct_by_name(struct_name);
             if let Some(s) = strct {
-                if step_name != "print" && !s.steps.iter().any(|stp| stp.name == *step_name) {
+                if step_name != "print" && s.step_by_name(step_name).is_none() {
                     context.errors.push(ValidationError {
                         error_type: ValidationErrorType::UndefinedStep,
                         context: ErrorContext {
@@ -546,57 +548,66 @@ fn get_var_type<'ast>(
     loc: &'ast Loc,
 ) -> Option<(Type, Loc)> {
     
-    let parts = parts_exp.get_parts();
+    let parts = parts_exp.get_parts(); // n.something.abc
+
+    let mut part_types : Vec<Type> = Vec::new();
 
     // Get type of first part by looking in the current context 
     let mut found_type: Option<(Type, Loc)>;
     found_type = get_type_from_context(&parts[0], context);
+
+    if found_type.is_none() {
+        context.errors.push(ValidationError {
+            error_type: ValidationErrorType::UndefinedType(parts[0].clone()),
+            context: ErrorContext::from_block_context(context),
+            loc: *loc,
+        });
+        return None;
+    }
     
     let mut idx = 1; // start at 1 as first part is already done
+    let mut premature_break = false;
     while idx < parts.len() {
-        let id = &parts[idx];
-        if let Some((Type::Named(s), _)) = found_type {
+        if let Some((Type::Named(ref s), _)) = found_type {
+            part_types.push(found_type.as_ref().unwrap().0.clone());
+
             found_type = get_type_from_scope(
-                id,
+                &parts[idx],
                 &context
-                .structs
-                .iter()
-                .find(|st| st.name == *s)
-                .unwrap()
+                .program
+                .struct_by_name(&s)
+                .unwrap() // assured by get_type_from_context not returning None
                 .parameters
             );
         } else {
-            break
+            idx += 1;
+            premature_break = true;
+            break;
         }
         idx += 1;
     }
 
-    if let None = found_type {
-        if idx == 1 { // i.e. first part was None type hence idx not incremented
-            context.errors.push(ValidationError {
-                error_type: ValidationErrorType::UndefinedType(parts[0].clone()),
-                context: ErrorContext::from_block_context(context),
-                loc: *loc,
-            });
-        } else {
-            context.errors.push(ValidationError {
-                error_type: ValidationErrorType::UndefinedField(
-                    parts[idx-2].clone(),
-                    parts[idx-1].clone(),
-                ),
-                context: ErrorContext::from_block_context(context),
-                loc: *loc,
-            });
-        }
+    if found_type.is_none() || premature_break {
+        context.errors.push(ValidationError {
+            error_type: ValidationErrorType::UndefinedField(
+                parts[idx-2].clone(),
+                parts[idx-1].clone(),
+            ),
+            context: ErrorContext::from_block_context(context),
+            loc: *loc,
+        });
+    } else {
+        /* Completely legal Var expression, so we add to the type info. */
+        part_types.push(found_type.as_ref().unwrap().0.clone());
+        context.var_exp_type_info.insert(parts_exp as *const Exp, part_types);
     }
-
 
     return found_type
 }
 
 fn type_is_defined<'ast>(t: &Type, context: &mut BlockEvaluationContext<'ast>, loc: Loc) -> bool {
     if let Type::Named(s) = t {
-        if !context.structs.iter().any(|st| st.name == *s) {
+        if context.program.struct_by_name(s).is_none() {
             context.errors.push(ValidationError {
                 error_type: ValidationErrorType::UndefinedType(s.clone()),
                 context: ErrorContext::from_block_context(context),
@@ -687,11 +698,11 @@ fn get_expr_type<'ast>(
             if type_is_defined(&cons_type, context, *loc) {
                 // check types of exps with parameters
                 let params = &context
-                    .structs
-                    .iter()
-                    .find(|strct| strct.name == *id)
-                    .unwrap()
+                    .program
+                    .struct_by_name(id)
+                    .unwrap() // id is checked by type_is_defined
                     .parameters;
+
                 if params.len() != exps.len() {
                     context.errors.push(ValidationError {
                         error_type: ValidationErrorType::InvalidNumberOfArguments(
@@ -811,7 +822,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let errors = validate_ast(&program);
+        let (errors, _) = validate_ast(&program);
         assert_eq!(errors.len(), 2);
         assert_eq!(
             errors[0],
@@ -843,7 +854,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
         assert!(validation_errors.len() == 1);
         assert_eq!(
             validation_errors[0],
@@ -864,7 +875,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
 
         assert!(validation_errors.len() == 1);
         assert_eq!(
@@ -886,7 +897,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
 
         assert!(validation_errors.len() == 1);
         assert_eq!(
@@ -909,7 +920,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
         assert!(validation_errors.len() == 1);
         assert_eq!(
             validation_errors[0],
@@ -930,7 +941,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
         assert!(validation_errors.len() == 1);
         assert_eq!(
             validation_errors[0],
@@ -951,7 +962,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
         assert!(validation_errors.len() == 1);
         assert_eq!(
             validation_errors[0],
@@ -967,12 +978,55 @@ mod tests {
     }
 
     #[test]
+    fn test_validate_var_type_index_non_named() {
+        let program_string = r#"struct A(a : Int){} struct B(b : A){ init {b.a.extra_index := 1;}} init"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let (validation_errors, _) = validate_ast(&program);
+        assert!(validation_errors.len() == 1);
+        assert_eq!(
+            validation_errors[0],
+            ValidationError {
+                error_type: UndefinedField("a".to_string(), "extra_index".to_string()),
+                context: ErrorContext {
+                    struct_name: Some("B".to_string()),
+                    step_name: Some("init".to_string())
+                },
+                loc: (43, 64)
+            }
+        );
+    }
+
+    #[test]
+    fn test_validate_var_type_correct() {
+        use crate::ast::*;
+        use crate::ast::Type::*;
+
+        let program_string = r#"struct A(a : Int, ab : B){} struct B(b : A){ init {b.ab.b.a := 1; b.a := 1;}} init"#;
+        let program = ProgramParser::new()
+            .parse(program_string)
+            .expect("ParseError.");
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
+        let mut sorted_info : Vec<&Vec<Type>> = type_info.values().collect();
+        sorted_info.sort();
+        assert_eq!(
+            sorted_info,
+            vec![
+                &vec![Named("A".to_string()), Named("B".to_string()), Named("A".to_string()), Int],
+                &vec![Named("A".to_string()), Int]
+            ]
+        );
+    }
+
+    #[test]
     fn test_validate_reserved_structs() {
         let program_string = r#"struct printf(a : Int, b : A){init{}} init"#;
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
         assert!(validation_errors.len() == 1);
         assert_eq!(
             validation_errors[0],
@@ -993,7 +1047,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
         assert!(validation_errors.len() == 1);
         assert_eq!(
             validation_errors[0],
@@ -1014,7 +1068,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
         assert!(validation_errors.len() == 1);
         assert_eq!(
             validation_errors[0],
@@ -1035,7 +1089,7 @@ mod tests {
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
-        let validation_errors = validate_ast(&program);
+        let (validation_errors, _) = validate_ast(&program);
         assert!(validation_errors.len() == 1);
         assert_eq!(
             validation_errors[0],

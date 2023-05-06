@@ -22,6 +22,11 @@ impl Program {
                     .step_by_name(step_name)
     }
 
+    pub fn has_any_step_by_name(&self, step_name : &String) -> bool {
+        self.structs.iter()
+                    .any(|strct| strct.step_by_name(step_name).is_some())
+    }
+
     pub fn get_step_to_structs(&self) -> HashMap<&String, Vec<&ADLStruct>> {
         let mut s2s : HashMap<&String, Vec<&ADLStruct>> = HashMap::new();
 
@@ -398,7 +403,7 @@ mod tests {
                 Box::new(Exp::Lit(Literal::BoolLit(true), (3, 7))),
                 vec![
                     Stat::Assignment(
-                        Box::new(Exp::Var(vec!["id".to_string(), "id2".to_string()], (1, 2))),
+                        Box::new(Exp::Var(vec!["id".to_string(), "id2".to_string()], (15, 21))),
                         Box::new(Exp::Lit(Literal::NullLit, (25, 29))),
                         (15, 30),
                     ),
