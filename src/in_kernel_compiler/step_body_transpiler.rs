@@ -53,10 +53,10 @@ impl StepBodyTranspiler<'_> {
 
 					if is_parameter {
 						let (owner_exp, owner_type) = owner.expect("Expected an owner for a parameter assignment.");
-						let load_suffix = self.load_suffix();
-						let store_suffix = self.store_suffix("new_val");
-						let adl_parts = "temporary-adl-parts";
-						let param = lhs_exp.get_parts().last().unwrap();
+						let parts_vec = lhs_exp.get_parts();
+
+						let adl_parts = parts_vec.join(".");
+						let param = parts_vec.last().unwrap();
 
 						let set_fp = self.fp.set_unstable(fp_level);
 
@@ -64,10 +64,10 @@ impl StepBodyTranspiler<'_> {
 							{indent}/* {adl_parts} = {rhs_as_c} */
 							{indent}owner = {owner_exp};
 							{indent}if(owner != 0){{
-							{indent}	auto prev_val = {owner_type}->{param}[owner]{load_suffix};
+							{indent}	auto prev_val = LOAD({owner_type}->{param}[owner]);
 							{indent}	auto new_val = {rhs_as_c};
 							{indent}	if (prev_val != new_val) {{
-							{indent}		{owner_type}->{param}[owner]{store_suffix};
+							{indent}		STORE({owner_type}->{param}[owner], new_val);
 							{indent}		{set_fp}
 							{indent}	}}
 							{indent}}}
@@ -96,7 +96,7 @@ impl StepBodyTranspiler<'_> {
 	        },
 	        UnOp(c, e, _) => {
 	            let e_comp = self.expression_as_c(e, strct, step);
-	            format!("({c}{e_comp})")
+	            format!("{c}{e_comp}")
 	        },
 	        Constructor(n, args, _) => {
 	            let args_comp = args.iter()
@@ -144,8 +144,6 @@ impl StepBodyTranspiler<'_> {
 	where
 		I : Iterator<Item = (&'a String, &'a Type)>
 	{
-		let load_suffix = self.load_suffix();
-
 		let (p0, mut previous_c_type) = parts.next().expect("Supply at least one part-type pair to get_var_expr_as_c.");
 		let mut previous_c_expr = p0.clone();
 		let mut owner = None;
@@ -163,28 +161,10 @@ impl StepBodyTranspiler<'_> {
 				owner = Some((previous_c_expr.clone(), previous_c_type.clone()));
 			}
 			
-			previous_c_expr = format!("{}->{id}[{previous_c_expr}]{load_suffix}", previous_c_type.name().unwrap().to_lowercase());
+			previous_c_expr = format!("LOAD({}->{id}[{previous_c_expr}])", previous_c_type.name().unwrap().to_lowercase());
 			previous_c_type = id_type;
 		}
 
 		(previous_c_expr, owner)
-	}
-
-	fn load_suffix(&self) -> String {
-		if self.memorder.is_strong() {
-			let order = self.memorder.as_cuda_order();
-			format!(".load({order})")
-		} else {
-			"".to_string()
-		}
-	}
-
-	fn store_suffix(&self, val : &str) -> String {
-		if self.memorder.is_strong() {
-			let order = self.memorder.as_cuda_order();
-			format!(".store({val}, {order})")
-		} else {
-			format!(" = {val}")
-		}
 	}
 }

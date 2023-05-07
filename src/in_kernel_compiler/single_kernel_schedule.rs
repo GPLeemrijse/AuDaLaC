@@ -38,6 +38,13 @@ impl SingleKernelSchedule<'_> {
 		 					.collect()
 	}
 
+	fn step_call_arguments(&self) -> String {
+		self.program.structs.iter()
+							.map(|s| s.name.to_lowercase())
+							.collect::<Vec<String>>()
+							.join(", ")
+	}
+
 	fn kernel_schedule_body(&self) -> String {
 		let ind = "\t";
 		let stab_stack = self.fp.top_of_kernel_decl();
@@ -51,6 +58,7 @@ impl SingleKernelSchedule<'_> {
 			{ind}unsigned int block_rank = block.thread_rank();
 			{ind}unsigned int block_idx = grid.block_rank();
 			{ind}unsigned int block_size = block.size();
+			{ind}const inst_size nrof_instances;
 
 			{schedule}"
 		}
@@ -90,23 +98,25 @@ impl SingleKernelSchedule<'_> {
 			},
 			TypedStepCall(struct_name, step_name, _) => {
 				let strct = self.program.struct_by_name(struct_name).unwrap();
-				let step_body = if step_name == "print" {
-					format!("{indent}	Body: {}.print", struct_name)
+				let step_call = if step_name == "print" {
+					format!("Body: {}.print", struct_name)
 				} else {
 					let step = strct.step_by_name(step_name).unwrap();
-					//self.step_body_as_c(step)
-					format!("{indent}	Body: {}.{}", struct_name, step.name)
+					self.call_step_function(strct, step, fp_level)
 				};
 
 				let nrof_instances = format!("{}->nrof_instances()", struct_name.to_lowercase());
-
+				let set_unstable = self.fp.set_unstable(fp_level);
 				formatdoc!{"
-					{indent}const inst_size nrof_instances = {nrof_instances};
+					{indent}nrof_instances = {nrof_instances};
 					{indent}#pragma unroll
 					{indent}for(int i = 0; i < INSTS_PER_THREAD; i++){{
 					{indent}	RefType self = block_size * (i + block_idx * INSTS_PER_THREAD) + block_rank;
 					{indent}	if (self >= nrof_instances) break;
-					{step_body}
+
+					{indent}	if (!{step_call}) {{
+					{indent}		{set_unstable}	
+					{indent}	}}
 					{indent}}}"
 				}
 			},
@@ -130,7 +140,7 @@ impl SingleKernelSchedule<'_> {
 
 	fn step_as_c_function(&self, strct : &ADLStruct, step : &Step, fp_level : usize) -> String {
 		let func_name = self.step_function_name(strct, step);
-		let func_header = format!("__device__ bool {func_name}(");
+		let func_header = format!("__device__ bool {func_name}");
 		let kernel_signature = self.format_signature(&func_header, self.kernel_parameters());
 
 		let step_body = self.step_transpiler.statements_as_c(&step.statements, strct, step, 1, fp_level);
@@ -139,7 +149,7 @@ impl SingleKernelSchedule<'_> {
 
 
 		formatdoc!{"
-			{kernel_signature}){{
+			{kernel_signature}
 				{pre_step_fp}
 				{step_body}
 				{post_step_fp}
@@ -147,19 +157,20 @@ impl SingleKernelSchedule<'_> {
 		"}
 	}
 
-	fn call_step_function(&self, strct : &ADLStruct, step : &Step, fp_level : usize) -> String {
+	fn call_step_function(&self, strct : &ADLStruct, step : &Step, _fp_level : usize) -> String {
+		let func_name = self.step_function_name(strct, step);
+		let func_args = self.step_call_arguments();
 		formatdoc!{"
-			
-		"}
+			{func_name}({func_args})"}
 	}
 
 	fn format_signature(&self, sig : &String, params : Vec<String>) -> String
 	{
 		let indent = format!(",\n{}{}",
-						     "\t".repeat(sig.len() / 4),
-						     " ".repeat(sig.len() % 4)
+						     "\t".repeat((sig.len()+1) / 4),
+						     " ".repeat((sig.len()+1) % 4)
 						    );
-		params.join(&indent)
+		format!("{sig}({}){{", params.join(&indent))
 	}
 
 	fn step_function_name(&self, strct : &ADLStruct, step : &Step) -> String {
@@ -186,17 +197,29 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	}
 	
 	fn functions(&self) -> Option<String> {
-		None
+		Some(self.program.structs
+					.iter()
+					.map(|strct|
+						strct.steps
+							 .iter()
+							 .map(|step|
+							 	self.step_as_c_function(strct, step, 666)
+							 )
+					)
+					.flatten()
+					.collect::<Vec<String>>()
+					.join("\n")
+		)
 	}
 
 	fn kernels(&self) -> Option<String> {
-		let kernel_header = format!("__global__ void {}(", SingleKernelSchedule::KERNEL_NAME);
+		let kernel_header = format!("__global__ void {}", SingleKernelSchedule::KERNEL_NAME);
 		let kernel_signature = self.format_signature(&kernel_header, self.kernel_parameters());
 		
 		let kernel_schedule_body = self.kernel_schedule_body();
 
 		Some(formatdoc!{"
-			{kernel_signature}){{
+			{kernel_signature}
 			{kernel_schedule_body}
 			}}
 		"})

@@ -114,9 +114,9 @@ pub fn transpile2(components : Vec<&dyn CompileComponent>) -> String {
 
 		{globals}
 
-		{kernels}
-
 		{functs}
+
+		{kernels}
 
 		int main(int argc, char **argv) {{
 		{pre_main}

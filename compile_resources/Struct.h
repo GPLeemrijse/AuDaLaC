@@ -41,7 +41,7 @@ protected:
 	inst_size capacity; // For how many is space allocated?
 
 	__host__ __device__ inline RefType claim_instance(void) {
-		ADL::RefType slot = instantiated_instances.fetch_add(1, cuda::memory_order_seq_cst);
+		ADL::RefType slot = instantiated_instances.fetch_add(1, cuda::memory_order_relaxed);
 		assert(slot < capacity);
 		return slot;
 	}
