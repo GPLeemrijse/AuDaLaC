@@ -51,4 +51,11 @@ impl FPStrategy for NaiveFixpoint {
 		let indent = "\t".repeat(lvl+2);
 		format!{"{indent}if(!stable)\n{indent}	clear_stack({lvl});"}
 	}
+	fn pre_step_function(&self, _: usize) -> String {
+		"bool stable = true;".to_string()
+	}
+
+	fn post_step_function(&self, _: usize) -> String {
+		"return stable;".to_string()
+	}
 }

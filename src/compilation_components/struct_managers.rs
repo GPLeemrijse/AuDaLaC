@@ -9,14 +9,14 @@ use indoc::formatdoc;
 pub struct StructManagers<'a> {
 	program : &'a Program,
 	nrof_structs : u64,
-	memorder : MemOrder,
+	memorder : &'a MemOrder,
 	scope : Scope,
 }
 
 impl StructManagers<'_> {
 	pub fn new<'a>(program : &'a Program,
 			   nrof_structs : u64,
-			   memorder : MemOrder,
+			   memorder : &'a MemOrder,
 			   scope : Scope) -> StructManagers<'a> {
 		StructManagers {
 			program,

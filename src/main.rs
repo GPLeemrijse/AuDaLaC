@@ -119,19 +119,20 @@ fn main() {
                             result = transpile::transpile(&schedule_manager, &struct_manager);
                         },
                         "in-kernel" => {
-                            let step_transpiler = StepBodyTranspiler::new(&type_info, memorder);
+                            let fp_strat = &NaiveFixpoint::new();
+                            let step_transpiler = StepBodyTranspiler::new(&type_info, &memorder, fp_strat);
                             result = transpile::transpile2(vec![
                                 &InitFileReader{},
                                 &PrintbufferSizeAdjuster::new(buffer_size),
                                 &StructManagers::new(
                                     &program,
                                     nrof_structs,
-                                    memorder,
+                                    &memorder,
                                     scope
                                 ),
                                 &SingleKernelSchedule::new(
                                     &program,
-                                    &NaiveFixpoint::new(),
+                                    fp_strat,
                                     instsperthread,
                                     &step_transpiler
                                 )

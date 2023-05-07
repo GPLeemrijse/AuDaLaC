@@ -1,25 +1,29 @@
+use crate::transpilation_traits::FPStrategy;
 use crate::MemOrder;
 use crate::coalesced_compiler::as_c_literal;
 use crate::in_kernel_compiler::as_c_type;
 use crate::ast::*;
 use std::collections::HashMap;
+use indoc::formatdoc;
 
 pub struct StepBodyTranspiler<'a> {
 	var_exp_type_info : &'a HashMap<*const Exp, Vec<Type>>,
-	memorder : MemOrder,
+	memorder : &'a MemOrder,
+	fp : &'a dyn FPStrategy,
 }
 
 
 impl StepBodyTranspiler<'_> {
-	pub fn new(type_info : &HashMap<*const Exp, Vec<Type>>, order: MemOrder) -> StepBodyTranspiler {
+	pub fn new<'a>(type_info : &'a HashMap<*const Exp, Vec<Type>>, order: &'a MemOrder, fp : &'a dyn FPStrategy) -> StepBodyTranspiler<'a> {
 		StepBodyTranspiler{
 			var_exp_type_info : type_info,
-			memorder : order
+			memorder : order,
+			fp
 		}
 	}
 
 
-	fn statements_as_c(&self, statements: &Vec<Stat>, strct: &ADLStruct, step: &Step, indent_lvl: usize) -> String {
+	pub fn statements_as_c(&self, statements: &Vec<Stat>, strct: &ADLStruct, step: &Step, indent_lvl: usize, fp_level : usize) -> String {
 		let indent = String::from("\t").repeat(indent_lvl);
 		let mut stmt_vec : Vec<String> = Vec::new();
 
@@ -29,8 +33,8 @@ impl StepBodyTranspiler<'_> {
 			let statement_as_string = match stmt {
 				IfThen(e, stmts_true, stmts_false, _) => {
 					let cond = self.expression_as_c(e, strct, step);
-					let body_true = self.statements_as_c(stmts_true, strct, step, indent_lvl + 1);
-					let body_false = self.statements_as_c(stmts_false, strct, step, indent_lvl + 1);
+					let body_true = self.statements_as_c(stmts_true, strct, step, indent_lvl + 1, fp_level);
+					let body_false = self.statements_as_c(stmts_false, strct, step, indent_lvl + 1, fp_level);
 					
 					let else_block = if body_false == "" { "".to_string()} else {
 						format!(" else {{{body_false}\n{indent}}}")
@@ -43,57 +47,33 @@ impl StepBodyTranspiler<'_> {
 					let e_as_c = self.expression_as_c(e, strct, step);
 					format!("{indent}{t_as_c} {n} = {e_as_c};")
 				},
-				Assignment(parts_exp, e, _) => {
-					let parts = parts_exp.get_parts();
-					debug_assert!(parts.len() > 0);
+				Assignment(lhs_exp, rhs_exp, _) => {
+					let (lhs_as_c, owner, is_parameter) = self.var_exp_as_c(lhs_exp, strct);
+					let rhs_as_c = self.expression_as_c(rhs_exp, strct, step);
 
-					let types = self.var_exp_type_info.get(&(parts_exp as *const Exp)).expect("Could not find var expression in type info.");
-					let e_as_c = self.expression_as_c(e, strct, step);
-					
-					let parts_as_c = self.expression_as_c(
-						&Exp::Var(
-							parts.to_vec(),
-							(0, 0)
-						),
-						strct,
-						step
-					);
-
-					let owner = self.expression_as_c(
-						&Exp::Var(
-							parts[..parts.len()-1].to_vec(),
-							(0, 0)
-						),
-						strct,
-						step
-					);
-
-					if strct.parameter_by_name(&parts[0]).is_some() {
-						let param_type = self.basic_type_as_c(types.last().unwrap());
-						let param = parts.last().unwrap();
-						let owner_type = if parts.len() == 1 {
-							strct.name.to_lowercase()
-						} else {
-							types[types.len()-2].name().unwrap().to_string().to_lowercase()
-						};
+					if is_parameter {
+						let (owner_exp, owner_type) = owner.expect("Expected an owner for a parameter assignment.");
 						let load_suffix = self.load_suffix();
 						let store_suffix = self.store_suffix("new_val");
-						let adl_parts = parts.join(".");
+						let adl_parts = "temporary-adl-parts";
+						let param = lhs_exp.get_parts().last().unwrap();
+
+						let set_fp = self.fp.set_unstable(fp_level);
 
 						formatdoc!{"
-							{indent}/* {adl_parts} = {e_as_c} */
-							{indent}par_owner = {owner};
-							{indent}if(par_owner != 0){{
-							{indent}	{param_type} prev_val = {owner_type}->{param}[par_owner]{load_suffix};
-							{indent}	{param_type} new_val = {e_as_c};
+							{indent}/* {adl_parts} = {rhs_as_c} */
+							{indent}owner = {owner_exp};
+							{indent}if(owner != 0){{
+							{indent}	auto prev_val = {owner_type}->{param}[owner]{load_suffix};
+							{indent}	auto new_val = {rhs_as_c};
 							{indent}	if (prev_val != new_val) {{
-							{indent}		{owner_type}->{param}[par_owner]{store_suffix};
-							{indent}		FP->set();
+							{indent}		{owner_type}->{param}[owner]{store_suffix};
+							{indent}		{set_fp}
 							{indent}	}}
 							{indent}}}
 						"}
 					} else {
-						format!("{indent}{parts_as_c} = {e_as_c};")
+						format!("{indent}{lhs_as_c} = {rhs_as_c};")
 					}
 				},
 			};
@@ -106,7 +86,6 @@ impl StepBodyTranspiler<'_> {
 
 	fn expression_as_c(&self, e: &Exp, strct: &ADLStruct, step: &Step) -> String {
 	    use Exp::*;
-	    use std::iter::zip;
 	    
 	    match e {
 	        BinOp(e1, c, e2, _) => {
@@ -126,41 +105,69 @@ impl StepBodyTranspiler<'_> {
 
 	            format!("{}->create_instance({args_comp})", n.to_lowercase())
 	        },
-	        Var(parts, _) => {
-	        	if parts.is_empty() {
-	        		// Used for statements_as_c
-	        		return "self".to_string();
-	        	}
-	        	let is_parameter = strct.parameter_by_name(&parts[0]).is_some();
-	        	let types = self.var_exp_type_info.get(&(e as *const Exp)).expect("Could not find var expression in type info.");
-
-	        	let load_suffix = self.load_suffix();
-
-	        	let mut previous_c_expr : String = "self".to_string();
-	        	let mut previous_c_type : &String = &strct.name;
-	        	let mut start_idx = 0;
-	        	
-	        	if !is_parameter {
-	        		previous_c_expr = parts[0].clone();
-	        		if let Some(t_name) = types[0].name() {
-	        			previous_c_type = t_name;
-	        		} else {
-	        			debug_assert!(parts.len() == 1);
-	        		}
-	        		start_idx = 1;
-	        	}
-
-	        	for (t, p) in zip(types[start_idx..].iter(), parts[start_idx..].iter()) {
-	        		previous_c_expr = format!("{}->{p}[{previous_c_expr}]{load_suffix}", previous_c_type.to_lowercase());
-	        		if t.name().is_some() {
-	        			previous_c_type = t.name().unwrap();
-	        		}
-	        	}
-
-	            return format!("({previous_c_expr})");
+	        Var(..) => {
+	        	self.var_exp_as_c(e, strct).0 // Not interested in the owner or is_parameter
 	        },
 	        Lit(l, _) => as_c_literal(l),
 	    }
+	}
+
+	fn var_exp_as_c(&self, exp : &Exp, strct: &ADLStruct) -> (String, Option<(String, Type)>, bool) {
+		use std::iter::zip;
+		if let Exp::Var(parts, _) = exp {
+			let types = self.var_exp_type_info.get(&(exp as *const Exp)).expect("Could not find var expression in type info.");
+			let is_parameter = strct.parameter_by_name(&parts[0]).is_some();
+
+			let (exp_as_c, owner);
+
+        	// For parameters, the 'self' part is implicit.
+        	if is_parameter {
+        		(exp_as_c, owner) = self.stitch_parts_and_types(zip(
+        			["self".to_string()].iter().chain(parts.iter()),
+        			[Type::Named(strct.name.clone())].iter().chain(types.iter())
+        		));
+        	} else {
+        		(exp_as_c, owner) = self.stitch_parts_and_types(zip(
+        			parts.iter(),
+        			types.iter()
+        		));
+        	}
+        	return (exp_as_c, owner, is_parameter);
+		}
+		panic!("Expected Var expression.");
+	}
+
+	/* Returns the full expression for evaluating the field-type pairs in parts, 
+	   and, if applicable, returns the penultimate partial result (the parameter owner).
+	*/
+	fn stitch_parts_and_types<'a, I>(&self, mut parts : I) -> (String, Option<(String, Type)>)
+	where
+		I : Iterator<Item = (&'a String, &'a Type)>
+	{
+		let load_suffix = self.load_suffix();
+
+		let (p0, mut previous_c_type) = parts.next().expect("Supply at least one part-type pair to get_var_expr_as_c.");
+		let mut previous_c_expr = p0.clone();
+		let mut owner = None;
+
+		let mut peekable = parts.peekable();
+
+		while let Some((id, id_type)) = peekable.next() {
+			// non-named types are only allowed at the end. validate_ast should catch this.
+			if previous_c_type.name().is_none() && peekable.peek().is_some() {
+				panic!("non-named type not at the end of var expression.");
+			}
+
+			// Store the penultimate value in owner
+			if peekable.peek().is_none() {
+				owner = Some((previous_c_expr.clone(), previous_c_type.clone()));
+			}
+			
+			previous_c_expr = format!("{}->{id}[{previous_c_expr}]{load_suffix}", previous_c_type.name().unwrap().to_lowercase());
+			previous_c_type = id_type;
+		}
+
+		(previous_c_expr, owner)
 	}
 
 	fn load_suffix(&self) -> String {

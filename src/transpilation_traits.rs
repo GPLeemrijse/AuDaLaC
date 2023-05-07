@@ -40,10 +40,13 @@ pub trait CompileComponent {
 }
 
 pub trait FPStrategy {
-    fn is_stable(&self, lvl : usize) -> String;
-    fn set_unstable(&self, lvl : usize) -> String;
-    fn top_of_kernel_decl(&self) -> String;
     fn global_decl(&self) -> String;
+    fn top_of_kernel_decl(&self) -> String;
     fn pre_iteration(&self, lvl: usize) -> String;
     fn post_iteration(&self, lvl: usize) -> String;
+    fn is_stable(&self, lvl : usize) -> String;
+
+    fn set_unstable(&self, lvl : usize) -> String;
+    fn pre_step_function(&self, lvl : usize) -> String;
+    fn post_step_function(&self, lvl : usize) -> String;
 }

@@ -16,7 +16,7 @@ pub struct SingleKernelSchedule<'a> {
 impl SingleKernelSchedule<'_> {
 	const KERNEL_NAME : &str = "schedule_kernel";
 
-	pub fn new<'a>(program : &'a Program, fp : &'a dyn FPStrategy, instances_per_thread: usize, step_transpiler : &StepBodyTranspiler) -> SingleKernelSchedule<'a> {
+	pub fn new<'a>(program : &'a Program, fp : &'a dyn FPStrategy, instances_per_thread: usize, step_transpiler : &'a StepBodyTranspiler<'_>) -> SingleKernelSchedule<'a> {
 		SingleKernelSchedule {
 			program,
 			fp,
@@ -127,6 +127,44 @@ impl SingleKernelSchedule<'_> {
 			}
 		}
 	}
+
+	fn step_as_c_function(&self, strct : &ADLStruct, step : &Step, fp_level : usize) -> String {
+		let func_name = self.step_function_name(strct, step);
+		let func_header = format!("__device__ bool {func_name}(");
+		let kernel_signature = self.format_signature(&func_header, self.kernel_parameters());
+
+		let step_body = self.step_transpiler.statements_as_c(&step.statements, strct, step, 1, fp_level);
+		let pre_step_fp = self.fp.pre_step_function(fp_level);
+		let post_step_fp = self.fp.post_step_function(fp_level);
+
+
+		formatdoc!{"
+			{kernel_signature}){{
+				{pre_step_fp}
+				{step_body}
+				{post_step_fp}
+			}}
+		"}
+	}
+
+	fn call_step_function(&self, strct : &ADLStruct, step : &Step, fp_level : usize) -> String {
+		formatdoc!{"
+			
+		"}
+	}
+
+	fn format_signature(&self, sig : &String, params : Vec<String>) -> String
+	{
+		let indent = format!(",\n{}{}",
+						     "\t".repeat(sig.len() / 4),
+						     " ".repeat(sig.len() % 4)
+						    );
+		params.join(&indent)
+	}
+
+	fn step_function_name(&self, strct : &ADLStruct, step : &Step) -> String {
+		format!("{}_{}", strct.name, step.name)
+	}
 }
 
 impl CompileComponent for SingleKernelSchedule<'_> {
@@ -153,16 +191,12 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 
 	fn kernels(&self) -> Option<String> {
 		let kernel_header = format!("__global__ void {}(", SingleKernelSchedule::KERNEL_NAME);
-		let param_indent = format!(",\n{}{}",
-								   "\t".repeat(kernel_header.len() / 4),
-								   " ".repeat(kernel_header.len() % 4)
-								  );
-		let kernel_parameters = self.kernel_parameters().join(&param_indent);
+		let kernel_signature = self.format_signature(&kernel_header, self.kernel_parameters());
 		
 		let kernel_schedule_body = self.kernel_schedule_body();
 
 		Some(formatdoc!{"
-			{kernel_header}{kernel_parameters}){{
+			{kernel_signature}){{
 			{kernel_schedule_body}
 			}}
 		"})
