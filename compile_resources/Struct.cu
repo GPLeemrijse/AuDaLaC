@@ -135,3 +135,17 @@ __host__ __device__ bool Struct::sync_nrof_instances(Struct* other) {
 
 	return differ;
 }
+
+
+__device__ bool Struct::sync_difference(void) {
+	// Sync own active instances
+	inst_size instantiated_instances = this->instantiated_instances.load(cuda::memory_order_relaxed);
+	inst_size old_active_instances = this->active_instances.load(cuda::memory_order_relaxed);
+	bool differ = instantiated_instances != old_active_instances;
+
+	if (differ) {
+		this->active_instances.store(instantiated_instances, cuda::memory_order_relaxed);
+	}
+
+	return differ;
+}

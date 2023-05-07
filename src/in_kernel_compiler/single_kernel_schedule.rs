@@ -55,7 +55,8 @@ impl SingleKernelSchedule<'_> {
 			{ind}{stab_stack}
 			{ind}grid_group grid = this_grid();
 			{ind}thread_block block = this_thread_block();
-			{ind}unsigned int block_rank = block.thread_rank();
+			{ind}unsigned int in_grid_rank = grid.thread_rank();
+			{ind}unsigned int in_block_rank = block.thread_rank();
 			{ind}unsigned int block_idx = grid.block_rank();
 			{ind}unsigned int block_size = block.size();
 			{ind}const inst_size nrof_instances;
@@ -69,72 +70,129 @@ impl SingleKernelSchedule<'_> {
 		let indent = "\t".repeat(fp_level+1);
 		
 		match sched {
-			StepCall(step_name, _) => {
-				let structs = self.step_to_structs
-								  .get(step_name)
-								  .unwrap();
-				if structs.len() > 1 {
-					unimplemented!("Untyped stepcalls with more than 1 implementor are not allowed.");
-				}
+			StepCall(..) => self.step_call_as_c(sched, fp_level),
+			Sequential(..) => self.sequential_step_as_c(sched, fp_level),
+			TypedStepCall(..) => self.typed_step_call_as_c(sched, fp_level),
+			Fixpoint(..) => self.fixpoint_as_c(sched, fp_level),
+		}
+	}
 
-				// For now fall back on single-struct steps
-				let strct = structs[0];
-				self.schedule_as_c(&TypedStepCall(
-					strct.name.clone(),
-					step_name.to_string(),
-					(0, 0)
-				), fp_level)
-			},
-			Sequential(s1, s2, _) => {
-				let sched1 = self.schedule_as_c(s1, fp_level);
-				let sched2 = self.schedule_as_c(s2, fp_level);
+	fn fixpoint_as_c(&self, sched : &Schedule, fp_level : usize) -> String {
+		use crate::ast::Schedule::*;
+		if let Fixpoint(s, _) = sched {
+			let indent = "\t".repeat(fp_level+1);
+			let pre_iteration = self.fp.pre_iteration(fp_level);
+			let sched = self.schedule_as_c(s, fp_level + 1);
+			let post_iteration = self.fp.post_iteration(fp_level);
+			let is_stable = self.fp.is_stable(fp_level);
 
-				formatdoc!{"
+			formatdoc!{"
+				{indent}do{{
+				{pre_iteration}
+				{sched}
+				{post_iteration}
+				{indent}	grid.sync();
+				{indent}}} while(!{is_stable});
+			"}
+		} else {
+			unreachable!()
+		}
+	}
+
+	fn sequential_step_as_c(&self, sched : &Schedule, fp_level : usize) -> String {
+		use crate::ast::Schedule::*;
+		if let Sequential(s1, s2, _) = sched {
+			let indent = "\t".repeat(fp_level+1);
+			let sched1 = self.schedule_as_c(s1, fp_level);
+			let sched2 = self.schedule_as_c(s2, fp_level);
+
+			formatdoc!{"
 					{sched1}
 
 					{indent}grid.sync();
 
-					{sched2}"}
-			},
-			TypedStepCall(struct_name, step_name, _) => {
-				let strct = self.program.struct_by_name(struct_name).unwrap();
-				let step_call = if step_name == "print" {
-					format!("Body: {}.print", struct_name)
-				} else {
-					let step = strct.step_by_name(step_name).unwrap();
-					self.call_step_function(strct, step, fp_level)
-				};
-
-				let nrof_instances = format!("{}->nrof_instances()", struct_name.to_lowercase());
-				let set_unstable = self.fp.set_unstable(fp_level);
-				formatdoc!{"
-					{indent}nrof_instances = {nrof_instances};
-					{indent}#pragma unroll
-					{indent}for(int i = 0; i < INSTS_PER_THREAD; i++){{
-					{indent}	RefType self = block_size * (i + block_idx * INSTS_PER_THREAD) + block_rank;
-					{indent}	if (self >= nrof_instances) break;
-
-					{indent}	if (!{step_call}) {{
-					{indent}		{set_unstable}	
-					{indent}	}}
-					{indent}}}"
-				}
-			},
-			Fixpoint(s, _) => {
-				let pre_iteration = self.fp.pre_iteration(fp_level);
-				let sched = self.schedule_as_c(s, fp_level + 1);
-				let post_iteration = self.fp.post_iteration(fp_level);
-				let is_stable = self.fp.is_stable(fp_level);
-
-				return formatdoc!{"
-					{indent}do{{
-					{pre_iteration}
-					{sched}
-					{post_iteration}
-					{indent}	grid.sync();
-					{indent}}} while(!{is_stable});
-				"};
+					{sched2}"
 			}
+		} else {
+			unreachable!()
+		}
+	}
+
+	fn typed_step_call_as_c(&self, sched : &Schedule, fp_level : usize) -> String {
+		use crate::ast::Schedule::*;
+
+		if let TypedStepCall(struct_name, step_name, _) = sched {
+			let indent = "\t".repeat(fp_level+1);
+			let strct = self.program.struct_by_name(struct_name).unwrap();
+			if step_name == "print" {
+				return format!("Body: {}.print", struct_name);
+			}
+
+			let step = strct.step_by_name(step_name).unwrap();
+			let step_call = self.call_step_function(strct, step, fp_level);
+			let set_unstable = self.fp.set_unstable(fp_level);
+			let constructs = step.constructors();
+			let sync_suffix;
+
+			if constructs.is_empty() {
+				sync_suffix = "".to_string();
+			} else {
+				let to_sync = constructs.iter()
+									.map(|i| format!("created_instances = {}->sync_difference() || created_instances;", i.to_lowercase()))
+									.reduce(|acc, nxt| acc + "\n\t\t" + &nxt)
+									.unwrap();
+				sync_suffix = formatdoc!{"
+					
+					{indent}grid.sync();
+
+					{indent}if(in_grid_rank == 0) {{
+					{indent}	bool created_instances = false;
+					{indent}	{to_sync}
+					{indent}	if(created_instances) {{
+					{indent}		{set_unstable}
+					{indent}	}}
+					{indent}}}"};
+			}
+
+			let nrof_instances = format!("{}->nrof_instances()", struct_name.to_lowercase());
+
+			formatdoc!{"
+				{indent}nrof_instances = {nrof_instances};
+				{indent}#pragma unroll
+				{indent}for(int i = 0; i < INSTS_PER_THREAD; i++){{
+				{indent}	RefType self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
+				{indent}	if (self >= nrof_instances) break;
+
+				{indent}	if (!{step_call}) {{
+				{indent}		{set_unstable}	
+				{indent}	}}
+				{indent}}}
+				{sync_suffix}"
+			}
+		} else {
+			unreachable!()
+		}
+	}
+
+	fn step_call_as_c(&self, sched : & Schedule, fp_level : usize) -> String {
+		use crate::ast::Schedule::*;
+		if let StepCall(step_name, _) = sched {
+			let structs = self.step_to_structs
+							  .get(step_name)
+							  .unwrap();
+			if structs.len() > 1 {
+				unimplemented!("Untyped stepcalls with more than 1 implementor are not implemented yet.");
+			}
+
+			// For now fall back on single-struct steps
+			let strct = structs[0];
+			self.typed_step_call_as_c(&TypedStepCall(
+				strct.name.clone(),
+				step_name.to_string(),
+				(0, 0)
+			), fp_level)
+		} else {
+			unreachable!()
 		}
 	}
 
@@ -164,8 +222,7 @@ impl SingleKernelSchedule<'_> {
 			{func_name}({func_args})"}
 	}
 
-	fn format_signature(&self, sig : &String, params : Vec<String>) -> String
-	{
+	fn format_signature(&self, sig : &String, params : Vec<String>) -> String {
 		let indent = format!(",\n{}{}",
 						     "\t".repeat((sig.len()+1) / 4),
 						     " ".repeat((sig.len()+1) % 4)

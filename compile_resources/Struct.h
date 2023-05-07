@@ -25,6 +25,8 @@ public:
 	// other gets values of this
 	__host__ __device__ bool sync_nrof_instances(Struct* other);
 
+	__device__ bool sync_difference(void);
+
 	__host__ __device__ inst_size nrof_instances(void);
 
 	__host__ __device__ inst_size difference(void);
