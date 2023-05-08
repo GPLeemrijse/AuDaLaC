@@ -17,7 +17,7 @@ __host__ void Struct::free(void) {
 	}
 }
 
-__host__ void* Struct::to_device(void* allocated_ptr = NULL) {
+__host__ void* Struct::to_device(void* allocated_ptr) {
 	void* device_ptr;
 	size_t s = child_size();
 

@@ -1,3 +1,4 @@
+use crate::utils::as_printf;
 use crate::utils::format_signature;
 use crate::in_kernel_compiler::StepBodyTranspiler;
 use std::collections::HashMap;
@@ -11,18 +12,27 @@ pub struct SingleKernelSchedule<'a> {
 	fp : &'a dyn FPStrategy,
 	step_to_structs : HashMap<&'a String, Vec<&'a ADLStruct>>,
 	instances_per_thread : usize,
+	threads_per_block : usize,
+	nrof_threads : usize,
 	step_transpiler : &'a StepBodyTranspiler<'a>
 }
 
 impl SingleKernelSchedule<'_> {
 	const KERNEL_NAME : &str = "schedule_kernel";
 
-	pub fn new<'a>(program : &'a Program, fp : &'a dyn FPStrategy, instances_per_thread: usize, step_transpiler : &'a StepBodyTranspiler<'_>) -> SingleKernelSchedule<'a> {
+	pub fn new<'a>(program : &'a Program,
+				   fp : &'a dyn FPStrategy,
+				   instances_per_thread: usize,
+				   threads_per_block : usize,
+				   nrof_threads : usize,
+				   step_transpiler : &'a StepBodyTranspiler<'_>) -> SingleKernelSchedule<'a> {
 		SingleKernelSchedule {
 			program,
 			fp,
 			step_to_structs: program.get_step_to_structs(),
 			instances_per_thread,
+			threads_per_block,
+			nrof_threads,
 			step_transpiler : step_transpiler,
 		}
 	}
@@ -33,10 +43,17 @@ impl SingleKernelSchedule<'_> {
 		 					.collect()
 	}
 
-	fn kernel_parameters(&self) -> Vec<String> {
-		self.program.structs.iter()
-							.map(|s| format!("{}* {}", s.name, s.name.to_lowercase()))
-		 					.collect()
+	fn kernel_parameters(&self, including_self : bool) -> Vec<String> {
+		let mut structs = self.program.structs.iter()
+							.map(|s| format!("{} * const __restrict__ {}", s.name, s.name.to_lowercase()))
+		 					.collect();
+		if including_self {
+			let mut self_and_structs = vec!["const RefType self".to_string()];
+			self_and_structs.append(&mut structs);
+			self_and_structs
+		} else {
+			structs
+		}
 	}
 
 	fn step_call_arguments(&self) -> String {
@@ -53,14 +70,15 @@ impl SingleKernelSchedule<'_> {
 		let schedule = self.schedule_as_c(&self.program.schedule, 0);
 
 		formatdoc!{"
-			{ind}grid_group grid = this_grid();
-			{ind}thread_block block = this_thread_block();
-			{ind}uint in_grid_rank = grid.thread_rank();
-			{ind}uint in_block_rank = block.thread_rank();
-			{ind}uint block_idx = grid.block_rank();
-			{ind}uint block_size = block.size();
-			{ind}const inst_size nrof_instances;
+			{ind}const grid_group grid = this_grid();
+			{ind}const thread_block block = this_thread_block();
+			{ind}const uint in_grid_rank = grid.thread_rank();
+			{ind}const uint in_block_rank = block.thread_rank();
+			{ind}const uint block_idx = grid.block_rank();
+			{ind}const uint block_size = block.size();
+			{ind}inst_size nrof_instances;
 			{ind}bool step_parity = false;
+			{ind}RefType self;
 			{ind}{stab_stack}
 
 			{schedule}"
@@ -125,26 +143,35 @@ impl SingleKernelSchedule<'_> {
 		if let TypedStepCall(struct_name, step_name, _) = sched {
 			let indent = "\t".repeat(fp_level+1);
 			let strct = self.program.struct_by_name(struct_name).unwrap();
+			let step_call;
+
 			if step_name == "print" {
-				return format!("Body: {}.print", struct_name);
+				step_call = self.call_print_function(strct);
+			} else {
+				let step = strct.step_by_name(step_name).unwrap();
+				step_call = self.call_step_function(strct, step, fp_level);
 			}
 
-			let step = strct.step_by_name(step_name).unwrap();
-			let step_call = self.call_step_function(strct, step, fp_level);
 			let set_unstable = self.fp.set_unstable(fp_level);
-
 			let nrof_instances = format!("{}->nrof_instances2(step_parity)", struct_name.to_lowercase());
+
+			let step_call_and_stable_set = if fp_level == 0 {
+				format!("{indent}\t{step_call};")
+			} else {
+				formatdoc!{"
+					{indent}\tif (!{step_call}) {{
+					{indent}\t\t{set_unstable}	
+					{indent}\t}}"
+				}
+			};
 
 			formatdoc!{"
 				{indent}nrof_instances = {nrof_instances};
-				{indent}#pragma unroll
 				{indent}for(int i = 0; i < INSTS_PER_THREAD; i++){{
-				{indent}	RefType self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
+				{indent}	self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
 				{indent}	if (self >= nrof_instances) break;
-
-				{indent}	if (!{step_call}) {{
-				{indent}		{set_unstable}	
-				{indent}	}}
+				
+				{step_call_and_stable_set}				
 				{indent}}}
 				{indent}step_parity = !step_parity;"
 			}
@@ -177,9 +204,9 @@ impl SingleKernelSchedule<'_> {
 
 	fn step_as_c_function(&self, strct : &ADLStruct, step : &Step, fp_level : usize) -> String {
 		let func_name = self.step_function_name(strct, step);
-		let func_header = format!("__device__ bool {func_name}");
+		let func_header = format!("__device__ __inline__ bool {func_name}");
 
-		let mut params = self.kernel_parameters();
+		let mut params = self.kernel_parameters(true);
 		params.push("bool step_parity".to_string());
 
 		let kernel_signature = format_signature(&func_header, params, 0);
@@ -198,11 +225,53 @@ impl SingleKernelSchedule<'_> {
 		"}
 	}
 
+	fn print_as_c_function(&self, strct : &ADLStruct, fp_level : usize) -> String {
+		let func_name = format!("print_{}", strct.name);
+		let func_header = format!("__device__ __inline__ bool {func_name}");
+
+		let params = self.kernel_parameters(true);
+
+		let kernel_signature = format_signature(&func_header, params, 0);
+
+		let pre_step_fp = self.fp.pre_step_function(fp_level);
+		let post_step_fp = self.fp.post_step_function(fp_level);
+
+		let s_name = &strct.name;
+		let s_name_lwr = s_name.to_lowercase();
+		let params_as_fmt = strct.parameters.iter()
+											.map(|(n, t, _)| format!("{n}={}", as_printf(t)))
+											.reduce(|a, n| a + ", " + &n)
+											.unwrap();
+
+		let params_as_expr = strct.parameters.iter()
+											.map(|(n, _, _)| format!(", LOAD({s_name_lwr}->{n}[self])"))
+											.reduce(|a, n| a + &n)
+											.unwrap();
+
+		formatdoc!{"
+			{kernel_signature}
+				{pre_step_fp}
+				if (self != 0) {{
+					printf(\"{s_name}(%u): {params_as_fmt}\\n\", self{params_as_expr});
+				}}
+				{post_step_fp}
+			}}
+		"}
+	}
+
+
 	fn call_step_function(&self, strct : &ADLStruct, step : &Step, _fp_level : usize) -> String {
 		let func_name = self.step_function_name(strct, step);
 		let func_args = self.step_call_arguments();
 		formatdoc!{"
-			{func_name}({func_args})"}
+			{func_name}(self, {func_args}, step_parity)"}
+	}
+
+	fn call_print_function(&self, strct : &ADLStruct) -> String {
+		let func_name = format!("print_{}", strct.name);
+		let func_args = self.step_call_arguments();
+		formatdoc!{"
+			{func_name}(self, {func_args})"}
 	}
 
 	fn step_function_name(&self, strct : &ADLStruct, step : &Step) -> String {
@@ -211,17 +280,24 @@ impl SingleKernelSchedule<'_> {
 }
 
 impl CompileComponent for SingleKernelSchedule<'_> {
-	fn add_includes(&self, _set: &mut BTreeSet<&str>) {
+	fn add_includes(&self, set: &mut BTreeSet<&str>) {
+		set.insert("<cooperative_groups.h>");
 	}
 
 	fn defines(&self) -> Option<String> {
 		Some(formatdoc!("
-			#define INSTS_PER_THREAD {}
-		", self.instances_per_thread))
+				#define THREADS_PER_BLOCK {}
+				#define INSTS_PER_THREAD {}
+				#define FP_DEPTH {}
+			",
+			self.threads_per_block,
+			self.instances_per_thread,
+			self.program.schedule.fixpoint_depth()
+		))
 	}
 	
 	fn typedefs(&self) -> Option<String> {
-		None
+		Some("using namespace cooperative_groups;".to_string())
 	}
 	
 	fn globals(&self) -> Option<String> {
@@ -229,26 +305,31 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	}
 	
 	fn functions(&self) -> Option<String> {
-		let mut functions = self.program.structs
+		let mut functions = self.step_transpiler.functions();
+
+		let mut step_functions = self.program.structs
 								.iter()
 								.map(|strct|
-									strct.steps
-										 .iter()
-										 .map(|step|
-										 	self.step_as_c_function(strct, step, 666)
-										 )
+									std::iter::once(self.print_as_c_function(strct, 666))
+									.chain(
+										strct.steps
+											 .iter()
+											 .map(|step|
+											 	self.step_as_c_function(strct, step, 666)
+											 )
+									)
 								)
 								.flatten()
 								.collect::<Vec<String>>();
 
-		functions.append(&mut self.step_transpiler.functions());
+		functions.append(&mut step_functions);
 
 		Some(functions.join("\n"))
 	}
 
 	fn kernels(&self) -> Option<String> {
 		let kernel_header = format!("__global__ void {}", SingleKernelSchedule::KERNEL_NAME);
-		let kernel_signature = format_signature(&kernel_header, self.kernel_parameters(), 0);
+		let kernel_signature = format_signature(&kernel_header, self.kernel_parameters(false), 0);
 		
 		let kernel_schedule_body = self.kernel_schedule_body();
 
@@ -266,13 +347,13 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	fn main(&self) -> Option<String> {
 		let kernel_name = SingleKernelSchedule::KERNEL_NAME;
 		let arg_array = self.kernel_arguments().join(&format!(",\n\t\t"));
+		let nrof_threads =  self.nrof_threads;
 
 		Some(formatdoc!{"
-			\tinst_size nrof_instances = 10000; // TODO
 			\tvoid* {kernel_name}_args[] = {{
 			\t	{arg_array}
 			\t}};
-			\tauto dims = ADL::get_launch_dims(nrof_instances, (void*){kernel_name});
+			\tauto dims = ADL::get_launch_dims({nrof_threads}, (void*){kernel_name});
 
 			\tCHECK(
 			\t	cudaLaunchCooperativeKernel(

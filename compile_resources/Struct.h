@@ -20,7 +20,7 @@ public:
 
 	virtual void assert_correct_info(InitFile::StructInfo* info) = 0;
 
-	__host__ void* to_device(void* allocated_ptr);
+	__host__ void* to_device(void* allocated_ptr = NULL);
 
 	// other gets values of this
 	__host__ __device__ bool sync_nrof_instances(Struct* other);
@@ -53,9 +53,13 @@ protected:
 	inst_size executing_instances[2]; // How many are part of this and the next iteration?
 	inst_size created_instances; // How many have been created in total?
 
-	__host__ __device__ inline RefType claim_instance2(bool step_parity) {
+	__device__ __inline__ RefType claim_instance2(bool step_parity) {
 		ADL::RefType slot = atomicInc(&created_instances, capacity);
-		assert(slot); // atomicInc wraps around to 0 if it exceeds capacity
+		
+		// atomicInc wraps around to 0 if it exceeds capacity
+		if(!slot) {asm("trap;");}
+		//assert(slot); // Incurs a substantial stacksize penalty. 
+		
 		// Update the next iteration's executing_instances
 		atomicMax(&executing_instances[(uint)!step_parity], slot);
 		return slot;

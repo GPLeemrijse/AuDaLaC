@@ -1,5 +1,5 @@
 use crate::utils::as_c_type;
-use crate::coalesced_compiler::as_c_literal;
+use crate::utils::as_c_literal;
 use crate::ast::*;
 use std::collections::HashMap;
 use indoc::formatdoc;
@@ -36,7 +36,7 @@ impl StepBodyTranspiler<'_> {
 						format!(" else {{{body_false}\n{indent}}}")
 					};
 
-					format!{"{indent}if {cond} {{{body_true}\n{indent}}}{else_block}"}
+					format!{"{indent}if ({cond}) {{{body_true}\n{indent}}}{else_block}"}
 				},
 				Declaration(t, n, e, _) => {
 					let t_as_c = as_c_type(t);
@@ -51,11 +51,14 @@ impl StepBodyTranspiler<'_> {
 						let (owner_exp, owner_type) = owner.expect("Expected an owner for a parameter assignment.");
 						let parts_vec = lhs_exp.get_parts();
 						let param = parts_vec.last().unwrap();
+						let owner_type_obj = owner_type.name()
+													   .expect("non-named type as owner is illegal")
+													   .to_lowercase();
 
 						formatdoc!{"
 							{indent}// {lhs_exp} := {rhs_exp};
-							{indent}SetParam({owner_exp}, {owner_type}->{param}, {rhs_as_c}, &stable);
-						"}
+							{indent}SetParam({owner_exp}, {owner_type_obj}->{param}, {rhs_as_c}, &stable);"
+						}
 					} else {
 						format!("{indent}{lhs_as_c} = {rhs_as_c};")
 					}
@@ -80,7 +83,7 @@ impl StepBodyTranspiler<'_> {
 	        },
 	        UnOp(c, e, _) => {
 	            let e_comp = self.expression_as_c(e, strct, step);
-	            format!("{c}{e_comp}")
+	            format!("({c}{e_comp})")
 	        },
 	        Constructor(n, args, _) => {
 	            let mut arg_expressions = args.iter()
@@ -166,10 +169,10 @@ impl StepBodyTranspiler<'_> {
 	fn set_param_function(&self) -> String {
 		formatdoc!("
 			template<typename T>
-			void SetParam(RefType owner, T* params, T new_val, bool* stable) {{
+			__device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {{
 			    if (owner != 0){{
 			    	T old_val = LOAD(params[owner]);
-			    	if (prev_val != old_val){{
+			    	if (old_val != new_val){{
 			    		STORE(params[owner], new_val);
 			    		*stable = false;
 			    	}}

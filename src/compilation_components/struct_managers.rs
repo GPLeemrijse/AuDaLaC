@@ -72,7 +72,7 @@ impl StructManagers<'_> {
 			claim_instance = "claim_instance()";
 		}
 
-		let header = "__host__ __device__ RefType create_instance".to_string();
+		let header = "__device__ RefType create_instance".to_string();
 		let signature = format_signature(&header, create_func_parameters, 1);
 
 		formatdoc!{"
@@ -117,7 +117,8 @@ impl CompileComponent for StructManagers<'_> {
 	}
 	
 	fn typedefs(&self) -> Option<String> {
-		let mut res = "using namespace cooperative_groups;\n".to_string();
+		let mut res = String::new();
+
 		for strct in &self.program.structs {
 			let struct_name = &strct.name;
 			let nrof_params = strct.parameters.len();

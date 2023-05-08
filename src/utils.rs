@@ -1,4 +1,5 @@
 use crate::ast::Type;
+use crate::ast::Literal;
 
 pub fn as_c_type(t : &Type) -> String {
     use Type::*;
@@ -18,4 +19,28 @@ pub fn format_signature(sig : &String, params : Vec<String>, padding : usize) ->
                          " ".repeat((sig.len()+1+padding*4) % 4)
                         );
     format!("{sig}({}){{", params.join(&indent))
+}
+
+pub fn as_printf(t : &Type) -> String {
+    use Type::*;
+    match t {
+        Named(_) => "%u",
+        String => "%s",
+        Nat => "%u",
+        Int => "%d",
+        Bool => "%u",
+        Null => "%u",
+    }.to_string()
+}
+
+pub fn as_c_literal(l : &Literal) -> String {
+    use Literal::*;
+    match l {
+        NatLit(n) => format!("{}", n),
+        IntLit(i) => format!("{}", i),
+        BoolLit(b) => format!("{}", if *b {"true"} else {"false"}),
+        StringLit(s) => format!("\"{}\"", s),
+        NullLit => format!("({})0", as_c_type(&Type::Named(String::new()))),// index based!
+        ThisLit => "self".to_string(),
+    }
 }

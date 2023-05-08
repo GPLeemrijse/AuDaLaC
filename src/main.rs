@@ -50,7 +50,7 @@ fn main() {
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
-        (@arg nrofstructs: -n --nrofstructs +takes_value default_value("100") value_parser(clap::value_parser!(u64)) "nrof structs memory is allocated for.")
+        (@arg nrofstructs: -N --nrofstructs +takes_value default_value("1000") value_parser(clap::value_parser!(u64)) "nrof structs memory is allocated for.")
         (@arg buffersize: -b --buffersize +takes_value default_value("2048") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
         (@arg instsperthread: --instsperthread +takes_value default_value("32") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
         (@arg printnthinst: -d --printnthinst +takes_value default_value("0") value_parser(clap::value_parser!(usize)) "Print every n'th allocated instance.")
@@ -149,6 +149,8 @@ fn main() {
                                     &program,
                                     &*fp_strat,
                                     instsperthread,
+                                    512,// tpb
+                                    10000, // nrof threads
                                     &step_transpiler
                                 )
                             ]);

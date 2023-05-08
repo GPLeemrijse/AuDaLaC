@@ -343,7 +343,7 @@ impl CoalescedStructManager<'_> {
 					}}
 				{post_step_c}
 			}}
-		"}	
+		"}
 	}
 
 	fn statements_as_c(&self, statements: &Vec<Stat>, strct: &ADLStruct, step: &Step, indent_lvl: usize) -> String {
