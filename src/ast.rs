@@ -193,6 +193,19 @@ impl Exp {
     }
 }
 
+impl Display for Exp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use crate::ast::Exp::*;
+        match self {
+            BinOp(l, o, r, _) => write!(f, "{l} {o} {r}"),
+            UnOp(o, e, _) => write!(f, "{o}{e}"),
+            Constructor(n, exps, _) => write!(f, "{n}({})", exps.iter().map(|e| format!("{e}")).collect::<Vec<String>>().join(", ")),
+            Var(parts, _) => write!(f, "{}", parts.join(".")),
+            Lit(l, _) => write!(f, "{l}")
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Stat {
     IfThen(Box<Exp>, Vec<Stat>, Vec<Stat>, Loc),
@@ -273,6 +286,20 @@ pub enum Literal {
     StringLit(String),
     NullLit,
     ThisLit,
+}
+
+impl Display for Literal {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use crate::ast::Literal::*;
+        match self {
+            NatLit(v) => write!(f, "{v}"),
+            IntLit(v) => write!(f, "{v}"),
+            BoolLit(v) => write!(f, "{v}"),
+            StringLit(v) => write!(f, "\"{v}\""),
+            NullLit => write!(f, "null"),
+            ThisLit => write!(f, "this")
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
