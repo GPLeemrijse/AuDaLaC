@@ -133,8 +133,6 @@ fn main() {
                             //let fp_strat = 
                             let step_transpiler = StepBodyTranspiler::new(
                                 &type_info,
-                                &memorder,
-                                &*fp_strat,
                                 true
                             );
                             result = transpile::transpile2(vec![

@@ -229,19 +229,21 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	}
 	
 	fn functions(&self) -> Option<String> {
-		Some(self.program.structs
-					.iter()
-					.map(|strct|
-						strct.steps
-							 .iter()
-							 .map(|step|
-							 	self.step_as_c_function(strct, step, 666)
-							 )
-					)
-					.flatten()
-					.collect::<Vec<String>>()
-					.join("\n")
-		)
+		let mut functions = self.program.structs
+								.iter()
+								.map(|strct|
+									strct.steps
+										 .iter()
+										 .map(|step|
+										 	self.step_as_c_function(strct, step, 666)
+										 )
+								)
+								.flatten()
+								.collect::<Vec<String>>();
+
+		functions.append(&mut self.step_transpiler.functions());
+
+		Some(functions.join("\n"))
 	}
 
 	fn kernels(&self) -> Option<String> {

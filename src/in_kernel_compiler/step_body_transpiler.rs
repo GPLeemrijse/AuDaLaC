@@ -1,6 +1,4 @@
 use crate::utils::as_c_type;
-use crate::transpilation_traits::FPStrategy;
-use crate::MemOrder;
 use crate::coalesced_compiler::as_c_literal;
 use crate::ast::*;
 use std::collections::HashMap;
@@ -8,18 +6,14 @@ use indoc::formatdoc;
 
 pub struct StepBodyTranspiler<'a> {
 	var_exp_type_info : &'a HashMap<*const Exp, Vec<Type>>,
-	memorder : &'a MemOrder,
-	fp : &'a dyn FPStrategy,
 	use_step_parity : bool
 }
 
 
 impl StepBodyTranspiler<'_> {
-	pub fn new<'a>(type_info : &'a HashMap<*const Exp, Vec<Type>>, order: &'a MemOrder, fp : &'a dyn FPStrategy, use_step_parity : bool) -> StepBodyTranspiler<'a> {
+	pub fn new<'a>(type_info : &'a HashMap<*const Exp, Vec<Type>>, use_step_parity : bool) -> StepBodyTranspiler<'a> {
 		StepBodyTranspiler{
 			var_exp_type_info : type_info,
-			memorder : order,
-			fp,
 			use_step_parity
 		}
 	}
@@ -56,23 +50,11 @@ impl StepBodyTranspiler<'_> {
 					if is_parameter {
 						let (owner_exp, owner_type) = owner.expect("Expected an owner for a parameter assignment.");
 						let parts_vec = lhs_exp.get_parts();
-
-						let adl_parts = parts_vec.join(".");
 						let param = parts_vec.last().unwrap();
 
-						let set_fp = self.fp.set_unstable(fp_level);
-
 						formatdoc!{"
-							{indent}/* {adl_parts} = {rhs_as_c} */
-							{indent}owner = {owner_exp};
-							{indent}if(owner != 0){{
-							{indent}	auto prev_val = LOAD({owner_type}->{param}[owner]);
-							{indent}	auto new_val = {rhs_as_c};
-							{indent}	if (prev_val != new_val) {{
-							{indent}		STORE({owner_type}->{param}[owner], new_val);
-							{indent}		{set_fp}
-							{indent}	}}
-							{indent}}}
+							{indent}// {lhs_exp} := {rhs_exp};
+							{indent}SetParam({owner_exp}, {owner_type}->{param}, {rhs_as_c}, &stable);
 						"}
 					} else {
 						format!("{indent}{lhs_as_c} = {rhs_as_c};")
@@ -174,5 +156,25 @@ impl StepBodyTranspiler<'_> {
 		}
 
 		(previous_c_expr, owner)
+	}
+
+
+	pub fn functions(&self) -> Vec<String> {
+		vec![self.set_param_function()]
+	}
+
+	fn set_param_function(&self) -> String {
+		formatdoc!("
+			template<typename T>
+			void SetParam(RefType owner, T* params, T new_val, bool* stable) {{
+			    if (owner != 0){{
+			    	T old_val = LOAD(params[owner]);
+			    	if (prev_val != old_val){{
+			    		STORE(params[owner], new_val);
+			    		*stable = false;
+			    	}}
+			    }}
+			}}
+		")
 	}
 }
