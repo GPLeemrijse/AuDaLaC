@@ -98,6 +98,10 @@ __host__ __device__ inst_size Struct::nrof_instances(void){
 	return active_instances.load(cuda::memory_order_seq_cst);
 }
 
+__host__ __device__ inst_size Struct::nrof_instances2(bool step_parity){
+	return executing_instances[(int)step_parity];
+}
+
 __host__ __device__ inst_size Struct::difference(void){
 	return instantiated_instances.load(cuda::memory_order_seq_cst) - active_instances.load(cuda::memory_order_seq_cst);
 }
@@ -117,12 +121,14 @@ __host__ __device__ bool Struct::sync_nrof_instances(Struct* other) {
 	}
 
 	#ifdef __CUDA_ARCH__
+		/*NOTE: Also copies to instantiated_instances, so keep those sequential in memory. */
 		memcpy(
 			&other->active_instances, // dst
 			&this->active_instances,
 			sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>) * 2
 		);
 	#else
+		/*NOTE: Also copies to instantiated_instances, so keep those sequential in memory. */
 		CHECK(
 			cudaMemcpy(
 				&other->active_instances, // dst
@@ -132,20 +138,6 @@ __host__ __device__ bool Struct::sync_nrof_instances(Struct* other) {
 			)
 		);
 	#endif
-
-	return differ;
-}
-
-
-__device__ bool Struct::sync_difference(void) {
-	// Sync own active instances
-	inst_size instantiated_instances = this->instantiated_instances.load(cuda::memory_order_relaxed);
-	inst_size old_active_instances = this->active_instances.load(cuda::memory_order_relaxed);
-	bool differ = instantiated_instances != old_active_instances;
-
-	if (differ) {
-		this->active_instances.store(instantiated_instances, cuda::memory_order_relaxed);
-	}
 
 	return differ;
 }

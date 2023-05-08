@@ -1,3 +1,4 @@
+use crate::utils::format_signature;
 use crate::in_kernel_compiler::StepBodyTranspiler;
 use std::collections::HashMap;
 use crate::ast::*;
@@ -52,14 +53,15 @@ impl SingleKernelSchedule<'_> {
 		let schedule = self.schedule_as_c(&self.program.schedule, 0);
 
 		formatdoc!{"
-			{ind}{stab_stack}
 			{ind}grid_group grid = this_grid();
 			{ind}thread_block block = this_thread_block();
-			{ind}unsigned int in_grid_rank = grid.thread_rank();
-			{ind}unsigned int in_block_rank = block.thread_rank();
-			{ind}unsigned int block_idx = grid.block_rank();
-			{ind}unsigned int block_size = block.size();
+			{ind}uint in_grid_rank = grid.thread_rank();
+			{ind}uint in_block_rank = block.thread_rank();
+			{ind}uint block_idx = grid.block_rank();
+			{ind}uint block_size = block.size();
 			{ind}const inst_size nrof_instances;
+			{ind}bool step_parity = false;
+			{ind}{stab_stack}
 
 			{schedule}"
 		}
@@ -67,7 +69,6 @@ impl SingleKernelSchedule<'_> {
 
 	fn schedule_as_c(&self, sched : &Schedule, fp_level : usize) -> String {
 		use crate::ast::Schedule::*;
-		let indent = "\t".repeat(fp_level+1);
 		
 		match sched {
 			StepCall(..) => self.step_call_as_c(sched, fp_level),
@@ -131,30 +132,8 @@ impl SingleKernelSchedule<'_> {
 			let step = strct.step_by_name(step_name).unwrap();
 			let step_call = self.call_step_function(strct, step, fp_level);
 			let set_unstable = self.fp.set_unstable(fp_level);
-			let constructs = step.constructors();
-			let sync_suffix;
 
-			if constructs.is_empty() {
-				sync_suffix = "".to_string();
-			} else {
-				let to_sync = constructs.iter()
-									.map(|i| format!("created_instances = {}->sync_difference() || created_instances;", i.to_lowercase()))
-									.reduce(|acc, nxt| acc + "\n\t\t" + &nxt)
-									.unwrap();
-				sync_suffix = formatdoc!{"
-					
-					{indent}grid.sync();
-
-					{indent}if(in_grid_rank == 0) {{
-					{indent}	bool created_instances = false;
-					{indent}	{to_sync}
-					{indent}	if(created_instances) {{
-					{indent}		{set_unstable}
-					{indent}	}}
-					{indent}}}"};
-			}
-
-			let nrof_instances = format!("{}->nrof_instances()", struct_name.to_lowercase());
+			let nrof_instances = format!("{}->nrof_instances2(step_parity)", struct_name.to_lowercase());
 
 			formatdoc!{"
 				{indent}nrof_instances = {nrof_instances};
@@ -167,7 +146,7 @@ impl SingleKernelSchedule<'_> {
 				{indent}		{set_unstable}	
 				{indent}	}}
 				{indent}}}
-				{sync_suffix}"
+				{indent}step_parity = !step_parity;"
 			}
 		} else {
 			unreachable!()
@@ -199,7 +178,11 @@ impl SingleKernelSchedule<'_> {
 	fn step_as_c_function(&self, strct : &ADLStruct, step : &Step, fp_level : usize) -> String {
 		let func_name = self.step_function_name(strct, step);
 		let func_header = format!("__device__ bool {func_name}");
-		let kernel_signature = self.format_signature(&func_header, self.kernel_parameters());
+
+		let mut params = self.kernel_parameters();
+		params.push("bool step_parity".to_string());
+
+		let kernel_signature = format_signature(&func_header, params, 0);
 
 		let step_body = self.step_transpiler.statements_as_c(&step.statements, strct, step, 1, fp_level);
 		let pre_step_fp = self.fp.pre_step_function(fp_level);
@@ -220,14 +203,6 @@ impl SingleKernelSchedule<'_> {
 		let func_args = self.step_call_arguments();
 		formatdoc!{"
 			{func_name}({func_args})"}
-	}
-
-	fn format_signature(&self, sig : &String, params : Vec<String>) -> String {
-		let indent = format!(",\n{}{}",
-						     "\t".repeat((sig.len()+1) / 4),
-						     " ".repeat((sig.len()+1) % 4)
-						    );
-		format!("{sig}({}){{", params.join(&indent))
 	}
 
 	fn step_function_name(&self, strct : &ADLStruct, step : &Step) -> String {
@@ -271,7 +246,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 
 	fn kernels(&self) -> Option<String> {
 		let kernel_header = format!("__global__ void {}", SingleKernelSchedule::KERNEL_NAME);
-		let kernel_signature = self.format_signature(&kernel_header, self.kernel_parameters());
+		let kernel_signature = format_signature(&kernel_header, self.kernel_parameters(), 0);
 		
 		let kernel_schedule_body = self.kernel_schedule_body();
 

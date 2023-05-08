@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::transpilation_traits::FPStrategy;
+use crate::fp_strategies::NaiveAlternatingFixpoint;
 use crate::in_kernel_compiler::StepBodyTranspiler;
 use crate::fp_strategies::NaiveFixpoint;
 use crate::compilation_components::*;
@@ -31,6 +33,7 @@ mod transpile;
 mod compilation_components;
 mod in_kernel_compiler;
 mod fp_strategies;
+mod utils;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
@@ -45,7 +48,7 @@ fn main() {
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
         (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") possible_value("in-kernel") default_value("coalesced") "Which compiler to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
-        (@arg voting: -v --vote_strat possible_value("naive") possible_value("per-thread") possible_value("per-coalesced") possible_value("per-block") possible_value("hierarchical") possible_value("banks-reduced") possible_value("banks-32-writes") default_value("naive") "Which fixpoint stability voting strategy to use.")
+        (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofstructs: -n --nrofstructs +takes_value default_value("100") value_parser(clap::value_parser!(u64)) "nrof structs memory is allocated for.")
         (@arg buffersize: -b --buffersize +takes_value default_value("2048") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
@@ -67,6 +70,7 @@ fn main() {
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output");
     let compiler : &str = args.value_of("compiler").unwrap();
+    let voting_strat : &str = args.value_of("voting").unwrap();
     let memorder = MemOrder::from_str(args.value_of("memorder").unwrap());
     let scope = Scope::from_str(args.value_of("scope").unwrap());
     
@@ -119,8 +123,20 @@ fn main() {
                             result = transpile::transpile(&schedule_manager, &struct_manager);
                         },
                         "in-kernel" => {
-                            let fp_strat = &NaiveFixpoint::new();
-                            let step_transpiler = StepBodyTranspiler::new(&type_info, &memorder, fp_strat);
+
+                            let fp_strat : Box<dyn FPStrategy> = match voting_strat {
+                                "naive" => Box::new(NaiveFixpoint::new()),
+                                "naive-alternating" => Box::new(NaiveAlternatingFixpoint::new()),
+                                _ => panic!("voting strategy not found.")
+                            };
+
+                            //let fp_strat = 
+                            let step_transpiler = StepBodyTranspiler::new(
+                                &type_info,
+                                &memorder,
+                                &*fp_strat,
+                                true
+                            );
                             result = transpile::transpile2(vec![
                                 &InitFileReader{},
                                 &PrintbufferSizeAdjuster::new(buffer_size),
@@ -128,11 +144,12 @@ fn main() {
                                     &program,
                                     nrof_structs,
                                     &memorder,
-                                    scope
+                                    scope,
+                                    true
                                 ),
                                 &SingleKernelSchedule::new(
                                     &program,
-                                    fp_strat,
+                                    &*fp_strat,
                                     instsperthread,
                                     &step_transpiler
                                 )

@@ -5,24 +5,28 @@ use crate::MemOrder;
 use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
 use indoc::formatdoc;
+use crate::utils::format_signature;
 
 pub struct StructManagers<'a> {
 	program : &'a Program,
 	nrof_structs : u64,
 	memorder : &'a MemOrder,
 	scope : Scope,
+	use_step_parity : bool
 }
 
 impl StructManagers<'_> {
 	pub fn new<'a>(program : &'a Program,
 			   nrof_structs : u64,
 			   memorder : &'a MemOrder,
-			   scope : Scope) -> StructManagers<'a> {
+			   scope : Scope,
+			   use_step_parity : bool) -> StructManagers<'a> {
 		StructManagers {
 			program,
 			nrof_structs,
 			memorder,
-			scope
+			scope,
+			use_step_parity
 		}
 	}
 
@@ -46,6 +50,38 @@ impl StructManagers<'_> {
 	        Bool => "ADL::BoolType",
 	        Null => "ADL::RefType",
 	    }
+	}
+
+	fn create_instance_function_as_c(&self, strct : &ADLStruct) -> String {
+		let mut create_func_parameters : Vec<String> = strct.parameters
+												 			.iter()
+												 			.map(|(s, t, _)| format!("{} _{s}", self.basic_type_as_c(t)))
+												 			.collect();
+
+		let assignments = strct.parameters
+							   .iter()
+							   .map(|(s, _, _)| format!("STORE({s}[slot], _{s});"))
+							   .collect::<Vec<String>>()
+							   .join("\n\t\t");
+
+		let claim_instance;
+		if self.use_step_parity {
+			claim_instance = "claim_instance2(step_parity)";
+			create_func_parameters.push("bool step_parity".to_string());
+		} else {
+			claim_instance = "claim_instance()";
+		}
+
+		let header = "__host__ __device__ RefType create_instance".to_string();
+		let signature = format_signature(&header, create_func_parameters, 1);
+
+		formatdoc!{"
+			\t{signature}
+			\t\tRefType slot = {claim_instance};
+			\t\t{assignments}
+			\t\treturn slot;
+			\t}}"
+		}
 	}
 }
 
@@ -89,21 +125,19 @@ impl CompileComponent for StructManagers<'_> {
 			let param_decls = strct.parameters.iter()
 								.map(|(s, t, _)| format!("{}* {s};", self.type_as_c(t)))
 								.reduce(|acc: String, nxt| acc + "\n			" + &nxt).unwrap();
-			let param_type_assertions = strct.parameters.iter()
-								.enumerate()
-								.map(|(idx, (_, t, _))| format!("assert (info->parameter_types[{idx}] == ADL::{});", as_type_enum(t)))
-								.reduce(|acc: String, nxt| acc + "\n		" + &nxt).unwrap();
-			let params_args = strct.parameters.iter()
-								.map(|(s, t, _)| format!("{} _{s}", self.basic_type_as_c(t)))
-								.reduce(|acc: String, nxt| acc + ", " + &nxt).unwrap();
+			
+			let param_type_assertions = strct.parameters
+											 .iter()
+											 .enumerate()
+											 .map(|(idx, (_, t, _))| format!("assert (info->parameter_types[{idx}] == ADL::{});", as_type_enum(t)))
+											 .reduce(|acc: String, nxt| acc + "\n		" + &nxt).unwrap();
+
 			let param_sizes = strct.parameters.iter()
 								.map(|(_, t, _)| format!("sizeof({})", self.type_as_c(t)))
 								.collect::<Vec<String>>()
 								.join(",\n\t\t\t");
 
-			let assignments = strct.parameters.iter()
-								.map(|(s, _, _)| format!("STORE({s}[slot], _{s});"))
-								.reduce(|acc: String, nxt| acc + "\n		" + &nxt).unwrap();
+			let create_func = self.create_instance_function_as_c(strct);
 
 			res.push_str(&formatdoc!{"
 				class {struct_name} : public Struct {{
@@ -138,11 +172,7 @@ impl CompileComponent for StructManagers<'_> {
 						return sizes[idx];
 					}}
 
-					__host__ __device__ RefType create_instance({params_args}) {{
-						RefType slot = claim_instance();
-						{assignments}
-						return slot;
-					}}
+					{create_func}
 				}};
 
 			"});

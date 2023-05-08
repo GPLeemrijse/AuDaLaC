@@ -1,7 +1,7 @@
+use crate::utils::as_c_type;
 use crate::transpilation_traits::FPStrategy;
 use crate::MemOrder;
 use crate::coalesced_compiler::as_c_literal;
-use crate::in_kernel_compiler::as_c_type;
 use crate::ast::*;
 use std::collections::HashMap;
 use indoc::formatdoc;
@@ -10,15 +10,17 @@ pub struct StepBodyTranspiler<'a> {
 	var_exp_type_info : &'a HashMap<*const Exp, Vec<Type>>,
 	memorder : &'a MemOrder,
 	fp : &'a dyn FPStrategy,
+	use_step_parity : bool
 }
 
 
 impl StepBodyTranspiler<'_> {
-	pub fn new<'a>(type_info : &'a HashMap<*const Exp, Vec<Type>>, order: &'a MemOrder, fp : &'a dyn FPStrategy) -> StepBodyTranspiler<'a> {
+	pub fn new<'a>(type_info : &'a HashMap<*const Exp, Vec<Type>>, order: &'a MemOrder, fp : &'a dyn FPStrategy, use_step_parity : bool) -> StepBodyTranspiler<'a> {
 		StepBodyTranspiler{
 			var_exp_type_info : type_info,
 			memorder : order,
-			fp
+			fp,
+			use_step_parity
 		}
 	}
 
@@ -99,11 +101,17 @@ impl StepBodyTranspiler<'_> {
 	            format!("{c}{e_comp}")
 	        },
 	        Constructor(n, args, _) => {
-	            let args_comp = args.iter()
+	            let mut arg_expressions = args.iter()
 	                    .map(|e| self.expression_as_c(e, strct, step))
-	                    .reduce(|acc: String, nxt| acc + ", " + &nxt).unwrap();
+	                    .collect::<Vec<String>>();
 
-	            format!("{}->create_instance({args_comp})", n.to_lowercase())
+	            if self.use_step_parity {
+	            	arg_expressions.push("step_parity".to_string());
+	            }
+
+	            let args = arg_expressions.join(", ");
+
+	            format!("{}->create_instance({args})", n.to_lowercase())
 	        },
 	        Var(..) => {
 	        	self.var_exp_as_c(e, strct).0 // Not interested in the owner or is_parameter
