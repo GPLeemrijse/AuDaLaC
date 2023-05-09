@@ -130,7 +130,6 @@ fn main() {
                                 _ => panic!("voting strategy not found.")
                             };
 
-                            //let fp_strat = 
                             let step_transpiler = StepBodyTranspiler::new(
                                 &type_info,
                                 true
