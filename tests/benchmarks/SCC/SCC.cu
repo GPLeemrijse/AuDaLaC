@@ -19,19 +19,14 @@ class NodeSet : public Struct {
 public:
 	NodeSet (void) : Struct() {}
 	
-	union {
-		void* parameters[8];
-		struct {
-			ATOMIC(ADL::RefType)* pivot_f_b;
-			ATOMIC(ADL::RefType)* pivot_f_nb;
-			ATOMIC(ADL::RefType)* pivot_nf_b;
-			ATOMIC(ADL::RefType)* pivot_nf_nb;
-			ATOMIC(ADL::BoolType)* scc;
-			ATOMIC(ADL::RefType)* f_and_b;
-			ATOMIC(ADL::RefType)* not_f_and_b;
-			ATOMIC(ADL::RefType)* f_and_not_b;
-		};
-	};
+	ATOMIC(RefType)* pivot_f_b;
+	ATOMIC(RefType)* pivot_f_nb;
+	ATOMIC(RefType)* pivot_nf_b;
+	ATOMIC(RefType)* pivot_nf_nb;
+	ATOMIC(BoolType)* scc;
+	ATOMIC(RefType)* f_and_b;
+	ATOMIC(RefType)* not_f_and_b;
+	ATOMIC(RefType)* f_and_not_b;
 
 	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "NodeSet");
@@ -47,7 +42,7 @@ public:
 	};
 
 	void** get_parameters(void) {
-		return parameters;
+		return (void**)&pivot_f_b;
 	}
 
 	size_t child_size(void) {
@@ -56,26 +51,26 @@ public:
 
 	size_t param_size(uint idx) {
 		static size_t sizes[8] = {
-			sizeof(ATOMIC(ADL::RefType)),
-			sizeof(ATOMIC(ADL::RefType)),
-			sizeof(ATOMIC(ADL::RefType)),
-			sizeof(ATOMIC(ADL::RefType)),
-			sizeof(ATOMIC(ADL::BoolType)),
-			sizeof(ATOMIC(ADL::RefType)),
-			sizeof(ATOMIC(ADL::RefType)),
-			sizeof(ATOMIC(ADL::RefType))
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(BoolType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType))
 		};
 		return sizes[idx];
 	}
 
-		__device__ RefType create_instance(ADL::RefType _pivot_f_b,
-									   ADL::RefType _pivot_f_nb,
-									   ADL::RefType _pivot_nf_b,
-									   ADL::RefType _pivot_nf_nb,
-									   ADL::BoolType _scc,
-									   ADL::RefType _f_and_b,
-									   ADL::RefType _not_f_and_b,
-									   ADL::RefType _f_and_not_b,
+	__device__ RefType create_instance(RefType _pivot_f_b,
+									   RefType _pivot_f_nb,
+									   RefType _pivot_nf_b,
+									   RefType _pivot_nf_nb,
+									   BoolType _scc,
+									   RefType _f_and_b,
+									   RefType _not_f_and_b,
+									   RefType _f_and_not_b,
 									   bool step_parity){
 		RefType slot = claim_instance2(step_parity);
 		STORE(pivot_f_b[slot], _pivot_f_b);
@@ -94,14 +89,9 @@ class Node : public Struct {
 public:
 	Node (void) : Struct() {}
 	
-	union {
-		void* parameters[3];
-		struct {
-			ATOMIC(ADL::RefType)* set;
-			ATOMIC(ADL::BoolType)* fwd;
-			ATOMIC(ADL::BoolType)* bwd;
-		};
-	};
+	ATOMIC(RefType)* set;
+	ATOMIC(BoolType)* fwd;
+	ATOMIC(BoolType)* bwd;
 
 	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "Node");
@@ -112,7 +102,7 @@ public:
 	};
 
 	void** get_parameters(void) {
-		return parameters;
+		return (void**)&set;
 	}
 
 	size_t child_size(void) {
@@ -121,16 +111,16 @@ public:
 
 	size_t param_size(uint idx) {
 		static size_t sizes[3] = {
-			sizeof(ATOMIC(ADL::RefType)),
-			sizeof(ATOMIC(ADL::BoolType)),
-			sizeof(ATOMIC(ADL::BoolType))
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(BoolType)),
+			sizeof(ATOMIC(BoolType))
 		};
 		return sizes[idx];
 	}
 
-		__device__ RefType create_instance(ADL::RefType _set,
-									   ADL::BoolType _fwd,
-									   ADL::BoolType _bwd,
+	__device__ RefType create_instance(RefType _set,
+									   BoolType _fwd,
+									   BoolType _bwd,
 									   bool step_parity){
 		RefType slot = claim_instance2(step_parity);
 		STORE(set[slot], _set);
@@ -144,13 +134,8 @@ class Edge : public Struct {
 public:
 	Edge (void) : Struct() {}
 	
-	union {
-		void* parameters[2];
-		struct {
-			ATOMIC(ADL::RefType)* s;
-			ATOMIC(ADL::RefType)* t;
-		};
-	};
+	ATOMIC(RefType)* s;
+	ATOMIC(RefType)* t;
 
 	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "Edge");
@@ -160,7 +145,7 @@ public:
 	};
 
 	void** get_parameters(void) {
-		return parameters;
+		return (void**)&s;
 	}
 
 	size_t child_size(void) {
@@ -169,14 +154,14 @@ public:
 
 	size_t param_size(uint idx) {
 		static size_t sizes[2] = {
-			sizeof(ATOMIC(ADL::RefType)),
-			sizeof(ATOMIC(ADL::RefType))
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType))
 		};
 		return sizes[idx];
 	}
 
-		__device__ RefType create_instance(ADL::RefType _s,
-									   ADL::RefType _t,
+	__device__ RefType create_instance(RefType _s,
+									   RefType _t,
 									   bool step_parity){
 		RefType slot = claim_instance2(step_parity);
 		STORE(s[slot], _s);
@@ -195,11 +180,12 @@ Edge* host_Edge_ptr = &host_Edge;
 Node* host_Node_ptr = &host_Node;
 NodeSet* host_NodeSet_ptr = &host_NodeSet;
 
-Edge* gm_Edge;
-Node* gm_Node;
-NodeSet* gm_NodeSet;
+__device__ Edge* __restrict__ edge;
+__device__ Node* __restrict__ node;
+__device__ NodeSet* __restrict__ nodeset;
 
 __device__ bool fp_stack[FP_DEPTH][2];
+
 __device__ __inline__ void clear_stack(int lvl, bool iteration_parity) {
 	/*	For the first lvl, only clear the iteration_parity bool.
 		The first !iteration_parity bool is being set to true in advance.
@@ -210,6 +196,13 @@ __device__ __inline__ void clear_stack(int lvl, bool iteration_parity) {
 		fp_stack[lvl][iteration_parity] = false;
 		fp_stack[lvl][!iteration_parity] = false;
 		lvl--;
+	}
+}
+
+__device__ __inline__ void initialize_stack() {
+	for(int i = 0; i < FP_DEPTH; i++){
+		fp_stack[i][0] = true;
+		fp_stack[i][1] = true;
 	}
 }
 
@@ -224,10 +217,7 @@ __device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T 
     }
 }
 
-__device__ __inline__ bool print_NodeSet(const RefType self,
-										 NodeSet * const __restrict__ nodeset,
-										 Node * const __restrict__ node,
-										 Edge * const __restrict__ edge){
+__device__ __inline__ bool print_NodeSet(const RefType self){
 	bool stable = true;
 	if (self != 0) {
 		printf("NodeSet(%u): pivot_f_b=%u, pivot_f_nb=%u, pivot_nf_b=%u, pivot_nf_nb=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, LOAD(nodeset->pivot_f_b[self]), LOAD(nodeset->pivot_f_nb[self]), LOAD(nodeset->pivot_nf_b[self]), LOAD(nodeset->pivot_nf_nb[self]), LOAD(nodeset->scc[self]), LOAD(nodeset->f_and_b[self]), LOAD(nodeset->not_f_and_b[self]), LOAD(nodeset->f_and_not_b[self]));
@@ -236,9 +226,6 @@ __device__ __inline__ bool print_NodeSet(const RefType self,
 }
 
 __device__ __inline__ bool NodeSet_allocate_sets(const RefType self,
-												 NodeSet * const __restrict__ nodeset,
-												 Node * const __restrict__ node,
-												 Edge * const __restrict__ edge,
 												 bool step_parity){
 	bool stable = true;
 	
@@ -274,9 +261,6 @@ __device__ __inline__ bool NodeSet_allocate_sets(const RefType self,
 }
 
 __device__ __inline__ bool NodeSet_initialise_pivot_fwd_bwd(const RefType self,
-															NodeSet * const __restrict__ nodeset,
-															Node * const __restrict__ node,
-															Edge * const __restrict__ edge,
 															bool step_parity){
 	bool stable = true;
 	
@@ -309,10 +293,7 @@ __device__ __inline__ bool NodeSet_initialise_pivot_fwd_bwd(const RefType self,
 	return stable;
 }
 
-__device__ __inline__ bool print_Node(const RefType self,
-									  NodeSet * const __restrict__ nodeset,
-									  Node * const __restrict__ node,
-									  Edge * const __restrict__ edge){
+__device__ __inline__ bool print_Node(const RefType self){
 	bool stable = true;
 	if (self != 0) {
 		printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, LOAD(node->set[self]), LOAD(node->fwd[self]), LOAD(node->bwd[self]));
@@ -321,9 +302,6 @@ __device__ __inline__ bool print_Node(const RefType self,
 }
 
 __device__ __inline__ bool Node_pivots_nominate(const RefType self,
-												NodeSet * const __restrict__ nodeset,
-												Node * const __restrict__ node,
-												Edge * const __restrict__ edge,
 												bool step_parity){
 	bool stable = true;
 	
@@ -351,9 +329,6 @@ __device__ __inline__ bool Node_pivots_nominate(const RefType self,
 }
 
 __device__ __inline__ bool Node_divide_into_sets_reset_fwd_bwd(const RefType self,
-															   NodeSet * const __restrict__ nodeset,
-															   Node * const __restrict__ node,
-															   Edge * const __restrict__ edge,
 															   bool step_parity){
 	bool stable = true;
 	
@@ -378,10 +353,7 @@ __device__ __inline__ bool Node_divide_into_sets_reset_fwd_bwd(const RefType sel
 	return stable;
 }
 
-__device__ __inline__ bool print_Edge(const RefType self,
-									  NodeSet * const __restrict__ nodeset,
-									  Node * const __restrict__ node,
-									  Edge * const __restrict__ edge){
+__device__ __inline__ bool print_Edge(const RefType self){
 	bool stable = true;
 	if (self != 0) {
 		printf("Edge(%u): s=%u, t=%u\n", self, LOAD(edge->s[self]), LOAD(edge->t[self]));
@@ -390,9 +362,6 @@ __device__ __inline__ bool print_Edge(const RefType self,
 }
 
 __device__ __inline__ bool Edge_compute_fwd_bwd(const RefType self,
-												NodeSet * const __restrict__ nodeset,
-												Node * const __restrict__ node,
-												Edge * const __restrict__ edge,
 												bool step_parity){
 	bool stable = true;
 	
@@ -410,9 +379,7 @@ __device__ __inline__ bool Edge_compute_fwd_bwd(const RefType self,
 }
 
 
-__global__ void schedule_kernel(NodeSet * const __restrict__ nodeset,
-								Node * const __restrict__ node,
-								Edge * const __restrict__ edge){
+__global__ void schedule_kernel(){
 	const grid_group grid = this_grid();
 	const thread_block block = this_thread_block();
 	const uint in_grid_rank = grid.thread_rank();
@@ -430,12 +397,13 @@ __global__ void schedule_kernel(NodeSet * const __restrict__ nodeset,
 		if (in_grid_rank == 0)
 			fp_stack[0][!iteration_parity[0]] = true;
 
+
 		nrof_instances = node->nrof_instances2(step_parity);
 		for(int i = 0; i < INSTS_PER_THREAD; i++){
 			self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
 			if (self >= nrof_instances) break;
 
-			if (!Node_pivots_nominate(self, nodeset, node, edge, step_parity)) {
+			if (!Node_pivots_nominate(self, step_parity)) {
 				stable = false;	
 			}				
 		}
@@ -448,7 +416,7 @@ __global__ void schedule_kernel(NodeSet * const __restrict__ nodeset,
 			self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
 			if (self >= nrof_instances) break;
 
-			if (!NodeSet_allocate_sets(self, nodeset, node, edge, step_parity)) {
+			if (!NodeSet_allocate_sets(self, step_parity)) {
 				stable = false;	
 			}				
 		}
@@ -461,7 +429,7 @@ __global__ void schedule_kernel(NodeSet * const __restrict__ nodeset,
 			self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
 			if (self >= nrof_instances) break;
 
-			if (!Node_divide_into_sets_reset_fwd_bwd(self, nodeset, node, edge, step_parity)) {
+			if (!Node_divide_into_sets_reset_fwd_bwd(self, step_parity)) {
 				stable = false;	
 			}				
 		}
@@ -474,7 +442,7 @@ __global__ void schedule_kernel(NodeSet * const __restrict__ nodeset,
 			self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
 			if (self >= nrof_instances) break;
 
-			if (!NodeSet_initialise_pivot_fwd_bwd(self, nodeset, node, edge, step_parity)) {
+			if (!NodeSet_initialise_pivot_fwd_bwd(self, step_parity)) {
 				stable = false;	
 			}				
 		}
@@ -488,12 +456,13 @@ __global__ void schedule_kernel(NodeSet * const __restrict__ nodeset,
 			if (in_grid_rank == 0)
 				fp_stack[1][!iteration_parity[1]] = true;
 
+
 			nrof_instances = edge->nrof_instances2(step_parity);
 			for(int i = 0; i < INSTS_PER_THREAD; i++){
 				self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
 				if (self >= nrof_instances) break;
 
-				if (!Edge_compute_fwd_bwd(self, nodeset, node, edge, step_parity)) {
+				if (!Edge_compute_fwd_bwd(self, step_parity)) {
 					stable = false;	
 				}				
 			}
@@ -509,14 +478,12 @@ __global__ void schedule_kernel(NodeSet * const __restrict__ nodeset,
 	} while(!fp_stack[0][iteration_parity[0]]);
 
 
-	grid.sync();
-
 	nrof_instances = node->nrof_instances2(step_parity);
 	for(int i = 0; i < INSTS_PER_THREAD; i++){
 		self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
 		if (self >= nrof_instances) break;
 
-		print_Node(self, nodeset, node, edge);				
+		print_Node(self);				
 	}
 	step_parity = !step_parity;
 }
@@ -540,17 +507,19 @@ int main(int argc, char **argv) {
 
 	CHECK(cudaDeviceSynchronize());
 
-	gm_Edge = (Edge*)host_Edge.to_device();
-	gm_Node = (Node*)host_Node.to_device();
-	gm_NodeSet = (NodeSet*)host_NodeSet.to_device();
+	Edge * const loc_edge = (Edge*)host_Edge.to_device();
+	Node * const loc_node = (Node*)host_Node.to_device();
+	NodeSet * const loc_nodeset = (NodeSet*)host_NodeSet.to_device();
 
+	CHECK(cudaMemcpyToSymbol(edge, &loc_edge, sizeof(Edge * const)));
+	CHECK(cudaMemcpyToSymbol(node, &loc_node, sizeof(Node * const)));
+	CHECK(cudaMemcpyToSymbol(nodeset, &loc_nodeset, sizeof(NodeSet * const)));
 
+	bool* fp_stack_address;
+	cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack);
+	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 2 * sizeof(bool)));
 
-	void* schedule_kernel_args[] = {
-		&gm_NodeSet,
-		&gm_Node,
-		&gm_Edge
-	};
+	void* schedule_kernel_args[] = {};
 	auto dims = ADL::get_launch_dims(10000, (void*)schedule_kernel);
 
 	CHECK(

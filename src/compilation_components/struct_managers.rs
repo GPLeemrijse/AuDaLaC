@@ -115,7 +115,7 @@ impl CompileComponent for StructManagers<'_> {
 
 			let param_decls = strct.parameters.iter()
 								.map(|(s, t, _)| format!("{}* {s};", self.type_as_c(t)))
-								.reduce(|acc: String, nxt| acc + "\n			" + &nxt).unwrap();
+								.reduce(|acc: String, nxt| acc + "\n\t" + &nxt).unwrap();
 
 			let param_type_assertions = strct.parameters
 											 .iter()
