@@ -90,6 +90,9 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 
 	this->instantiated_instances = info->nrof_instances + 1; // null-instance
 	this->active_instances = info->nrof_instances + 1;
+	this->created_instances = info->nrof_instances + 1;
+	this->executing_instances[0] = info->nrof_instances + 1;
+	this->executing_instances[1] = info->nrof_instances + 1;
 	this->capacity = capacity;
 	this->is_initialised = true;
 }

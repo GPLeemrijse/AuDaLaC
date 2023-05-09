@@ -57,8 +57,8 @@ protected:
 		ADL::RefType slot = atomicInc(&created_instances, capacity);
 		
 		// atomicInc wraps around to 0 if it exceeds capacity
-		if(!slot) {asm("trap;");}
-		//assert(slot); // Incurs a substantial stacksize penalty. 
+		//if(!slot) {asm("trap;");}
+		assert(slot); // Incurs a stacksize penalty.
 		
 		// Update the next iteration's executing_instances
 		atomicMax(&executing_instances[(uint)!step_parity], slot);
