@@ -548,7 +548,7 @@ fn get_var_type<'ast>(
     loc: &'ast Loc,
 ) -> Option<(Type, Loc)> {
     
-    let parts = parts_exp.get_parts(); // n.something.abc
+    let parts = parts_exp.get_parts();
 
     let mut part_types : Vec<Type> = Vec::new();
 

@@ -80,7 +80,6 @@ pub struct Step {
     pub name: String,
     pub statements: Vec<Stat>,
     pub loc: Loc,
-    //pub owner: Option<&'a ADLStruct<'a>>
 }
 
 fn remove_duplicates<T: Ord>(vec : &mut Vec<T>){
@@ -130,21 +129,6 @@ impl Step {
             |_| Vec::new()
         )
     }
-
-    // Returns a vector of (struct_name, parameter_name)
-    // pub fn written_parameters(&self) -> Vec<(&String, &String)> {
-    //     use Stat::*;
-    //     self.visit::<(&String, &String)>(
-    //         |stat| {
-    //             if let Assignment(parts, _, _) = stat {
-    //                 vec![(&s, &t)]
-    //             } else {
-    //                 Vec::new()
-    //             }
-    //         },
-    //         |_| Vec::new()
-    //     )
-    // }
 }
 
 #[derive(Eq, PartialEq, Debug)]
