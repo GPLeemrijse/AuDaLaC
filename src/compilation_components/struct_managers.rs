@@ -6,6 +6,8 @@ use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
 use indoc::formatdoc;
 use crate::utils::format_signature;
+use crate::utils::as_c_type;
+
 
 pub struct StructManagers<'a> {
 	program : &'a Program,
@@ -31,7 +33,7 @@ impl StructManagers<'_> {
 	}
 
 	fn type_as_c(&self, t : &Type) -> String {
-		let basic_type = self.basic_type_as_c(t);
+		let basic_type = as_c_type(t);
 
 		if !self.memorder.is_strong() {
 	    	basic_type.to_string()
@@ -40,23 +42,11 @@ impl StructManagers<'_> {
 	    }
 	}
 
-	fn basic_type_as_c(&self, t : &Type) -> &str {
-		use Type::*;
-	    match t {
-	        Named(..) => "ADL::RefType",
-	        String => "ADL::StringType",
-	        Nat => "ADL::NatType",
-	        Int => "ADL::IntType",
-	        Bool => "ADL::BoolType",
-	        Null => "ADL::RefType",
-	    }
-	}
-
 	fn create_instance_function_as_c(&self, strct : &ADLStruct) -> String {
 		let mut create_func_parameters : Vec<String> = strct.parameters
-												 			.iter()
-												 			.map(|(s, t, _)| format!("{} _{s}", self.basic_type_as_c(t)))
-												 			.collect();
+															.iter()
+															.map(|(s, t, _)| format!("{} _{s}", as_c_type(t)))
+															.collect();
 
 		let assignments = strct.parameters
 							   .iter()
