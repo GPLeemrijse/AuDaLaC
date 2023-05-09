@@ -37,16 +37,23 @@ impl SingleKernelSchedule<'_> {
 		}
 	}
 
-	fn kernel_arguments(&self) -> Vec<String> {
+	fn _kernel_arguments(&self) -> Vec<String> {
 		self.program.structs.iter()
 							.map(|s| format!("&gm_{}", s.name))
-		 					.collect()
+							.collect()
+	}
+
+	fn _get_struct_manager_parameters(&self) -> Vec<String> {
+		self.program.structs.iter()
+							.map(|s| format!("{} * const __restrict__ {}", s.name, s.name.to_lowercase()))
+							.collect()
 	}
 
 	fn kernel_parameters(&self, including_self : bool) -> Vec<String> {
-		let mut structs = self.program.structs.iter()
-							.map(|s| format!("{} * const __restrict__ {}", s.name, s.name.to_lowercase()))
-		 					.collect();
+		// Use this version when passing struct managers as kernel parameters
+		// let mut structs = self._get_struct_manager_parameters();
+		let mut structs = Vec::new();
+
 		if including_self {
 			let mut self_and_structs = vec!["const RefType self".to_string()];
 			self_and_structs.append(&mut structs);
@@ -56,11 +63,14 @@ impl SingleKernelSchedule<'_> {
 		}
 	}
 
-	fn step_call_arguments(&self) -> String {
+	fn step_call_arguments(&self) -> Vec<String> {
+		/*
+		Use this when not using global struct managers
 		self.program.structs.iter()
 							.map(|s| s.name.to_lowercase())
 							.collect::<Vec<String>>()
-							.join(", ")
+		*/
+		Vec::new()
 	}
 
 	fn kernel_schedule_body(&self) -> String {
@@ -262,16 +272,25 @@ impl SingleKernelSchedule<'_> {
 
 	fn call_step_function(&self, strct : &ADLStruct, step : &Step, _fp_level : usize) -> String {
 		let func_name = self.step_function_name(strct, step);
-		let func_args = self.step_call_arguments();
+		let mut func_args = vec!["self".to_string()];
+
+		func_args.append(&mut self.step_call_arguments());
+		func_args.push("step_parity".to_string());
+
+		let args = func_args.join(", ");
 		formatdoc!{"
-			{func_name}(self, {func_args}, step_parity)"}
+			{func_name}({args})"}
 	}
 
 	fn call_print_function(&self, strct : &ADLStruct) -> String {
 		let func_name = format!("print_{}", strct.name);
-		let func_args = self.step_call_arguments();
+		let mut func_args = vec!["self".to_string()];
+
+		func_args.append(&mut self.step_call_arguments());
+
+		let args = func_args.join(", ");
 		formatdoc!{"
-			{func_name}(self, {func_args})"}
+			{func_name}({args})"}
 	}
 
 	fn step_function_name(&self, strct : &ADLStruct, step : &Step) -> String {
@@ -299,11 +318,11 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	fn typedefs(&self) -> Option<String> {
 		Some("using namespace cooperative_groups;".to_string())
 	}
-	
+
 	fn globals(&self) -> Option<String> {
 		Some(self.fp.global_decl())
 	}
-	
+
 	fn functions(&self) -> Option<String> {
 		let mut functions = self.step_transpiler.functions();
 
@@ -346,13 +365,10 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	
 	fn main(&self) -> Option<String> {
 		let kernel_name = SingleKernelSchedule::KERNEL_NAME;
-		let arg_array = self.kernel_arguments().join(&format!(",\n\t\t"));
 		let nrof_threads =  self.nrof_threads;
 
 		Some(formatdoc!{"
-			\tvoid* {kernel_name}_args[] = {{
-			\t	{arg_array}
-			\t}};
+			\tvoid* {kernel_name}_args[] = {{}};
 			\tauto dims = ADL::get_launch_dims({nrof_threads}, (void*){kernel_name});
 
 			\tCHECK(
@@ -366,7 +382,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 			\tCHECK(cudaDeviceSynchronize());
 		"})
 	}
-	
+
 	fn post_main(&self) -> Option<String> {
 		None
 	}

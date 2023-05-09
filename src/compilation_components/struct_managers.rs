@@ -126,7 +126,7 @@ impl CompileComponent for StructManagers<'_> {
 			let param_decls = strct.parameters.iter()
 								.map(|(s, t, _)| format!("{}* {s};", self.type_as_c(t)))
 								.reduce(|acc: String, nxt| acc + "\n			" + &nxt).unwrap();
-			
+
 			let param_type_assertions = strct.parameters
 											 .iter()
 											 .enumerate()
@@ -193,7 +193,7 @@ impl CompileComponent for StructManagers<'_> {
 		for struct_name in struct_names {
 			constr.push_str(&format!{"{struct_name} host_{struct_name} = {struct_name}();\n"});
 			ptrs.push_str(&format!{"{struct_name}* host_{struct_name}_ptr = &host_{struct_name};\n"});
-			device_constr.push_str(&format!{"{struct_name}* gm_{struct_name};\n"});
+			device_constr.push_str(&format!{"__device__ {struct_name}* __restrict__ {};\n", struct_name.to_lowercase()});
 		}
 
 		res.push_str(&formatdoc!{"
@@ -213,14 +213,17 @@ impl CompileComponent for StructManagers<'_> {
 		let mut registers = String::new();
 		let mut inits = String::new();
 		let mut to_device = String::new();
+		let mut memcpy = String::new();
 
 		let mut struct_names : Vec<&String> = self.program.structs.iter().map(|s| &s.name).collect();
 		struct_names.sort();
 
 		for (idx, struct_name) in struct_names.iter().enumerate() {
+			let s_name_lwr = struct_name.to_lowercase();
 			registers.push_str(&format!{"\tCHECK(cudaHostRegister(&host_{struct_name}, sizeof({struct_name}), cudaHostRegisterDefault));\n"});
 			inits.push_str(&format!{"\thost_{struct_name}.initialise(&structs[{idx}], {});\n", self.nrof_structs});
-			to_device.push_str(&format!{"\tgm_{struct_name} = ({struct_name}*)host_{struct_name}.to_device();\n"});
+			to_device.push_str(&format!{"\t{struct_name} * const loc_{s_name_lwr} = ({struct_name}*)host_{struct_name}.to_device();\n"});
+			memcpy.push_str(&format!{"\tCHECK(cudaMemcpyToSymbol({s_name_lwr}, loc_{s_name_lwr}, sizeof({struct_name} * const)));\n"});
 		}
 
 		res.push_str(&formatdoc!{"
@@ -229,6 +232,7 @@ impl CompileComponent for StructManagers<'_> {
 				CHECK(cudaDeviceSynchronize());
 
 			{to_device}
+			{memcpy}
 		"});
 
 		return Some(res);
