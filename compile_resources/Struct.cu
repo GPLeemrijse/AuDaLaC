@@ -9,7 +9,7 @@ __host__ void Struct::free(void) {
 	if (is_initialised) {
 		void** params = get_parameters();
 
-		for (int p = 0; p < nrof_parameters; p++){ 
+		for (int p = 0; p < nrof_parameters; p++){
 			CHECK(
 				cudaFree(params[p])
 			);

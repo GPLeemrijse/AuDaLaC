@@ -17,6 +17,7 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 	fn global_decl(&self) -> String {
 		formatdoc!{"
 			__device__ bool fp_stack[FP_DEPTH][2];
+			
 			__device__ __inline__ void clear_stack(int lvl, bool iteration_parity) {{
 				/*	For the first lvl, only clear the iteration_parity bool.
 					The first !iteration_parity bool is being set to true in advance.
@@ -41,7 +42,9 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 	}
 
 	fn top_of_kernel_decl(&self) -> String {
-		"bool iteration_parity[FP_DEPTH] = {false};".to_string()
+		formatdoc!("
+			\tbool iteration_parity[FP_DEPTH] = {{false}};"
+		)
 	}
 
 	fn pre_iteration(&self, lvl: usize) -> String {

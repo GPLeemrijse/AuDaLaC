@@ -89,7 +89,7 @@ impl SingleKernelSchedule<'_> {
 			{ind}inst_size nrof_instances;
 			{ind}bool step_parity = false;
 			{ind}RefType self;
-			{ind}{stab_stack}
+			{stab_stack}
 
 			{schedule}"
 		}
