@@ -48,7 +48,7 @@ impl StructManagers<'_> {
 															.map(|(s, t, _)| format!("{} _{s}", as_c_type(t)))
 															.collect();
 
-		let assignments = strct.parameters
+		let mut assignments = strct.parameters
 							   .iter()
 							   .map(|(s, _, _)| format!("STORE({s}[slot], _{s});"))
 							   .collect::<Vec<String>>()
@@ -58,6 +58,8 @@ impl StructManagers<'_> {
 		if self.use_step_parity {
 			claim_instance = "claim_instance2(step_parity)";
 			create_func_parameters.push("bool step_parity".to_string());
+			create_func_parameters.push("bool* stable".to_string());
+			assignments.push_str("\n\t\t*stable = false;");
 		} else {
 			claim_instance = "claim_instance()";
 		}

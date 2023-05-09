@@ -86,23 +86,24 @@ impl StepBodyTranspiler<'_> {
 	            format!("({c}{e_comp})")
 	        },
 	        Constructor(n, args, _) => {
-	            let mut arg_expressions = args.iter()
-	                    .map(|e| self.expression_as_c(e, strct, step))
-	                    .collect::<Vec<String>>();
+				let mut arg_expressions = args.iter()
+											  .map(|e| self.expression_as_c(e, strct, step))
+											  .collect::<Vec<String>>();
 
-	            if self.use_step_parity {
-	            	arg_expressions.push("step_parity".to_string());
-	            }
+				if self.use_step_parity {
+					arg_expressions.push("step_parity".to_string());
+					arg_expressions.push("&stable".to_string());
+				}
 
-	            let args = arg_expressions.join(", ");
+				let args = arg_expressions.join(", ");
 
-	            format!("{}->create_instance({args})", n.to_lowercase())
-	        },
-	        Var(..) => {
-	        	self.var_exp_as_c(e, strct).0 // Not interested in the owner or is_parameter
-	        },
-	        Lit(l, _) => as_c_literal(l),
-	    }
+				format!("{}->create_instance({args})", n.to_lowercase())
+			},
+			Var(..) => {
+				self.var_exp_as_c(e, strct).0 // Not interested in the owner or is_parameter
+			},
+			Lit(l, _) => as_c_literal(l),
+		}
 	}
 
 	fn var_exp_as_c(&self, exp : &Exp, strct: &ADLStruct) -> (String, Option<(String, Type)>, bool) {
