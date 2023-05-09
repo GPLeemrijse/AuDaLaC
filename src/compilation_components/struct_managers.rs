@@ -130,17 +130,14 @@ impl CompileComponent for StructManagers<'_> {
 
 			let create_func = self.create_instance_function_as_c(strct);
 
+			let first_param = strct.parameters.iter().next().map_or("NULL".to_string(), |p| format!("&{}", p.0));
+
 			res.push_str(&formatdoc!{"
 				class {struct_name} : public Struct {{
 				public:
 					{struct_name} (void) : Struct() {{}}
 					
-					union {{
-						void* parameters[{nrof_params}];
-						struct {{
-							{param_decls}
-						}};
-					}};
+					{param_decls}
 
 					void assert_correct_info(InitFile::StructInfo* info) {{
 						assert (info->name == \"{struct_name}\");
@@ -149,7 +146,7 @@ impl CompileComponent for StructManagers<'_> {
 					}};
 
 					void** get_parameters(void) {{
-						return parameters;
+						return (void**){first_param};
 					}}
 
 					size_t child_size(void) {{
@@ -163,7 +160,7 @@ impl CompileComponent for StructManagers<'_> {
 						return sizes[idx];
 					}}
 
-					{create_func}
+				{create_func}
 				}};
 
 			"});
