@@ -59,4 +59,13 @@ impl FPStrategy for NaiveFixpoint {
 	fn post_step_function(&self, _: usize) -> String {
 		"return stable;".to_string()
 	}
+
+	fn initialise(&self) -> String {
+		// No need to initialise, as that is done before each iteration (`pre_iteration`).
+		"".to_string()
+	}
+
+	fn requires_intra_fixpoint_sync(&self) -> bool {
+		false
+	}
 }

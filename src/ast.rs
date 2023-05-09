@@ -58,6 +58,21 @@ impl Schedule {
             _ => 0
         }
     }
+
+    pub fn is_fixpoint(&self) -> bool {
+        return matches!(self, crate::ast::Schedule::Fixpoint(..));
+    }
+
+    /*  Unfolds Sequential steps and returns the first non-Sequential (sub)schedule.
+        Does return itself if non-Sequential.
+    */
+    pub fn earliest_subschedule(&self) -> &Schedule {
+        use crate::ast::Schedule::*;
+        match self {
+            Sequential(s, _, _) => s.earliest_subschedule(),
+            StepCall(..)|TypedStepCall(..)|Fixpoint(..) => &self
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]

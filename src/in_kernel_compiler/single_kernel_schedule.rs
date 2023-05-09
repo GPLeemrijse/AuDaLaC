@@ -115,9 +115,16 @@ impl SingleKernelSchedule<'_> {
 			let post_iteration = self.fp.post_iteration(fp_level);
 			let is_stable = self.fp.is_stable(fp_level);
 
+			let sync = if self.fp.requires_intra_fixpoint_sync() && s.earliest_subschedule().is_fixpoint() {
+				format!("{indent}\tgrid.sync();")
+			} else {
+				"".to_string()
+			};
+
 			formatdoc!{"
 				{indent}do{{
 				{pre_iteration}
+				{sync}
 				{sched}
 				{post_iteration}
 				{indent}	grid.sync();
@@ -135,11 +142,15 @@ impl SingleKernelSchedule<'_> {
 			let sched1 = self.schedule_as_c(s1, fp_level);
 			let sched2 = self.schedule_as_c(s2, fp_level);
 
+			let sync = if s1.is_fixpoint() {
+				"".to_string()
+			} else {
+				format!("\n{indent}grid.sync();\n")
+			};
+
 			formatdoc!{"
 					{sched1}
-
-					{indent}grid.sync();
-
+					{sync}
 					{sched2}"
 			}
 		} else {
@@ -360,7 +371,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	}
 	
 	fn pre_main(&self) -> Option<String> {
-		None
+		Some(self.fp.initialise())
 	}
 	
 	fn main(&self) -> Option<String> {

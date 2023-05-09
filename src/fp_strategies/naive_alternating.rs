@@ -29,6 +29,13 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 					fp_stack[lvl][!iteration_parity] = false;
 					lvl--;
 				}}
+			}}
+
+			__device__ __inline__ void initialize_stack() {{
+				for(int i = 0; i < FP_DEPTH; i++){{
+					fp_stack[i][0] = true;
+					fp_stack[i][1] = true;
+				}}
 			}}"
 		}
 	}
@@ -68,5 +75,17 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 
 	fn post_step_function(&self, _: usize) -> String {
 		"return stable;".to_string()
+	}
+
+	fn initialise(&self) -> String {
+		formatdoc!("
+			\tbool* fp_stack_address;
+			\tcudaGetSymbolAddress((void **)&fp_stack_address, fp_stack);
+			\tCHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 2 * sizeof(bool)));"
+		)
+	}
+
+	fn requires_intra_fixpoint_sync(&self) -> bool {
+		true
 	}
 }
