@@ -53,6 +53,13 @@ pub fn transpile(schedule_manager : &dyn ScheduleManager, struct_manager : &dyn 
 		{functs}
 
 		int main(int argc, char **argv) {{
+			if (argc != 2) {{
+				printf(\"Supply a .init file.\\n\");
+				exit(1);
+			}}
+			
+			std::vector<InitFile::StructInfo> structs = InitFile::parse(argv[1]);
+			
 			{pre_main}
 
 			size_t printf_size;
