@@ -210,7 +210,7 @@ impl CompileComponent for StructManagers<'_> {
 			registers.push_str(&format!{"\tCHECK(cudaHostRegister(&host_{struct_name}, sizeof({struct_name}), cudaHostRegisterDefault));\n"});
 			inits.push_str(&format!{"\thost_{struct_name}.initialise(&structs[{idx}], {});\n", self.nrof_structs});
 			to_device.push_str(&format!{"\t{struct_name} * const loc_{s_name_lwr} = ({struct_name}*)host_{struct_name}.to_device();\n"});
-			memcpy.push_str(&format!{"\tCHECK(cudaMemcpyToSymbol({s_name_lwr}, loc_{s_name_lwr}, sizeof({struct_name} * const)));\n"});
+			memcpy.push_str(&format!{"\tCHECK(cudaMemcpyToSymbol({s_name_lwr}, &loc_{s_name_lwr}, sizeof({struct_name} * const)));\n"});
 		}
 
 		res.push_str(&formatdoc!{"
