@@ -29,13 +29,6 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 					fp_stack[lvl][!iteration_parity] = false;
 					lvl--;
 				}}
-			}}
-
-			__device__ __inline__ void initialize_stack() {{
-				for(int i = 0; i < FP_DEPTH; i++){{
-					fp_stack[i][0] = true;
-					fp_stack[i][1] = true;
-				}}
 			}}"
 		}
 	}
