@@ -57,7 +57,7 @@ impl StepBodyTranspiler<'_> {
 
 						formatdoc!{"
 							{indent}// {lhs_exp} := {rhs_exp};
-							{indent}SetParam({owner_exp}, {owner_type_obj}->{param}, {rhs_as_c}, &stable);"
+							{indent}SetParam({owner_exp}, {owner_type_obj}->{param}, {rhs_as_c}, stable);"
 						}
 					} else {
 						format!("{indent}{lhs_as_c} = {rhs_as_c};")
@@ -92,7 +92,7 @@ impl StepBodyTranspiler<'_> {
 
 				if self.use_step_parity {
 					arg_expressions.push("step_parity".to_string());
-					arg_expressions.push("&stable".to_string());
+					arg_expressions.push("stable".to_string());
 				}
 
 				let args = arg_expressions.join(", ");

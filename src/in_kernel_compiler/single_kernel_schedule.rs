@@ -1,3 +1,4 @@
+use crate::WorkDivisor;
 use crate::utils::as_printf;
 use crate::utils::format_signature;
 use crate::in_kernel_compiler::StepBodyTranspiler;
@@ -11,10 +12,8 @@ pub struct SingleKernelSchedule<'a> {
 	program : &'a Program,
 	fp : &'a dyn FPStrategy,
 	step_to_structs : HashMap<&'a String, Vec<&'a ADLStruct>>,
-	instances_per_thread : usize,
-	threads_per_block : usize,
-	nrof_threads : usize,
-	step_transpiler : &'a StepBodyTranspiler<'a>
+	step_transpiler : &'a StepBodyTranspiler<'a>,
+	work_divisor : &'a WorkDivisor
 }
 
 impl SingleKernelSchedule<'_> {
@@ -22,18 +21,14 @@ impl SingleKernelSchedule<'_> {
 
 	pub fn new<'a>(program : &'a Program,
 				   fp : &'a dyn FPStrategy,
-				   instances_per_thread: usize,
-				   threads_per_block : usize,
-				   nrof_threads : usize,
-				   step_transpiler : &'a StepBodyTranspiler<'_>) -> SingleKernelSchedule<'a> {
+				   step_transpiler : &'a StepBodyTranspiler<'_>,
+				   work_divisor : &'a WorkDivisor) -> SingleKernelSchedule<'a> {
 		SingleKernelSchedule {
 			program,
 			fp,
 			step_to_structs: program.get_step_to_structs(),
-			instances_per_thread,
-			threads_per_block,
-			nrof_threads,
 			step_transpiler : step_transpiler,
+			work_divisor : work_divisor,
 		}
 	}
 
@@ -52,7 +47,7 @@ impl SingleKernelSchedule<'_> {
 	fn kernel_parameters(&self, including_self : bool) -> Vec<String> {
 		// Use this version when passing struct managers as kernel parameters
 		// let mut structs = self._get_struct_manager_parameters();
-		let mut structs = Vec::new();
+		let mut structs = vec!["bool* stable".to_string()];
 
 		if including_self {
 			let mut self_and_structs = vec!["const RefType self".to_string()];
@@ -61,16 +56,6 @@ impl SingleKernelSchedule<'_> {
 		} else {
 			structs
 		}
-	}
-
-	fn step_call_arguments(&self) -> Vec<String> {
-		/*
-		Use this when not using global struct managers
-		self.program.structs.iter()
-							.map(|s| s.name.to_lowercase())
-							.collect::<Vec<String>>()
-		*/
-		Vec::new()
 	}
 
 	fn kernel_schedule_body(&self) -> String {
@@ -89,6 +74,7 @@ impl SingleKernelSchedule<'_> {
 			{ind}inst_size nrof_instances;
 			{ind}bool step_parity = false;
 			{ind}RefType self;
+			{ind}bool stable = true; // Only used to compile steps outside fixpoints
 			{stab_stack}
 
 			{schedule}"
@@ -164,36 +150,20 @@ impl SingleKernelSchedule<'_> {
 		if let TypedStepCall(struct_name, step_name, _) = sched {
 			let indent = "\t".repeat(fp_level+1);
 			let strct = self.program.struct_by_name(struct_name).unwrap();
-			let step_call;
+			let func_name;
 
 			if step_name == "print" {
-				step_call = self.call_print_function(strct);
+				func_name = format!("print_{}", strct.name);
 			} else {
 				let step = strct.step_by_name(step_name).unwrap();
-				step_call = self.call_step_function(strct, step, fp_level);
+				func_name = self.step_function_name(strct, step);
 			}
 
-			let set_unstable = self.fp.set_unstable(fp_level);
 			let nrof_instances = format!("{}->nrof_instances2(step_parity)", struct_name.to_lowercase());
-
-			let step_call_and_stable_set = if fp_level == 0 {
-				format!("{indent}\t{step_call};")
-			} else {
-				formatdoc!{"
-					{indent}\tif (!{step_call}) {{
-					{indent}\t\t{set_unstable}	
-					{indent}\t}}"
-				}
-			};
 
 			formatdoc!{"
 				{indent}nrof_instances = {nrof_instances};
-				{indent}for(int i = 0; i < INSTS_PER_THREAD; i++){{
-				{indent}	self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
-				{indent}	if (self >= nrof_instances) break;
-				
-				{step_call_and_stable_set}				
-				{indent}}}
+				{indent}executeStep<{func_name}>(nrof_instances, step_parity, grid, block, &stable);
 				{indent}step_parity = !step_parity;"
 			}
 		} else {
@@ -233,29 +203,21 @@ impl SingleKernelSchedule<'_> {
 		let kernel_signature = format_signature(&func_header, params, 0);
 
 		let step_body = self.step_transpiler.statements_as_c(&step.statements, strct, step, 1, fp_level);
-		let pre_step_fp = self.fp.pre_step_function(fp_level);
-		let post_step_fp = self.fp.post_step_function(fp_level);
-
 
 		formatdoc!{"
 			{kernel_signature}
-				{pre_step_fp}
 				{step_body}
-				{post_step_fp}
 			}}
 		"}
 	}
 
-	fn print_as_c_function(&self, strct : &ADLStruct, fp_level : usize) -> String {
+	fn print_as_c_function(&self, strct : &ADLStruct, _fp_level : usize) -> String {
 		let func_name = format!("print_{}", strct.name);
 		let func_header = format!("__device__ __inline__ bool {func_name}");
 
 		let params = self.kernel_parameters(true);
 
 		let kernel_signature = format_signature(&func_header, params, 0);
-
-		let pre_step_fp = self.fp.pre_step_function(fp_level);
-		let post_step_fp = self.fp.post_step_function(fp_level);
 
 		let s_name = &strct.name;
 		let s_name_lwr = s_name.to_lowercase();
@@ -271,37 +233,11 @@ impl SingleKernelSchedule<'_> {
 
 		formatdoc!{"
 			{kernel_signature}
-				{pre_step_fp}
 				if (self != 0) {{
 					printf(\"{s_name}(%u): {params_as_fmt}\\n\", self{params_as_expr});
 				}}
-				{post_step_fp}
 			}}
 		"}
-	}
-
-
-	fn call_step_function(&self, strct : &ADLStruct, step : &Step, _fp_level : usize) -> String {
-		let func_name = self.step_function_name(strct, step);
-		let mut func_args = vec!["self".to_string()];
-
-		func_args.append(&mut self.step_call_arguments());
-		func_args.push("step_parity".to_string());
-
-		let args = func_args.join(", ");
-		formatdoc!{"
-			{func_name}({args})"}
-	}
-
-	fn call_print_function(&self, strct : &ADLStruct) -> String {
-		let func_name = format!("print_{}", strct.name);
-		let mut func_args = vec!["self".to_string()];
-
-		func_args.append(&mut self.step_call_arguments());
-
-		let args = func_args.join(", ");
-		formatdoc!{"
-			{func_name}({args})"}
 	}
 
 	fn step_function_name(&self, strct : &ADLStruct, step : &Step) -> String {
@@ -316,12 +252,8 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 
 	fn defines(&self) -> Option<String> {
 		Some(formatdoc!("
-				#define THREADS_PER_BLOCK {}
-				#define INSTS_PER_THREAD {}
 				#define FP_DEPTH {}
 			",
-			self.threads_per_block,
-			self.instances_per_thread,
 			self.program.schedule.fixpoint_depth()
 		))
 	}
@@ -359,7 +291,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 
 	fn kernels(&self) -> Option<String> {
 		let kernel_header = format!("__global__ void {}", SingleKernelSchedule::KERNEL_NAME);
-		let kernel_signature = format_signature(&kernel_header, self.kernel_parameters(false), 0);
+		let kernel_signature = format_signature(&kernel_header, Vec::new(), 0);
 		
 		let kernel_schedule_body = self.kernel_schedule_body();
 
@@ -376,11 +308,11 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	
 	fn main(&self) -> Option<String> {
 		let kernel_name = SingleKernelSchedule::KERNEL_NAME;
-		let nrof_threads =  self.nrof_threads;
+		let get_dims = self.work_divisor.get_dims(kernel_name);
 
 		Some(formatdoc!{"
 			\tvoid* {kernel_name}_args[] = {{}};
-			\tauto dims = ADL::get_launch_dims({nrof_threads}, (void*){kernel_name});
+			\tauto dims = {get_dims};
 
 			\tCHECK(
 			\t	cudaLaunchCooperativeKernel(

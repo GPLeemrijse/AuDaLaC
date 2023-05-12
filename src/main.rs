@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::in_kernel_compiler::{WorkDivisor, DivisionStrategy};
 use crate::transpilation_traits::FPStrategy;
 use crate::fp_strategies::NaiveAlternatingFixpoint;
 use crate::in_kernel_compiler::StepBodyTranspiler;
@@ -134,9 +135,18 @@ fn main() {
                                 &type_info,
                                 true
                             );
+
+                            let work_divisor = WorkDivisor::new(
+                                instsperthread,
+                                512, // tpb
+                                10000, // nrof_threads
+                                DivisionStrategy::BlockSizeIncrease
+                            );
+
                             result = transpile::transpile2(vec![
                                 &InitFileReader{},
                                 &PrintbufferSizeAdjuster::new(buffer_size),
+                                &work_divisor,
                                 &StructManagers::new(
                                     &program,
                                     nrof_structs,
@@ -147,10 +157,8 @@ fn main() {
                                 &SingleKernelSchedule::new(
                                     &program,
                                     &*fp_strat,
-                                    instsperthread,
-                                    512,// tpb
-                                    10000, // nrof threads
-                                    &step_transpiler
+                                    &step_transpiler,
+                                    &work_divisor
                                 )
                             ]);
                         },

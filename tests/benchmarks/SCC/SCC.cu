@@ -1,8 +1,7 @@
-#define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
+#define I_PER_THREAD 32
+#define THREADS_PER_BLOCK 512#define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
 #define LOAD(A) A.load(cuda::memory_order_relaxed)
-#define THREADS_PER_BLOCK 512
-#define INSTS_PER_THREAD 32
 #define FP_DEPTH 2
 
 
@@ -71,7 +70,8 @@ public:
 									   RefType _f_and_b,
 									   RefType _not_f_and_b,
 									   RefType _f_and_not_b,
-									   bool step_parity){
+									   bool step_parity,
+									   bool* stable){
 		RefType slot = claim_instance2(step_parity);
 		STORE(pivot_f_b[slot], _pivot_f_b);
 		STORE(pivot_f_nb[slot], _pivot_f_nb);
@@ -81,6 +81,7 @@ public:
 		STORE(f_and_b[slot], _f_and_b);
 		STORE(not_f_and_b[slot], _not_f_and_b);
 		STORE(f_and_not_b[slot], _f_and_not_b);
+		*stable = false;
 		return slot;
 	}
 };
@@ -121,11 +122,13 @@ public:
 	__device__ RefType create_instance(RefType _set,
 									   BoolType _fwd,
 									   BoolType _bwd,
-									   bool step_parity){
+									   bool step_parity,
+									   bool* stable){
 		RefType slot = claim_instance2(step_parity);
 		STORE(set[slot], _set);
 		STORE(fwd[slot], _fwd);
 		STORE(bwd[slot], _bwd);
+		*stable = false;
 		return slot;
 	}
 };
@@ -162,10 +165,12 @@ public:
 
 	__device__ RefType create_instance(RefType _s,
 									   RefType _t,
-									   bool step_parity){
+									   bool step_parity,
+									   bool* stable){
 		RefType slot = claim_instance2(step_parity);
 		STORE(s[slot], _s);
 		STORE(t[slot], _t);
+		*stable = false;
 		return slot;
 	}
 };
@@ -199,13 +204,15 @@ __device__ __inline__ void clear_stack(int lvl, bool iteration_parity) {
 	}
 }
 
-__device__ __inline__ void initialize_stack() {
-	for(int i = 0; i < FP_DEPTH; i++){
-		fp_stack[i][0] = true;
-		fp_stack[i][1] = true;
+template <typename Step>
+void executeStep(inst_size nrof_instances, bool step_parity, grid_group grid, thread_block block, bool* stable){
+	for(int i = 0; i < I_PER_THREAD; i++){
+		const RefType self = block.size() * (i + grid.block_rank() * I_PER_THREAD) + block.rank();
+		if (self >= nrof_instances) break;
+
+		Step(self, stable, step_parity);
 	}
 }
-
 template<typename T>
 __device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {
     if (owner != 0){
@@ -217,165 +224,157 @@ __device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T 
     }
 }
 
-__device__ __inline__ bool print_NodeSet(const RefType self){
-	bool stable = true;
+__device__ __inline__ bool print_NodeSet(const RefType self,
+										 bool* stable){
 	if (self != 0) {
 		printf("NodeSet(%u): pivot_f_b=%u, pivot_f_nb=%u, pivot_nf_b=%u, pivot_nf_nb=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, LOAD(nodeset->pivot_f_b[self]), LOAD(nodeset->pivot_f_nb[self]), LOAD(nodeset->pivot_nf_b[self]), LOAD(nodeset->pivot_nf_nb[self]), LOAD(nodeset->scc[self]), LOAD(nodeset->f_and_b[self]), LOAD(nodeset->not_f_and_b[self]), LOAD(nodeset->f_and_not_b[self]));
 	}
-	return stable;
 }
 
 __device__ __inline__ bool NodeSet_allocate_sets(const RefType self,
+												 bool* stable,
 												 bool step_parity){
-	bool stable = true;
 	
 	if ((LOAD(nodeset->pivot_f_b[self]) != (RefType)0)) {
 		if ((LOAD(nodeset->pivot_nf_nb[self]) == (RefType)0)) {
 			// f_and_b := this;
-			SetParam(self, nodeset->f_and_b, self, &stable);
+			SetParam(self, nodeset->f_and_b, self, stable);
 			// scc := true;
-			SetParam(self, nodeset->scc, true, &stable);
+			SetParam(self, nodeset->scc, true, stable);
 			// pivot_f_b := null;
-			SetParam(self, nodeset->pivot_f_b, (RefType)0, &stable);
+			SetParam(self, nodeset->pivot_f_b, (RefType)0, stable);
 		}
 		if ((LOAD(nodeset->pivot_nf_nb[self]) != (RefType)0)) {
 			// f_and_b := NodeSet(null, null, null, null, true, null, null, null);
-			SetParam(self, nodeset->f_and_b, nodeset->create_instance((RefType)0, (RefType)0, (RefType)0, (RefType)0, true, (RefType)0, (RefType)0, (RefType)0, step_parity), &stable);
+			SetParam(self, nodeset->f_and_b, nodeset->create_instance((RefType)0, (RefType)0, (RefType)0, (RefType)0, true, (RefType)0, (RefType)0, (RefType)0, step_parity, stable), stable);
 			// pivot_f_b := null;
-			SetParam(self, nodeset->pivot_f_b, (RefType)0, &stable);
+			SetParam(self, nodeset->pivot_f_b, (RefType)0, stable);
 		}
 	}
 	if ((LOAD(nodeset->pivot_f_nb[self]) != (RefType)0)) {
 		// f_and_not_b := NodeSet(null, pivot_f_nb, null, null, false, null, null, null);
-		SetParam(self, nodeset->f_and_not_b, nodeset->create_instance((RefType)0, LOAD(nodeset->pivot_f_nb[self]), (RefType)0, (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, step_parity), &stable);
+		SetParam(self, nodeset->f_and_not_b, nodeset->create_instance((RefType)0, LOAD(nodeset->pivot_f_nb[self]), (RefType)0, (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, step_parity, stable), stable);
 		// pivot_f_nb := null;
-		SetParam(self, nodeset->pivot_f_nb, (RefType)0, &stable);
+		SetParam(self, nodeset->pivot_f_nb, (RefType)0, stable);
 	}
 	if ((LOAD(nodeset->pivot_nf_b[self]) != (RefType)0)) {
 		// not_f_and_b := NodeSet(null, null, pivot_nf_b, null, false, null, null, null);
-		SetParam(self, nodeset->not_f_and_b, nodeset->create_instance((RefType)0, (RefType)0, LOAD(nodeset->pivot_nf_b[self]), (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, step_parity), &stable);
+		SetParam(self, nodeset->not_f_and_b, nodeset->create_instance((RefType)0, (RefType)0, LOAD(nodeset->pivot_nf_b[self]), (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, step_parity, stable), stable);
 		// pivot_nf_b := null;
-		SetParam(self, nodeset->pivot_nf_b, (RefType)0, &stable);
+		SetParam(self, nodeset->pivot_nf_b, (RefType)0, stable);
 	}
-	return stable;
 }
 
 __device__ __inline__ bool NodeSet_initialise_pivot_fwd_bwd(const RefType self,
+															bool* stable,
 															bool step_parity){
-	bool stable = true;
 	
 	if ((!LOAD(nodeset->scc[self]))) {
 		// pivot_f_b.fwd := true;
-		SetParam(LOAD(nodeset->pivot_f_b[self]), node->fwd, true, &stable);
+		SetParam(LOAD(nodeset->pivot_f_b[self]), node->fwd, true, stable);
 		// pivot_f_b.bwd := true;
-		SetParam(LOAD(nodeset->pivot_f_b[self]), node->bwd, true, &stable);
+		SetParam(LOAD(nodeset->pivot_f_b[self]), node->bwd, true, stable);
 		// pivot_f_b := null;
-		SetParam(self, nodeset->pivot_f_b, (RefType)0, &stable);
+		SetParam(self, nodeset->pivot_f_b, (RefType)0, stable);
 		// pivot_f_nb.fwd := true;
-		SetParam(LOAD(nodeset->pivot_f_nb[self]), node->fwd, true, &stable);
+		SetParam(LOAD(nodeset->pivot_f_nb[self]), node->fwd, true, stable);
 		// pivot_f_nb.bwd := true;
-		SetParam(LOAD(nodeset->pivot_f_nb[self]), node->bwd, true, &stable);
+		SetParam(LOAD(nodeset->pivot_f_nb[self]), node->bwd, true, stable);
 		// pivot_f_nb := null;
-		SetParam(self, nodeset->pivot_f_nb, (RefType)0, &stable);
+		SetParam(self, nodeset->pivot_f_nb, (RefType)0, stable);
 		// pivot_nf_b.fwd := true;
-		SetParam(LOAD(nodeset->pivot_nf_b[self]), node->fwd, true, &stable);
+		SetParam(LOAD(nodeset->pivot_nf_b[self]), node->fwd, true, stable);
 		// pivot_nf_b.bwd := true;
-		SetParam(LOAD(nodeset->pivot_nf_b[self]), node->bwd, true, &stable);
+		SetParam(LOAD(nodeset->pivot_nf_b[self]), node->bwd, true, stable);
 		// pivot_nf_b := null;
-		SetParam(self, nodeset->pivot_nf_b, (RefType)0, &stable);
+		SetParam(self, nodeset->pivot_nf_b, (RefType)0, stable);
 		// pivot_nf_nb.fwd := true;
-		SetParam(LOAD(nodeset->pivot_nf_nb[self]), node->fwd, true, &stable);
+		SetParam(LOAD(nodeset->pivot_nf_nb[self]), node->fwd, true, stable);
 		// pivot_nf_nb.bwd := true;
-		SetParam(LOAD(nodeset->pivot_nf_nb[self]), node->bwd, true, &stable);
+		SetParam(LOAD(nodeset->pivot_nf_nb[self]), node->bwd, true, stable);
 		// pivot_nf_nb := null;
-		SetParam(self, nodeset->pivot_nf_nb, (RefType)0, &stable);
+		SetParam(self, nodeset->pivot_nf_nb, (RefType)0, stable);
 	}
-	return stable;
 }
 
-__device__ __inline__ bool print_Node(const RefType self){
-	bool stable = true;
+__device__ __inline__ bool print_Node(const RefType self,
+									  bool* stable){
 	if (self != 0) {
 		printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, LOAD(node->set[self]), LOAD(node->fwd[self]), LOAD(node->bwd[self]));
 	}
-	return stable;
 }
 
 __device__ __inline__ bool Node_pivots_nominate(const RefType self,
+												bool* stable,
 												bool step_parity){
-	bool stable = true;
 	
 	if ((!LOAD(nodeset->scc[LOAD(node->set[self])]))) {
 		BoolType f = LOAD(node->fwd[self]);
 		BoolType b = LOAD(node->bwd[self]);
 		if ((f && b)) {
 			// set.pivot_f_b := this;
-			SetParam(LOAD(node->set[self]), nodeset->pivot_f_b, self, &stable);
+			SetParam(LOAD(node->set[self]), nodeset->pivot_f_b, self, stable);
 		}
 		if ((f && (!b))) {
 			// set.pivot_f_nb := this;
-			SetParam(LOAD(node->set[self]), nodeset->pivot_f_nb, self, &stable);
+			SetParam(LOAD(node->set[self]), nodeset->pivot_f_nb, self, stable);
 		}
 		if (((!f) && b)) {
 			// set.pivot_nf_b := this;
-			SetParam(LOAD(node->set[self]), nodeset->pivot_nf_b, self, &stable);
+			SetParam(LOAD(node->set[self]), nodeset->pivot_nf_b, self, stable);
 		}
 		if (((!f) && (!b))) {
 			// set.pivot_nf_nb := this;
-			SetParam(LOAD(node->set[self]), nodeset->pivot_nf_nb, self, &stable);
+			SetParam(LOAD(node->set[self]), nodeset->pivot_nf_nb, self, stable);
 		}
 	}
-	return stable;
 }
 
 __device__ __inline__ bool Node_divide_into_sets_reset_fwd_bwd(const RefType self,
+															   bool* stable,
 															   bool step_parity){
-	bool stable = true;
 	
 	BoolType f = LOAD(node->fwd[self]);
 	BoolType b = LOAD(node->bwd[self]);
 	if ((f && b)) {
 		// set := set.f_and_b;
-		SetParam(self, node->set, LOAD(nodeset->f_and_b[LOAD(node->set[self])]), &stable);
+		SetParam(self, node->set, LOAD(nodeset->f_and_b[LOAD(node->set[self])]), stable);
 	}
 	if (((!f) && b)) {
 		// set := set.not_f_and_b;
-		SetParam(self, node->set, LOAD(nodeset->not_f_and_b[LOAD(node->set[self])]), &stable);
+		SetParam(self, node->set, LOAD(nodeset->not_f_and_b[LOAD(node->set[self])]), stable);
 	}
 	if ((f && (!b))) {
 		// set := set.f_and_not_b;
-		SetParam(self, node->set, LOAD(nodeset->f_and_not_b[LOAD(node->set[self])]), &stable);
+		SetParam(self, node->set, LOAD(nodeset->f_and_not_b[LOAD(node->set[self])]), stable);
 	}
 	// fwd := false;
-	SetParam(self, node->fwd, false, &stable);
+	SetParam(self, node->fwd, false, stable);
 	// bwd := false;
-	SetParam(self, node->bwd, false, &stable);
-	return stable;
+	SetParam(self, node->bwd, false, stable);
 }
 
-__device__ __inline__ bool print_Edge(const RefType self){
-	bool stable = true;
+__device__ __inline__ bool print_Edge(const RefType self,
+									  bool* stable){
 	if (self != 0) {
 		printf("Edge(%u): s=%u, t=%u\n", self, LOAD(edge->s[self]), LOAD(edge->t[self]));
 	}
-	return stable;
 }
 
 __device__ __inline__ bool Edge_compute_fwd_bwd(const RefType self,
+												bool* stable,
 												bool step_parity){
-	bool stable = true;
 	
 	if ((LOAD(node->set[LOAD(edge->t[self])]) == LOAD(node->set[LOAD(edge->s[self])]))) {
 		if (LOAD(node->fwd[LOAD(edge->s[self])])) {
 			// t.fwd := true;
-			SetParam(LOAD(edge->t[self]), node->fwd, true, &stable);
+			SetParam(LOAD(edge->t[self]), node->fwd, true, stable);
 		}
 		if (LOAD(node->bwd[LOAD(edge->t[self])])) {
 			// s.bwd := true;
-			SetParam(LOAD(edge->s[self]), node->bwd, true, &stable);
+			SetParam(LOAD(edge->s[self]), node->bwd, true, stable);
 		}
 	}
-	return stable;
 }
 
 
@@ -389,6 +388,7 @@ __global__ void schedule_kernel(){
 	inst_size nrof_instances;
 	bool step_parity = false;
 	RefType self;
+	bool stable = true; // Only used to compile steps outside fixpoints
 	bool iteration_parity[FP_DEPTH] = {false};
 
 	do{
@@ -399,53 +399,25 @@ __global__ void schedule_kernel(){
 
 
 		nrof_instances = node->nrof_instances2(step_parity);
-		for(int i = 0; i < INSTS_PER_THREAD; i++){
-			self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
-			if (self >= nrof_instances) break;
-
-			if (!Node_pivots_nominate(self, step_parity)) {
-				stable = false;	
-			}				
-		}
+		executeStep<Node_pivots_nominate>(nrof_instances, step_parity, grid, block, &stable);
 		step_parity = !step_parity;
 
 		grid.sync();
 
 		nrof_instances = nodeset->nrof_instances2(step_parity);
-		for(int i = 0; i < INSTS_PER_THREAD; i++){
-			self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
-			if (self >= nrof_instances) break;
-
-			if (!NodeSet_allocate_sets(self, step_parity)) {
-				stable = false;	
-			}				
-		}
+		executeStep<NodeSet_allocate_sets>(nrof_instances, step_parity, grid, block, &stable);
 		step_parity = !step_parity;
 
 		grid.sync();
 
 		nrof_instances = node->nrof_instances2(step_parity);
-		for(int i = 0; i < INSTS_PER_THREAD; i++){
-			self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
-			if (self >= nrof_instances) break;
-
-			if (!Node_divide_into_sets_reset_fwd_bwd(self, step_parity)) {
-				stable = false;	
-			}				
-		}
+		executeStep<Node_divide_into_sets_reset_fwd_bwd>(nrof_instances, step_parity, grid, block, &stable);
 		step_parity = !step_parity;
 
 		grid.sync();
 
 		nrof_instances = nodeset->nrof_instances2(step_parity);
-		for(int i = 0; i < INSTS_PER_THREAD; i++){
-			self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
-			if (self >= nrof_instances) break;
-
-			if (!NodeSet_initialise_pivot_fwd_bwd(self, step_parity)) {
-				stable = false;	
-			}				
-		}
+		executeStep<NodeSet_initialise_pivot_fwd_bwd>(nrof_instances, step_parity, grid, block, &stable);
 		step_parity = !step_parity;
 
 		grid.sync();
@@ -458,14 +430,7 @@ __global__ void schedule_kernel(){
 
 
 			nrof_instances = edge->nrof_instances2(step_parity);
-			for(int i = 0; i < INSTS_PER_THREAD; i++){
-				self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
-				if (self >= nrof_instances) break;
-
-				if (!Edge_compute_fwd_bwd(self, step_parity)) {
-					stable = false;	
-				}				
-			}
+			executeStep<Edge_compute_fwd_bwd>(nrof_instances, step_parity, grid, block, &stable);
 			step_parity = !step_parity;
 			if(!stable)
 				clear_stack(1, iteration_parity[1]);
@@ -479,12 +444,7 @@ __global__ void schedule_kernel(){
 
 
 	nrof_instances = node->nrof_instances2(step_parity);
-	for(int i = 0; i < INSTS_PER_THREAD; i++){
-		self = block_size * (i + block_idx * INSTS_PER_THREAD) + in_block_rank;
-		if (self >= nrof_instances) break;
-
-		print_Node(self);				
-	}
+	executeStep<print_Node>(nrof_instances, step_parity, grid, block, &stable);
 	step_parity = !step_parity;
 }
 
@@ -501,9 +461,9 @@ int main(int argc, char **argv) {
 	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_NodeSet, sizeof(NodeSet), cudaHostRegisterDefault));
 
-	host_Edge.initialise(&structs[0], 10000);
-	host_Node.initialise(&structs[1], 10000);
-	host_NodeSet.initialise(&structs[2], 10000);
+	host_Edge.initialise(&structs[0], 1000);
+	host_Node.initialise(&structs[1], 1000);
+	host_NodeSet.initialise(&structs[2], 1000);
 
 	CHECK(cudaDeviceSynchronize());
 

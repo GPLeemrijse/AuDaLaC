@@ -62,14 +62,6 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 		format!{"{indent}if(!stable)\n{indent}	clear_stack({lvl}, iteration_parity[{lvl}]);"}
 	}
 
-	fn pre_step_function(&self, _: usize) -> String {
-		"bool stable = true;".to_string()
-	}
-
-	fn post_step_function(&self, _: usize) -> String {
-		"return stable;".to_string()
-	}
-
 	fn initialise(&self) -> String {
 		formatdoc!("
 			\tbool* fp_stack_address;
