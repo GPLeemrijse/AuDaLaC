@@ -156,7 +156,7 @@ impl CompileComponent for StructManagers<'_> {
 					}}
 
 					size_t param_size(uint idx) {{
-						static size_t sizes[{nrof_params}] = {{
+						static const size_t sizes[{nrof_params}] = {{
 							{param_sizes}
 						}};
 						return sizes[idx];
