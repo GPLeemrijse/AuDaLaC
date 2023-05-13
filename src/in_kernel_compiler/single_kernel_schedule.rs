@@ -67,13 +67,9 @@ impl SingleKernelSchedule<'_> {
 		formatdoc!{"
 			{ind}const grid_group grid = this_grid();
 			{ind}const thread_block block = this_thread_block();
-			{ind}const uint in_grid_rank = grid.thread_rank();
-			{ind}const uint in_block_rank = block.thread_rank();
-			{ind}const uint block_idx = grid.block_rank();
-			{ind}const uint block_size = block.size();
+			{ind}const bool is_thread0 = grid.thread_rank() == 0;
 			{ind}inst_size nrof_instances;
 			{ind}bool step_parity = false;
-			{ind}RefType self;
 			{ind}bool stable = true; // Only used to compile steps outside fixpoints
 			{stab_stack}
 

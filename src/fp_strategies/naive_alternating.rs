@@ -52,7 +52,7 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 		formatdoc!{"
 			{indent}iteration_parity[{lvl}] = !iteration_parity[{lvl}];
 			{indent}bool stable = true;
-			{indent}if (in_grid_rank == 0)
+			{indent}if (is_thread0)
 			{indent}	fp_stack[{lvl}][!iteration_parity[{lvl}]] = true;
 		"}
 	}

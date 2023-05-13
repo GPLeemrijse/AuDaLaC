@@ -1,5 +1,6 @@
 #define I_PER_THREAD 32
-#define THREADS_PER_BLOCK 512#define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
+#define THREADS_PER_BLOCK 512
+#define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
 #define LOAD(A) A.load(cuda::memory_order_relaxed)
 #define FP_DEPTH 2
@@ -49,7 +50,7 @@ public:
 	}
 
 	size_t param_size(uint idx) {
-		static size_t sizes[8] = {
+		static const size_t sizes[8] = {
 			sizeof(ATOMIC(RefType)),
 			sizeof(ATOMIC(RefType)),
 			sizeof(ATOMIC(RefType)),
@@ -111,7 +112,7 @@ public:
 	}
 
 	size_t param_size(uint idx) {
-		static size_t sizes[3] = {
+		static const size_t sizes[3] = {
 			sizeof(ATOMIC(RefType)),
 			sizeof(ATOMIC(BoolType)),
 			sizeof(ATOMIC(BoolType))
@@ -156,7 +157,7 @@ public:
 	}
 
 	size_t param_size(uint idx) {
-		static size_t sizes[2] = {
+		static const size_t sizes[2] = {
 			sizeof(ATOMIC(RefType)),
 			sizeof(ATOMIC(RefType))
 		};
@@ -381,20 +382,16 @@ __device__ __inline__ bool Edge_compute_fwd_bwd(const RefType self,
 __global__ void schedule_kernel(){
 	const grid_group grid = this_grid();
 	const thread_block block = this_thread_block();
-	const uint in_grid_rank = grid.thread_rank();
-	const uint in_block_rank = block.thread_rank();
-	const uint block_idx = grid.block_rank();
-	const uint block_size = block.size();
+	const bool is_thread0 = grid.thread_rank() == 0;
 	inst_size nrof_instances;
 	bool step_parity = false;
-	RefType self;
 	bool stable = true; // Only used to compile steps outside fixpoints
 	bool iteration_parity[FP_DEPTH] = {false};
 
 	do{
 		iteration_parity[0] = !iteration_parity[0];
 		bool stable = true;
-		if (in_grid_rank == 0)
+		if (is_thread0)
 			fp_stack[0][!iteration_parity[0]] = true;
 
 
@@ -425,7 +422,7 @@ __global__ void schedule_kernel(){
 		do{
 			iteration_parity[1] = !iteration_parity[1];
 			bool stable = true;
-			if (in_grid_rank == 0)
+			if (is_thread0)
 				fp_stack[1][!iteration_parity[1]] = true;
 
 

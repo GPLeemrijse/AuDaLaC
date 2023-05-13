@@ -65,8 +65,8 @@ impl CompileComponent for WorkDivisor {
 
 		Some(formatdoc!{"
 			#define I_PER_THREAD {ipt}
-			#define THREADS_PER_BLOCK {tpb}"
-		})
+			#define THREADS_PER_BLOCK {tpb}
+		"})
 	}
 	fn typedefs(&self) -> Option<String> { None }
 

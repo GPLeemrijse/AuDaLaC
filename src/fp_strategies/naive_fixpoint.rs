@@ -42,7 +42,7 @@ impl FPStrategy for NaiveFixpoint {
 		let indent = "\t".repeat(lvl+2);
 		formatdoc!{"
 			{indent}bool stable = true;
-			{indent}if (in_grid_rank == 0)
+			{indent}if (is_thread0)
 			{indent}	fp_stack[{lvl}] = true;
 			{indent}grid.sync();
 		"}
