@@ -11,7 +11,7 @@ use crate::utils::as_c_type;
 
 pub struct StructManagers<'a> {
 	program : &'a Program,
-	nrof_structs : u64,
+	nrof_structs : usize,
 	memorder : &'a MemOrder,
 	scope : Scope,
 	use_step_parity : bool
@@ -19,7 +19,7 @@ pub struct StructManagers<'a> {
 
 impl StructManagers<'_> {
 	pub fn new<'a>(program : &'a Program,
-			   nrof_structs : u64,
+			   nrof_structs : usize,
 			   memorder : &'a MemOrder,
 			   scope : Scope,
 			   use_step_parity : bool) -> StructManagers<'a> {

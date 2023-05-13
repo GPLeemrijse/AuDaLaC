@@ -1,5 +1,5 @@
-#define I_PER_THREAD 32
-#define THREADS_PER_BLOCK 512
+#define I_PER_THREAD 16
+#define THREADS_PER_BLOCK 256
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
 #define LOAD(A) A.load(cuda::memory_order_relaxed)
@@ -477,7 +477,7 @@ int main(int argc, char **argv) {
 	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 2 * sizeof(bool)));
 
 	void* schedule_kernel_args[] = {};
-	auto dims = ADL::get_launch_dims(10000, (void*)schedule_kernel);
+	auto dims = ADL::get_launch_dims(188, (void*)schedule_kernel);
 
 	CHECK(
 		cudaLaunchCooperativeKernel(

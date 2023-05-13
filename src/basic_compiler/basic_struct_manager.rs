@@ -7,7 +7,7 @@ use indoc::{indoc, formatdoc};
 
 pub struct BasicStructManager<'a> {
 	program : &'a Program,
-	nrof_structs : u64,
+	nrof_structs : usize,
 }
 
 impl StructManager for BasicStructManager<'_> {
@@ -233,7 +233,7 @@ impl StructManager for BasicStructManager<'_> {
 
 
 impl BasicStructManager<'_> {
-	pub fn new(program: &Program, nrof_structs: u64) -> BasicStructManager {
+	pub fn new(program: &Program, nrof_structs: usize) -> BasicStructManager {
 		BasicStructManager {
 			program,
 			nrof_structs

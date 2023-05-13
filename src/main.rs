@@ -51,9 +51,10 @@ fn main() {
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
-        (@arg nrofstructs: -N --nrofstructs +takes_value default_value("1000") value_parser(clap::value_parser!(u64)) "nrof structs memory is allocated for.")
+        (@arg nrofinstances: -N --nrofinstances +takes_value default_value("1000") value_parser(clap::value_parser!(usize)) "nrof struct instances memory is allocated for.")
+        (@arg instsperthread: -M --instsperthread +takes_value default_value("32") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
+        (@arg threads_per_block: -T --threadsperblock +takes_value default_value("256") value_parser(clap::value_parser!(usize)) "Number of threads per block.")
         (@arg buffersize: -b --buffersize +takes_value default_value("2048") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
-        (@arg instsperthread: --instsperthread +takes_value default_value("32") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
         (@arg printnthinst: -d --printnthinst +takes_value default_value("0") value_parser(clap::value_parser!(usize)) "Print every n'th allocated instance.")
         (@arg printunstable: -u --printunstable "Print which step changed the stability stack.")
         (@arg output: -o --output +takes_value "Output file")
@@ -64,9 +65,10 @@ fn main() {
     let print_ast = args.is_present("print_ast");
     let init_file = args.is_present("init_file");
     let print_unstable = args.is_present("printunstable");
-    let nrof_structs : u64 = *args.get_one("nrofstructs").unwrap();
+    let nrof_instances_per_struct : usize = *args.get_one("nrofinstances").unwrap();
     let buffer_size : usize = *args.get_one("buffersize").unwrap();
-    let instsperthread : usize = *args.get_one("instsperthread").unwrap();
+    let instances_per_thread : usize = *args.get_one("instsperthread").unwrap();
+    let threads_per_block : usize = *args.get_one("threads_per_block").unwrap();
     let printnthinst : usize = *args.get_one("printnthinst").unwrap();
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output");
@@ -114,12 +116,12 @@ fn main() {
 
                     match compiler {
                         "basic" => {
-                            let struct_manager = BasicStructManager::new(&program, nrof_structs);
+                            let struct_manager = BasicStructManager::new(&program, nrof_instances_per_struct);
                             let schedule_manager = BasicScheduleManager::new(&program);
                             result = transpile::transpile(&schedule_manager, &struct_manager);
                         },
                         "coalesced" => {
-                            let struct_manager = CoalescedStructManager::new(&program, nrof_structs, memorder, scope);
+                            let struct_manager = CoalescedStructManager::new(&program, nrof_instances_per_struct, memorder, scope);
                             let schedule_manager = CoalescedScheduleManager::new(&program, &struct_manager, printnthinst, print_unstable);
                             result = transpile::transpile(&schedule_manager, &struct_manager);
                         },
@@ -137,9 +139,10 @@ fn main() {
                             );
 
                             let work_divisor = WorkDivisor::new(
-                                instsperthread,
-                                512, // tpb
-                                10000, // nrof_threads
+                                &program,
+                                instances_per_thread,
+                                threads_per_block, // tpb
+                                nrof_instances_per_struct,
                                 DivisionStrategy::BlockSizeIncrease
                             );
 
@@ -149,7 +152,7 @@ fn main() {
                                 &work_divisor,
                                 &StructManagers::new(
                                     &program,
-                                    nrof_structs,
+                                    nrof_instances_per_struct,
                                     &memorder,
                                     scope,
                                     true

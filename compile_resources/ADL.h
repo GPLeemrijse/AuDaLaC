@@ -57,18 +57,22 @@ namespace ADL {
       OneBlockPerSM = 1,
    };
 
-   static std::tuple<dim3, dim3> get_launch_dims(inst_size nrof_instances, const void* kernel, OccupancyStrategy strat = MaxOccupancy){
+   static std::tuple<dim3, dim3> get_launch_dims(inst_size nrof_threads, const void* kernel, OccupancyStrategy strat = MaxOccupancy){
       assert(strat == MaxOccupancy);
       int numBlocksPerSm = 0;
-      int numThreads = THREADS_PER_BLOCK;
+      int tpb = THREADS_PER_BLOCK;
 
       cudaDeviceProp deviceProp;
       cudaGetDeviceProperties(&deviceProp, 0);
-      cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, numThreads, 0);
+      cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, tpb, 0);
       
       int max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
-      dim3 dimBlock(numThreads, 1, 1);
-      dim3 dimGrid( min(max_blocks, (nrof_instances + numThreads - 1)/numThreads), 1, 1);
+      int needed_blocks = (nrof_threads + tpb - 1)/tpb;
+
+      assert(needed_blocks <= max_blocks);
+
+      dim3 dimBlock(tpb, 1, 1);
+      dim3 dimGrid(needed_blocks, 1, 1);
       return std::make_tuple(dimGrid, dimBlock);
    }
 

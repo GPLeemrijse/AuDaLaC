@@ -7,7 +7,7 @@ use crate::coalesced_compiler::*;
 
 pub struct CoalescedStructManager<'a> {
 	pub program : &'a Program,
-	pub nrof_structs : u64,
+	pub nrof_structs : usize,
 	memorder : MemOrder,
 	scope : Scope,
 }
@@ -215,7 +215,7 @@ impl StructManager for CoalescedStructManager<'_> {
 }
 
 impl CoalescedStructManager<'_> {
-	pub fn new<'a>(program: &'a Program, nrof_structs: u64, memorder: MemOrder, scope: Scope) -> CoalescedStructManager<'a> {
+	pub fn new<'a>(program: &'a Program, nrof_structs: usize, memorder: MemOrder, scope: Scope) -> CoalescedStructManager<'a> {
 		CoalescedStructManager {
 			program,
 			nrof_structs,

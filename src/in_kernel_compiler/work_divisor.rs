@@ -1,3 +1,4 @@
+use crate::ast::Program;
 use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
 use indoc::formatdoc;
@@ -7,25 +8,28 @@ pub enum DivisionStrategy {
 	GridSizeIncrease
 }
 
-pub struct WorkDivisor {
+pub struct WorkDivisor<'a> {
+	program : &'a Program,
 	instances_per_thread : usize,
 	threads_per_block : usize,
-	launched_threads : usize,
+	allocated_per_instance : usize,
 	division_strategy : DivisionStrategy,
 }
 
-impl WorkDivisor {
-	pub fn new(instances_per_thread : usize, threads_per_block : usize, launched_threads : usize, 	division_strategy : DivisionStrategy,) -> WorkDivisor {
+impl WorkDivisor<'_> {
+	pub fn new(program : &Program, instances_per_thread : usize, threads_per_block : usize, allocated_per_instance : usize, 	division_strategy : DivisionStrategy,) -> WorkDivisor {
 		WorkDivisor {
+			program,
 			instances_per_thread,
 			threads_per_block,
-			launched_threads,
+			allocated_per_instance,
 			division_strategy,
 		}
 	}
 
 	pub fn get_dims(&self, kernel_name : &str) -> String {
-		let nrof_threads = self.launched_threads;
+		let nrof_instances = self.program.structs.len() * self.allocated_per_instance;
+		let nrof_threads = (nrof_instances + self.instances_per_thread - 1) / self.instances_per_thread;
 		formatdoc!("
 			ADL::get_launch_dims({nrof_threads}, (void*){kernel_name})"
 		)
@@ -54,7 +58,7 @@ impl WorkDivisor {
 	}
 }
 
-impl CompileComponent for WorkDivisor {
+impl CompileComponent for WorkDivisor<'_> {
 	fn add_includes(&self, set: &mut BTreeSet<&str>) {
 		set.insert("<cooperative_groups.h>");
 	}
