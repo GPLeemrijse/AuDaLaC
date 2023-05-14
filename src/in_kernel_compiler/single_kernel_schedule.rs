@@ -47,7 +47,7 @@ impl SingleKernelSchedule<'_> {
 	fn kernel_parameters(&self, including_self : bool) -> Vec<String> {
 		// Use this version when passing struct managers as kernel parameters
 		// let mut structs = self._get_struct_manager_parameters();
-		let mut structs = vec!["bool* stable".to_string()];
+		let mut structs = vec!["bool* stable".to_string(), "bool step_parity".to_string()];
 
 		if including_self {
 			let mut self_and_structs = vec!["const RefType self".to_string()];
@@ -191,10 +191,9 @@ impl SingleKernelSchedule<'_> {
 
 	fn step_as_c_function(&self, strct : &ADLStruct, step : &Step, fp_level : usize) -> String {
 		let func_name = self.step_function_name(strct, step);
-		let func_header = format!("__device__ __inline__ bool {func_name}");
+		let func_header = format!("__device__ __inline__ void {func_name}");
 
-		let mut params = self.kernel_parameters(true);
-		params.push("bool step_parity".to_string());
+		let params = self.kernel_parameters(true);
 
 		let kernel_signature = format_signature(&func_header, params, 0);
 
@@ -209,7 +208,7 @@ impl SingleKernelSchedule<'_> {
 
 	fn print_as_c_function(&self, strct : &ADLStruct, _fp_level : usize) -> String {
 		let func_name = format!("print_{}", strct.name);
-		let func_header = format!("__device__ __inline__ bool {func_name}");
+		let func_header = format!("__device__ __inline__ void {func_name}");
 
 		let params = self.kernel_parameters(true);
 

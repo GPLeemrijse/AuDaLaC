@@ -43,7 +43,7 @@ impl WorkDivisor<'_> {
 			BlockSizeIncrease => {
 				formatdoc!("
 					\tfor(int i = 0; i < I_PER_THREAD; i++){{
-					\t\tconst RefType self = block.size() * (i + grid.block_rank() * I_PER_THREAD) + block.rank();
+					\t\tconst RefType self = block.size() * (i + grid.block_rank() * I_PER_THREAD) + block.thread_rank();
 					\t\tif (self >= nrof_instances) break;"
 				)
 			},
@@ -80,8 +80,9 @@ impl CompileComponent for WorkDivisor<'_> {
 		let loop_header = self.loop_header();
 
 		Some(formatdoc!("
-			template <typename Step>
-			void executeStep(inst_size nrof_instances, bool step_parity, grid_group grid, thread_block block, bool* stable){{
+			typedef void(*step_func)(RefType, bool*, bool);
+			template <step_func Step>
+			__device__ void executeStep(inst_size nrof_instances, bool step_parity, grid_group grid, thread_block block, bool* stable){{
 			{loop_header}
 
 					Step(self, stable, step_parity);
