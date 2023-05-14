@@ -50,18 +50,18 @@ protected:
 	}
 
 	// New one-less-sync method:
-	inst_size executing_instances[2]; // How many are part of this and the next iteration?
-	inst_size created_instances; // How many have been created in total?
+	cuda::atomic<inst_size, cuda::thread_scope_device> executing_instances[2]; // How many are part of this and the next iteration?
+	cuda::atomic<inst_size, cuda::thread_scope_device> created_instances; // How many have been created in total?
 
 	__device__ __inline__ RefType claim_instance2(bool step_parity) {
-		ADL::RefType slot = atomicInc(&created_instances, capacity);
+		ADL::RefType slot = created_instances.fetch_add(1, cuda::memory_order_relaxed);
 		
 		// atomicInc wraps around to 0 if it exceeds capacity
 		//if(!slot) {asm("trap;");}
-		assert(slot); // Incurs a stacksize penalty.
+		assert(slot < capacity); // Incurs a stacksize penalty.
 		
 		// Update the next iteration's executing_instances
-		atomicMax(&executing_instances[(uint)!step_parity], slot);
+		executing_instances[(uint)!step_parity].fetch_max(slot);
 		return slot;
 	}
 
