@@ -16,18 +16,18 @@ impl NaiveFixpoint {
 impl FPStrategy for NaiveFixpoint {
 	fn global_decl(&self) -> String {
 		formatdoc!{"
-			__device__ volatile bool fp_stack[FP_DEPTH];
+			__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH];
 			
 			__device__ __inline__ void clear_stack(int lvl) {{
 				while(lvl >= 0){{
-					fp_stack[lvl--] = false;
+					fp_stack[lvl--].store(false, cuda::memory_order_relaxed);
 				}}
 			}}"
 		}
 	}
 
 	fn is_stable(&self, lvl: usize) -> String {
-		format!("fp_stack[{lvl}]")
+		format!("fp_stack[{lvl}].load(cuda::memory_order_relaxed)")
 	}
 
 	fn set_unstable(&self, _: usize) -> String {
@@ -43,7 +43,7 @@ impl FPStrategy for NaiveFixpoint {
 		formatdoc!{"
 			{indent}bool stable = true;
 			{indent}if (is_thread0)
-			{indent}	fp_stack[{lvl}] = true;
+			{indent}	fp_stack[{lvl}].store(true, cuda::memory_order_relaxed);
 			{indent}grid.sync();
 		"}
 	}
