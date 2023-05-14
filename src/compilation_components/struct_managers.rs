@@ -55,11 +55,9 @@ impl StructManagers<'_> {
 							   .collect::<Vec<String>>()
 							   .join("\n\t\t");
 
-		let num = self.program.struct_num_by_ref(strct).unwrap();
-
 		let claim_instance;
 		if self.use_step_parity {
-			claim_instance = format!("claim_instance2(struct_step_parity & (1ULL << {num}))");
+			claim_instance = format!("claim_instance2(struct_step_parity & {}_MASK)", strct.name);
 			create_func_parameters.push("uint64_t struct_step_parity".to_string());
 			create_func_parameters.push("bool* stable".to_string());
 			assignments.push_str("\n\t\t*stable = false;");
@@ -104,10 +102,19 @@ impl CompileComponent for StructManagers<'_> {
 			format!("A")
 		};
 
+		let masks = self.program
+						.structs
+						.iter()
+						.enumerate()
+						.map(|(idx, s)| format!("#define {}_MASK (1ULL << {idx})", s.name))
+						.collect::<Vec<String>>()
+						.join("\n");
+
 		Some(formatdoc!{"
 			#define ATOMIC(T) cuda::atomic<T, {scope}>
 			#define STORE(A, B) {store_macro}
 			#define LOAD(A) {load_macro}
+			{masks}
 		"})
 	}
 	

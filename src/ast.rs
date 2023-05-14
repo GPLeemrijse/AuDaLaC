@@ -16,20 +16,6 @@ impl Program {
                     .find(|s| &s.name == name)
     }
 
-    pub fn struct_num_by_name(&self, name : &String) -> Option<usize>{
-        self.structs.iter()
-                    .enumerate()
-                    .find(|(_, s)| &s.name == name)
-                    .and_then(|(idx, _)| Some(idx))
-    }
-
-    pub fn struct_num_by_ref(&self, strct : &ADLStruct) -> Option<usize>{
-        self.structs.iter()
-                    .enumerate()
-                    .find(|(_, s)| &strct == s)
-                    .and_then(|(idx, _)| Some(idx))
-    }
-
     pub fn step_by_name(&self, struct_name : &String, step_name : &String) -> Option<&Step>{
         self.structs.iter()
                     .find(|s| &s.name == struct_name)?

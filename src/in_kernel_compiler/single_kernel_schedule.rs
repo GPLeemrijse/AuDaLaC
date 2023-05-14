@@ -32,18 +32,6 @@ impl SingleKernelSchedule<'_> {
 		}
 	}
 
-	fn _kernel_arguments(&self) -> Vec<String> {
-		self.program.structs.iter()
-							.map(|s| format!("&gm_{}", s.name))
-							.collect()
-	}
-
-	fn _get_struct_manager_parameters(&self) -> Vec<String> {
-		self.program.structs.iter()
-							.map(|s| format!("{} * const __restrict__ {}", s.name, s.name.to_lowercase()))
-							.collect()
-	}
-
 	fn kernel_parameters(&self, including_self : bool) -> Vec<String> {
 		// Use this version when passing struct managers as kernel parameters
 		// let mut structs = self._get_struct_manager_parameters();
@@ -146,7 +134,7 @@ impl SingleKernelSchedule<'_> {
 		if let TypedStepCall(struct_name, step_name, _) = sched {
 			let indent = "\t".repeat(fp_level+1);
 			let strct = self.program.struct_by_name(struct_name).unwrap();
-			let strct_num = self.program.struct_num_by_name(struct_name).unwrap();
+			let strct_name = &strct.name;
 			let func_name;
 
 			if step_name == "print" {
@@ -156,12 +144,12 @@ impl SingleKernelSchedule<'_> {
 				func_name = self.step_function_name(strct, step);
 			}
 
-			let nrof_instances = format!("{}->nrof_instances2(struct_step_parity)", struct_name.to_lowercase());
+			let nrof_instances = format!("{}->nrof_instances2(struct_step_parity & {struct_name}_MASK)", struct_name.to_lowercase());
 
 			formatdoc!{"
 				{indent}nrof_instances = {nrof_instances};
 				{indent}executeStep<{func_name}>(nrof_instances, struct_step_parity, grid, block, &stable);
-				{indent}struct_step_parity ^= (1ULL << {strct_num});"
+				{indent}struct_step_parity ^= {strct_name}_MASK;"
 			}
 		} else {
 			unreachable!()
