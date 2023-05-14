@@ -2,6 +2,7 @@ use crate::ast::*;
 use crate::as_type_enum;
 use crate::Scope;
 use crate::MemOrder;
+use crate::cuda_atomics::MemoryOperation;
 use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
 use indoc::formatdoc;
@@ -88,14 +89,14 @@ impl CompileComponent for StructManagers<'_> {
 	fn defines(&self) -> Option<String> {
 		let scope = self.scope.as_cuda_scope();
 		let store_macro = if self.memorder.is_strong() {
-			let order = self.memorder.as_cuda_order();
+			let order = self.memorder.as_cuda_order(Some(MemoryOperation::Store));
 			format!("A.store(B, {order})")
 		} else {
 			format!("A = B")
 		};
 
 		let load_macro = if self.memorder.is_strong() {
-			let order = self.memorder.as_cuda_order();
+			let order = self.memorder.as_cuda_order(Some(MemoryOperation::Load));
 			format!("A.load({order})")
 		} else {
 			format!("A")

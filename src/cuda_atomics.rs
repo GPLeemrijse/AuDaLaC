@@ -1,7 +1,13 @@
 pub enum MemOrder {
     Weak,
     Relaxed,
+    AcqRel,
     SeqCons
+}
+
+pub enum MemoryOperation {
+    Load,
+    Store
 }
 
 impl MemOrder {
@@ -10,6 +16,7 @@ impl MemOrder {
             "weak" => MemOrder::Weak,
             "relaxed" => MemOrder::Relaxed,
             "seqcons" => MemOrder::SeqCons,
+            "acqrel" => MemOrder::AcqRel,
             _ => panic!("Invalid MemOrder"),
         }
     }
@@ -18,11 +25,14 @@ impl MemOrder {
         !matches!(self, MemOrder::Weak)
     }
 
-    pub fn as_cuda_order(&self) -> String {
-        match self {
-            MemOrder::Weak => panic!("Weak order should not be translated to c."),
-            MemOrder::Relaxed => "cuda::memory_order_relaxed".to_string(),
-            MemOrder::SeqCons => "cuda::memory_order_seq_cst".to_string(),
+    pub fn as_cuda_order(&self, op: Option<MemoryOperation>) -> String {
+        match (self, op) {
+            (MemOrder::Weak, _) => panic!("Weak order should not be translated to c."),
+            (MemOrder::Relaxed, _) => "cuda::memory_order_relaxed".to_string(),
+            (MemOrder::SeqCons, _) => "cuda::memory_order_seq_cst".to_string(),
+            (MemOrder::AcqRel, Some(MemoryOperation::Load)) => "cuda::memory_order_acquire".to_string(),
+            (MemOrder::AcqRel, Some(MemoryOperation::Store)) => "cuda::memory_order_release".to_string(),
+            _ => panic!("Unsupported combination of memory order and operation.")
         }
     }
 }

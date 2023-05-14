@@ -1,3 +1,4 @@
+use crate::cuda_atomics::MemoryOperation;
 use crate::cuda_atomics::{MemOrder, Scope};
 use std::collections::BTreeSet;
 use crate::transpilation_traits::*;
@@ -48,7 +49,7 @@ impl StructManager for CoalescedStructManager<'_> {
 
 			let assignments;
 			if self.memorder.is_strong() {
-				let order = self.memorder.as_cuda_order();
+				let order = self.memorder.as_cuda_order(Some(MemoryOperation::Store));
 				assignments = strct.parameters.iter()
 								.map(|(s, _, _)| format!("{s}[slot].store(_{s}, {order});"))
 								.reduce(|acc: String, nxt| acc + "\n		" + &nxt).unwrap();
@@ -527,7 +528,7 @@ impl CoalescedStructManager<'_> {
 
 	fn load_suffix(&self) -> String {
 		if self.memorder.is_strong() {
-			let order = self.memorder.as_cuda_order();
+			let order = self.memorder.as_cuda_order(Some(MemoryOperation::Load));
 			format!(".load({order})")
 		} else {
 			"".to_string()
@@ -536,7 +537,7 @@ impl CoalescedStructManager<'_> {
 
 	fn store_suffix(&self, val : &str) -> String {
 		if self.memorder.is_strong() {
-			let order = self.memorder.as_cuda_order();
+			let order = self.memorder.as_cuda_order(Some(MemoryOperation::Store));
 			format!(".store({val}, {order})")
 		} else {
 			format!(" = {val}")

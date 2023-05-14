@@ -48,7 +48,7 @@ fn main() {
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
         (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") possible_value("in-kernel") default_value("coalesced") "Which compiler to use.")
-        (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
+        (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofinstances: -N --nrofinstances +takes_value default_value("1000") value_parser(clap::value_parser!(usize)) "nrof struct instances memory is allocated for.")
