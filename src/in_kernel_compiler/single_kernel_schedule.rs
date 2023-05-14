@@ -47,7 +47,7 @@ impl SingleKernelSchedule<'_> {
 	fn kernel_parameters(&self, including_self : bool) -> Vec<String> {
 		// Use this version when passing struct managers as kernel parameters
 		// let mut structs = self._get_struct_manager_parameters();
-		let mut structs = vec!["bool* stable".to_string(), "bool step_parity".to_string()];
+		let mut structs = vec!["bool* stable".to_string(), "uint64_t struct_step_parity".to_string()];
 
 		if including_self {
 			let mut self_and_structs = vec!["const RefType self".to_string()];
@@ -69,7 +69,7 @@ impl SingleKernelSchedule<'_> {
 			{ind}const thread_block block = this_thread_block();
 			{ind}const bool is_thread0 = grid.thread_rank() == 0;
 			{ind}inst_size nrof_instances;
-			{ind}bool step_parity = false;
+			{ind}uint64_t struct_step_parity = 0; // bitmask
 			{ind}bool stable = true; // Only used to compile steps outside fixpoints
 			{stab_stack}
 
@@ -146,6 +146,7 @@ impl SingleKernelSchedule<'_> {
 		if let TypedStepCall(struct_name, step_name, _) = sched {
 			let indent = "\t".repeat(fp_level+1);
 			let strct = self.program.struct_by_name(struct_name).unwrap();
+			let strct_num = self.program.struct_num_by_name(struct_name).unwrap();
 			let func_name;
 
 			if step_name == "print" {
@@ -155,12 +156,12 @@ impl SingleKernelSchedule<'_> {
 				func_name = self.step_function_name(strct, step);
 			}
 
-			let nrof_instances = format!("{}->nrof_instances2(step_parity)", struct_name.to_lowercase());
+			let nrof_instances = format!("{}->nrof_instances2(struct_step_parity)", struct_name.to_lowercase());
 
 			formatdoc!{"
 				{indent}nrof_instances = {nrof_instances};
-				{indent}executeStep<{func_name}>(nrof_instances, step_parity, grid, block, &stable);
-				{indent}step_parity = !step_parity;"
+				{indent}executeStep<{func_name}>(nrof_instances, struct_step_parity, grid, block, &stable);
+				{indent}struct_step_parity ^= (1ULL << {strct_num});"
 			}
 		} else {
 			unreachable!()

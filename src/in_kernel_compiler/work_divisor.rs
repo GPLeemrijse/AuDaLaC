@@ -80,12 +80,12 @@ impl CompileComponent for WorkDivisor<'_> {
 		let loop_header = self.loop_header();
 
 		Some(formatdoc!("
-			typedef void(*step_func)(RefType, bool*, bool);
+			typedef void(*step_func)(RefType, bool*, uint64_t);
 			template <step_func Step>
-			__device__ void executeStep(inst_size nrof_instances, bool step_parity, grid_group grid, thread_block block, bool* stable){{
+			__device__ void executeStep(inst_size nrof_instances, uint64_t struct_step_parity, grid_group grid, thread_block block, bool* stable){{
 			{loop_header}
 
-					Step(self, stable, step_parity);
+					Step(self, stable, struct_step_parity);
 				}}
 			}}
 		"))

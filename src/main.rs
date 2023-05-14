@@ -50,9 +50,10 @@ fn main() {
         (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") possible_value("in-kernel") default_value("coalesced") "Which compiler to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
+        (@arg division_strat: -D --division_strat possible_value("blocksize") possible_value("gridsize") default_value("blocksize") "What division strategy to use. 'blocksize' lets blocks execute a continuous sequence of instances, while 'gridsize' evenly distributes over the blocks.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofinstances: -N --nrofinstances +takes_value default_value("1000") value_parser(clap::value_parser!(usize)) "nrof struct instances memory is allocated for.")
-        (@arg instsperthread: -M --instsperthread +takes_value default_value("32") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
+        (@arg instsperthread: -M --instsperthread +takes_value default_value("8") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
         (@arg threads_per_block: -T --threadsperblock +takes_value default_value("256") value_parser(clap::value_parser!(usize)) "Number of threads per block.")
         (@arg buffersize: -b --buffersize +takes_value default_value("2048") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
         (@arg printnthinst: -d --printnthinst +takes_value default_value("0") value_parser(clap::value_parser!(usize)) "Print every n'th allocated instance.")
@@ -74,6 +75,7 @@ fn main() {
     let output_file = args.value_of("output");
     let compiler : &str = args.value_of("compiler").unwrap();
     let voting_strat : &str = args.value_of("voting").unwrap();
+    let division_strat : &str = args.value_of("division_strat").unwrap();
     let memorder = MemOrder::from_str(args.value_of("memorder").unwrap());
     let scope = Scope::from_str(args.value_of("scope").unwrap());
     
@@ -133,6 +135,12 @@ fn main() {
                                 _ => panic!("voting strategy not found.")
                             };
 
+                            let div_strat = match division_strat {
+                                "blocksize" => DivisionStrategy::BlockSizeIncrease,
+                                "gridsize" => DivisionStrategy::GridSizeIncrease,
+                                _ => panic!("division strategy not found.")
+                            };
+
                             let step_transpiler = StepBodyTranspiler::new(
                                 &type_info,
                                 true
@@ -143,7 +151,7 @@ fn main() {
                                 instances_per_thread,
                                 threads_per_block, // tpb
                                 nrof_instances_per_struct,
-                                DivisionStrategy::BlockSizeIncrease
+                                div_strat
                             );
 
                             result = transpile::transpile2(vec![
