@@ -16,7 +16,7 @@ impl NaiveFixpoint {
 impl FPStrategy for NaiveFixpoint {
 	fn global_decl(&self) -> String {
 		formatdoc!{"
-			__device__ bool fp_stack[FP_DEPTH];
+			__device__ volatile bool fp_stack[FP_DEPTH];
 			
 			__device__ __inline__ void clear_stack(int lvl) {{
 				while(lvl >= 0){{
