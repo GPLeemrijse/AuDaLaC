@@ -53,16 +53,19 @@ protected:
 	cuda::atomic<inst_size, cuda::thread_scope_device> executing_instances[2]; // How many are part of this and the next iteration?
 	cuda::atomic<inst_size, cuda::thread_scope_device> created_instances; // How many have been created in total?
 
-	__device__ __inline__ RefType claim_instance2(bool parity) {
+	__device__ __inline__ RefType claim_instance2(void) {
 		ADL::RefType slot = created_instances.fetch_add(1, cuda::memory_order_relaxed);
 		
-		// atomicInc wraps around to 0 if it exceeds capacity
 		//if(!slot) {asm("trap;");}
 		assert(slot < capacity); // Incurs a stacksize penalty.
 		
-		// Update the next iteration's executing_instances
-		executing_instances[(uint)!parity].fetch_max(slot);
 		return slot;
+	}
+
+	__device__ __inline__ void update_counters(bool parity) {
+		executing_instances[(uint)parity].fetch_max(
+			created_instances.load(cuda::memory_order_relaxed)
+		);
 	}
 
 	bool is_initialised;

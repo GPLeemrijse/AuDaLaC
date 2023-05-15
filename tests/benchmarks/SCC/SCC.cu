@@ -3,10 +3,12 @@
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_release)
 #define LOAD(A) A.load(cuda::memory_order_acquire)
+#define FP_DEPTH 2
 #define NodeSet_MASK (1ULL << 0)
 #define Node_MASK (1ULL << 1)
 #define Edge_MASK (1ULL << 2)
-#define FP_DEPTH 2
+#define STEP_PARITY(STRUCT) ((bool)(struct_step_parity & STRUCT ## _MASK))
+#define TOGGLE_STEP_PARITY(STRUCT) {struct_step_parity ^= STRUCT ## _MASK;}
 
 
 #include "ADL.h"
@@ -74,9 +76,8 @@ public:
 									   RefType _f_and_b,
 									   RefType _not_f_and_b,
 									   RefType _f_and_not_b,
-									   uint64_t struct_step_parity,
 									   bool* stable){
-		RefType slot = claim_instance2(struct_step_parity & NodeSet_MASK);
+		RefType slot = claim_instance2();
 		STORE(pivot_f_b[slot], _pivot_f_b);
 		STORE(pivot_f_nb[slot], _pivot_f_nb);
 		STORE(pivot_nf_b[slot], _pivot_nf_b);
@@ -126,9 +127,8 @@ public:
 	__device__ RefType create_instance(RefType _set,
 									   BoolType _fwd,
 									   BoolType _bwd,
-									   uint64_t struct_step_parity,
 									   bool* stable){
-		RefType slot = claim_instance2(struct_step_parity & Node_MASK);
+		RefType slot = claim_instance2();
 		STORE(set[slot], _set);
 		STORE(fwd[slot], _fwd);
 		STORE(bwd[slot], _bwd);
@@ -169,9 +169,8 @@ public:
 
 	__device__ RefType create_instance(RefType _s,
 									   RefType _t,
-									   uint64_t struct_step_parity,
 									   bool* stable){
-		RefType slot = claim_instance2(struct_step_parity & Edge_MASK);
+		RefType slot = claim_instance2();
 		STORE(s[slot], _s);
 		STORE(t[slot], _t);
 		*stable = false;
@@ -207,12 +206,12 @@ __device__ __inline__ void clear_stack(int lvl, bool* iteration_parity) {
 
 typedef void(*step_func)(RefType, bool*, uint64_t);
 template <step_func Step>
-__device__ void executeStep(inst_size nrof_instances, uint64_t struct_step_parity, grid_group grid, thread_block block, bool* stable){
+__device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_block block, bool* stable){
 	for(int i = 0; i < I_PER_THREAD; i++){
 		const RefType self = block.size() * (i + grid.block_rank() * I_PER_THREAD) + block.thread_rank();
 		if (self >= nrof_instances) break;
 
-		Step(self, stable, struct_step_parity);
+		Step(self, stable);
 	}
 }
 template<typename T>
@@ -227,16 +226,14 @@ __device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T 
 }
 
 __device__ __inline__ void print_NodeSet(const RefType self,
-										 bool* stable,
-										 uint64_t struct_step_parity){
+										 bool* stable){
 	if (self != 0) {
 		printf("NodeSet(%u): pivot_f_b=%u, pivot_f_nb=%u, pivot_nf_b=%u, pivot_nf_nb=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, LOAD(nodeset->pivot_f_b[self]), LOAD(nodeset->pivot_f_nb[self]), LOAD(nodeset->pivot_nf_b[self]), LOAD(nodeset->pivot_nf_nb[self]), LOAD(nodeset->scc[self]), LOAD(nodeset->f_and_b[self]), LOAD(nodeset->not_f_and_b[self]), LOAD(nodeset->f_and_not_b[self]));
 	}
 }
 
 __device__ __inline__ void NodeSet_allocate_sets(const RefType self,
-												 bool* stable,
-												 uint64_t struct_step_parity){
+												 bool* stable){
 	
 	if ((LOAD(nodeset->pivot_f_b[self]) != (RefType)0)) {
 		if ((LOAD(nodeset->pivot_nf_nb[self]) == (RefType)0)) {
@@ -249,28 +246,27 @@ __device__ __inline__ void NodeSet_allocate_sets(const RefType self,
 		}
 		if ((LOAD(nodeset->pivot_nf_nb[self]) != (RefType)0)) {
 			// f_and_b := NodeSet(null, null, null, null, true, null, null, null);
-			SetParam(self, nodeset->f_and_b, nodeset->create_instance((RefType)0, (RefType)0, (RefType)0, (RefType)0, true, (RefType)0, (RefType)0, (RefType)0, struct_step_parity, stable), stable);
+			SetParam(self, nodeset->f_and_b, nodeset->create_instance((RefType)0, (RefType)0, (RefType)0, (RefType)0, true, (RefType)0, (RefType)0, (RefType)0, stable), stable);
 			// pivot_f_b := null;
 			SetParam(self, nodeset->pivot_f_b, (RefType)0, stable);
 		}
 	}
 	if ((LOAD(nodeset->pivot_f_nb[self]) != (RefType)0)) {
 		// f_and_not_b := NodeSet(null, pivot_f_nb, null, null, false, null, null, null);
-		SetParam(self, nodeset->f_and_not_b, nodeset->create_instance((RefType)0, LOAD(nodeset->pivot_f_nb[self]), (RefType)0, (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, struct_step_parity, stable), stable);
+		SetParam(self, nodeset->f_and_not_b, nodeset->create_instance((RefType)0, LOAD(nodeset->pivot_f_nb[self]), (RefType)0, (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, stable), stable);
 		// pivot_f_nb := null;
 		SetParam(self, nodeset->pivot_f_nb, (RefType)0, stable);
 	}
 	if ((LOAD(nodeset->pivot_nf_b[self]) != (RefType)0)) {
 		// not_f_and_b := NodeSet(null, null, pivot_nf_b, null, false, null, null, null);
-		SetParam(self, nodeset->not_f_and_b, nodeset->create_instance((RefType)0, (RefType)0, LOAD(nodeset->pivot_nf_b[self]), (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, struct_step_parity, stable), stable);
+		SetParam(self, nodeset->not_f_and_b, nodeset->create_instance((RefType)0, (RefType)0, LOAD(nodeset->pivot_nf_b[self]), (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, stable), stable);
 		// pivot_nf_b := null;
 		SetParam(self, nodeset->pivot_nf_b, (RefType)0, stable);
 	}
 }
 
 __device__ __inline__ void NodeSet_initialise_pivot_fwd_bwd(const RefType self,
-															bool* stable,
-															uint64_t struct_step_parity){
+															bool* stable){
 	
 	if ((!LOAD(nodeset->scc[self]))) {
 		// pivot_f_b.fwd := true;
@@ -301,16 +297,14 @@ __device__ __inline__ void NodeSet_initialise_pivot_fwd_bwd(const RefType self,
 }
 
 __device__ __inline__ void print_Node(const RefType self,
-									  bool* stable,
-									  uint64_t struct_step_parity){
+									  bool* stable){
 	if (self != 0) {
 		printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, LOAD(node->set[self]), LOAD(node->fwd[self]), LOAD(node->bwd[self]));
 	}
 }
 
 __device__ __inline__ void Node_pivots_nominate(const RefType self,
-												bool* stable,
-												uint64_t struct_step_parity){
+												bool* stable){
 	
 	if ((!LOAD(nodeset->scc[LOAD(node->set[self])]))) {
 		BoolType f = LOAD(node->fwd[self]);
@@ -335,8 +329,7 @@ __device__ __inline__ void Node_pivots_nominate(const RefType self,
 }
 
 __device__ __inline__ void Node_divide_into_sets_reset_fwd_bwd(const RefType self,
-															   bool* stable,
-															   uint64_t struct_step_parity){
+															   bool* stable){
 	
 	BoolType f = LOAD(node->fwd[self]);
 	BoolType b = LOAD(node->bwd[self]);
@@ -359,16 +352,14 @@ __device__ __inline__ void Node_divide_into_sets_reset_fwd_bwd(const RefType sel
 }
 
 __device__ __inline__ void print_Edge(const RefType self,
-									  bool* stable,
-									  uint64_t struct_step_parity){
+									  bool* stable){
 	if (self != 0) {
 		printf("Edge(%u): s=%u, t=%u\n", self, LOAD(edge->s[self]), LOAD(edge->t[self]));
 	}
 }
 
 __device__ __inline__ void Edge_compute_fwd_bwd(const RefType self,
-												bool* stable,
-												uint64_t struct_step_parity){
+												bool* stable){
 	
 	if ((LOAD(node->set[LOAD(edge->t[self])]) == LOAD(node->set[LOAD(edge->s[self])]))) {
 		if (LOAD(node->fwd[LOAD(edge->s[self])])) {
@@ -399,27 +390,31 @@ __global__ void schedule_kernel(){
 			fp_stack[0][(uint)!iteration_parity[0]].store(true, cuda::memory_order_relaxed);
 
 
-		nrof_instances = node->nrof_instances2(struct_step_parity & Node_MASK);
-		executeStep<Node_pivots_nominate>(nrof_instances, struct_step_parity, grid, block, &stable);
-		struct_step_parity ^= Node_MASK;
+		TOGGLE_STEP_PARITY(Node);
+		nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
+		executeStep<Node_pivots_nominate>(nrof_instances, grid, block, &stable);
+		node->update_counters(!STEP_PARITY(Node));
 
 		grid.sync();
 
-		nrof_instances = nodeset->nrof_instances2(struct_step_parity & NodeSet_MASK);
-		executeStep<NodeSet_allocate_sets>(nrof_instances, struct_step_parity, grid, block, &stable);
-		struct_step_parity ^= NodeSet_MASK;
+		TOGGLE_STEP_PARITY(NodeSet);
+		nrof_instances = nodeset->nrof_instances2(STEP_PARITY(NodeSet));
+		executeStep<NodeSet_allocate_sets>(nrof_instances, grid, block, &stable);
+		nodeset->update_counters(!STEP_PARITY(NodeSet));
 
 		grid.sync();
 
-		nrof_instances = node->nrof_instances2(struct_step_parity & Node_MASK);
-		executeStep<Node_divide_into_sets_reset_fwd_bwd>(nrof_instances, struct_step_parity, grid, block, &stable);
-		struct_step_parity ^= Node_MASK;
+		TOGGLE_STEP_PARITY(Node);
+		nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
+		executeStep<Node_divide_into_sets_reset_fwd_bwd>(nrof_instances, grid, block, &stable);
+		node->update_counters(!STEP_PARITY(Node));
 
 		grid.sync();
 
-		nrof_instances = nodeset->nrof_instances2(struct_step_parity & NodeSet_MASK);
-		executeStep<NodeSet_initialise_pivot_fwd_bwd>(nrof_instances, struct_step_parity, grid, block, &stable);
-		struct_step_parity ^= NodeSet_MASK;
+		TOGGLE_STEP_PARITY(NodeSet);
+		nrof_instances = nodeset->nrof_instances2(STEP_PARITY(NodeSet));
+		executeStep<NodeSet_initialise_pivot_fwd_bwd>(nrof_instances, grid, block, &stable);
+		nodeset->update_counters(!STEP_PARITY(NodeSet));
 
 		grid.sync();
 
@@ -430,9 +425,10 @@ __global__ void schedule_kernel(){
 				fp_stack[1][(uint)!iteration_parity[1]].store(true, cuda::memory_order_relaxed);
 
 
-			nrof_instances = edge->nrof_instances2(struct_step_parity & Edge_MASK);
-			executeStep<Edge_compute_fwd_bwd>(nrof_instances, struct_step_parity, grid, block, &stable);
-			struct_step_parity ^= Edge_MASK;
+			TOGGLE_STEP_PARITY(Edge);
+			nrof_instances = edge->nrof_instances2(STEP_PARITY(Edge));
+			executeStep<Edge_compute_fwd_bwd>(nrof_instances, grid, block, &stable);
+			edge->update_counters(!STEP_PARITY(Edge));
 			if(!stable)
 				clear_stack(1, iteration_parity[1]);
 			grid.sync();
@@ -444,9 +440,10 @@ __global__ void schedule_kernel(){
 	} while(!fp_stack[0][(uint)iteration_parity[0]].load(cuda::memory_order_relaxed));
 
 
-	nrof_instances = node->nrof_instances2(struct_step_parity & Node_MASK);
-	executeStep<print_Node>(nrof_instances, struct_step_parity, grid, block, &stable);
-	struct_step_parity ^= Node_MASK;
+	TOGGLE_STEP_PARITY(Node);
+	nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
+	executeStep<print_Node>(nrof_instances, grid, block, &stable);
+	node->update_counters(!STEP_PARITY(Node));
 }
 
 

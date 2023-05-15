@@ -35,7 +35,7 @@ impl SingleKernelSchedule<'_> {
 	fn kernel_parameters(&self, including_self : bool) -> Vec<String> {
 		// Use this version when passing struct managers as kernel parameters
 		// let mut structs = self._get_struct_manager_parameters();
-		let mut structs = vec!["bool* stable".to_string(), "uint64_t struct_step_parity".to_string()];
+		let mut structs = vec!["bool* stable".to_string()];
 
 		if including_self {
 			let mut self_and_structs = vec!["const RefType self".to_string()];
@@ -133,23 +133,25 @@ impl SingleKernelSchedule<'_> {
 
 		if let TypedStepCall(struct_name, step_name, _) = sched {
 			let indent = "\t".repeat(fp_level+1);
-			let strct = self.program.struct_by_name(struct_name).unwrap();
-			let strct_name = &strct.name;
+			let struct_name_lwr = struct_name.to_lowercase();
+			
 			let func_name;
-
 			if step_name == "print" {
-				func_name = format!("print_{}", strct.name);
+				func_name = format!("print_{struct_name}");
 			} else {
+				let strct = self.program.struct_by_name(struct_name).unwrap();
 				let step = strct.step_by_name(step_name).unwrap();
 				func_name = self.step_function_name(strct, step);
 			}
 
-			let nrof_instances = format!("{}->nrof_instances2(struct_step_parity & {struct_name}_MASK)", struct_name.to_lowercase());
+			let parity_value = format!("STEP_PARITY({struct_name})");
+			let nrof_instances = format!("{struct_name_lwr}->nrof_instances2({parity_value})");
 
 			formatdoc!{"
+				{indent}TOGGLE_STEP_PARITY({struct_name});
 				{indent}nrof_instances = {nrof_instances};
-				{indent}executeStep<{func_name}>(nrof_instances, struct_step_parity, grid, block, &stable);
-				{indent}struct_step_parity ^= {strct_name}_MASK;"
+				{indent}executeStep<{func_name}>(nrof_instances, grid, block, &stable);
+				{indent}{struct_name_lwr}->update_counters(!{parity_value});"
 			}
 		} else {
 			unreachable!()
@@ -235,10 +237,21 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	}
 
 	fn defines(&self) -> Option<String> {
+		let fp_depth = self.program.schedule.fixpoint_depth();
+		let masks = self.program
+						.structs
+						.iter()
+						.enumerate()
+						.map(|(idx, s)| format!("#define {}_MASK (1ULL << {idx})", s.name))
+						.collect::<Vec<String>>()
+						.join("\n");
+
 		Some(formatdoc!("
-				#define FP_DEPTH {}
-			",
-			self.program.schedule.fixpoint_depth()
+				#define FP_DEPTH {fp_depth}
+				{masks}
+				#define STEP_PARITY(STRUCT) ((bool)(struct_step_parity & STRUCT ## _MASK))
+				#define TOGGLE_STEP_PARITY(STRUCT) {{struct_step_parity ^= STRUCT ## _MASK;}}
+			"
 		))
 	}
 	

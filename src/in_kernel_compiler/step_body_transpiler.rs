@@ -91,7 +91,6 @@ impl StepBodyTranspiler<'_> {
 											  .collect::<Vec<String>>();
 
 				if self.use_step_parity {
-					arg_expressions.push("struct_step_parity".to_string());
 					arg_expressions.push("stable".to_string());
 				}
 

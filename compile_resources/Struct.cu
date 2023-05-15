@@ -102,9 +102,7 @@ __host__ __device__ inst_size Struct::nrof_instances(void){
 }
 
 __host__ __device__ inst_size Struct::nrof_instances2(bool step_parity){
-	error, check this & alternating fixpoint logic.
-	executing_instances[(uint)step_parity].fetch_max(executing_instances[(uint)!step_parity].load(cuda::memory_order_relaxed));
-	return executing_instances[(uint)step_parity];
+	return executing_instances[(uint)step_parity].load(cuda::memory_order_relaxed);
 }
 
 __host__ __device__ inst_size Struct::difference(void){
