@@ -55,7 +55,7 @@ fn main() {
         (@arg nrofinstances: -N --nrofinstances +takes_value default_value("1000") value_parser(clap::value_parser!(usize)) "nrof struct instances memory is allocated for.")
         (@arg instsperthread: -M --instsperthread +takes_value default_value("8") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
         (@arg threads_per_block: -T --threadsperblock +takes_value default_value("256") value_parser(clap::value_parser!(usize)) "Number of threads per block.")
-        (@arg buffersize: -b --buffersize +takes_value default_value("2048") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
+        (@arg buffersize: -b --buffersize +takes_value default_value("4096") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
         (@arg printnthinst: -d --printnthinst +takes_value default_value("0") value_parser(clap::value_parser!(usize)) "Print every n'th allocated instance.")
         (@arg printunstable: -u --printunstable "Print which step changed the stability stack.")
         (@arg output: -o --output +takes_value "Output file")
