@@ -42,6 +42,7 @@ impl FPStrategy for NaiveFixpoint {
 		let indent = "\t".repeat(lvl+2);
 		formatdoc!{"
 			{indent}bool stable = true;
+			{indent}grid.sync();
 			{indent}if (is_thread0)
 			{indent}	fp_stack[{lvl}].store(true, cuda::memory_order_relaxed);
 			{indent}grid.sync();
