@@ -32,6 +32,12 @@ public:
 
 	__host__ __device__ inst_size difference(void);
 
+	__device__ __inline__ void update_counters(bool parity) {
+		executing_instances[(uint)parity].fetch_max(
+			created_instances.load(cuda::memory_order_relaxed)
+		);
+	}
+
 protected:
 	virtual size_t child_size(void) = 0;
 
@@ -60,12 +66,6 @@ protected:
 		assert(slot < capacity); // Incurs a stacksize penalty.
 		
 		return slot;
-	}
-
-	__device__ __inline__ void update_counters(bool parity) {
-		executing_instances[(uint)parity].fetch_max(
-			created_instances.load(cuda::memory_order_relaxed)
-		);
 	}
 
 	bool is_initialised;
