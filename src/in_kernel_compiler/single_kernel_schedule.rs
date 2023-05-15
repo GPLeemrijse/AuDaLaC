@@ -182,7 +182,7 @@ impl SingleKernelSchedule<'_> {
 
 	fn step_as_c_function(&self, strct : &ADLStruct, step : &Step, fp_level : usize) -> String {
 		let func_name = self.step_function_name(strct, step);
-		let func_header = format!("__device__ __inline__ void {func_name}");
+		let func_header = format!("__device__ void {func_name}");
 
 		let params = self.kernel_parameters(true);
 

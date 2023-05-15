@@ -192,19 +192,26 @@ __device__ Edge* __restrict__ edge;
 __device__ Node* __restrict__ node;
 __device__ NodeSet* __restrict__ nodeset;
 
-__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH][2];
+/* Transform an iter_idx into the fp_stack index
+   associated with that operation.
+*/
+#define FP_SET(X) (X)
+#define FP_RESET(X) ((X) + 1 >= 3 ? (X) + 1 - 3 : (X) + 1)
+#define FP_READ(X) ((X) + 2 >= 3 ? (X) + 2 - 3 : (X) + 2)
 
-__device__ __inline__ void clear_stack(int lvl, bool* iteration_parity) {
-	/*	Clears the stack on the iteration_parity side.
-		The !iteration_parity side is currently (being set to) true.
+__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH][3];
+
+__device__ __inline__ void clear_stack(int lvl, uint8_t* iter_idx) {
+	/*	Clears the stack on the FP_SET side.
+		The FP_RESET and FP_READ sides should remain the same.
 	*/
 	while(lvl >= 0){
-		fp_stack[lvl][(uint)iteration_parity[lvl]].store(false, cuda::memory_order_relaxed);
+		fp_stack[lvl][FP_SET(iter_idx[lvl])].store(false, cuda::memory_order_relaxed);
 		lvl--;
 	}
 }
 
-typedef void(*step_func)(RefType, bool*, uint64_t);
+typedef void(*step_func)(RefType, bool*);
 template <step_func Step>
 __device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_block block, bool* stable){
 	for(int i = 0; i < I_PER_THREAD; i++){
@@ -232,8 +239,8 @@ __device__ __inline__ void print_NodeSet(const RefType self,
 	}
 }
 
-__device__ __inline__ void NodeSet_allocate_sets(const RefType self,
-												 bool* stable){
+__device__ void NodeSet_allocate_sets(const RefType self,
+											  bool* stable){
 	
 	if ((LOAD(nodeset->pivot_f_b[self]) != (RefType)0)) {
 		if ((LOAD(nodeset->pivot_nf_nb[self]) == (RefType)0)) {
@@ -265,8 +272,8 @@ __device__ __inline__ void NodeSet_allocate_sets(const RefType self,
 	}
 }
 
-__device__ __inline__ void NodeSet_initialise_pivot_fwd_bwd(const RefType self,
-															bool* stable){
+__device__ void NodeSet_initialise_pivot_fwd_bwd(const RefType self,
+														 bool* stable){
 	
 	if ((!LOAD(nodeset->scc[self]))) {
 		// pivot_f_b.fwd := true;
@@ -303,8 +310,8 @@ __device__ __inline__ void print_Node(const RefType self,
 	}
 }
 
-__device__ __inline__ void Node_pivots_nominate(const RefType self,
-												bool* stable){
+__device__ void Node_pivots_nominate(const RefType self,
+											 bool* stable){
 	
 	if ((!LOAD(nodeset->scc[LOAD(node->set[self])]))) {
 		BoolType f = LOAD(node->fwd[self]);
@@ -328,8 +335,8 @@ __device__ __inline__ void Node_pivots_nominate(const RefType self,
 	}
 }
 
-__device__ __inline__ void Node_divide_into_sets_reset_fwd_bwd(const RefType self,
-															   bool* stable){
+__device__ void Node_divide_into_sets_reset_fwd_bwd(const RefType self,
+															bool* stable){
 	
 	BoolType f = LOAD(node->fwd[self]);
 	BoolType b = LOAD(node->bwd[self]);
@@ -358,8 +365,8 @@ __device__ __inline__ void print_Edge(const RefType self,
 	}
 }
 
-__device__ __inline__ void Edge_compute_fwd_bwd(const RefType self,
-												bool* stable){
+__device__ void Edge_compute_fwd_bwd(const RefType self,
+											 bool* stable){
 	
 	if ((LOAD(node->set[LOAD(edge->t[self])]) == LOAD(node->set[LOAD(edge->s[self])]))) {
 		if (LOAD(node->fwd[LOAD(edge->s[self])])) {
@@ -381,13 +388,14 @@ __global__ void schedule_kernel(){
 	inst_size nrof_instances;
 	uint64_t struct_step_parity = 0; // bitmask
 	bool stable = true; // Only used to compile steps outside fixpoints
-	bool iteration_parity[FP_DEPTH] = {false};
+	uint8_t iter_idx[FP_DEPTH] = {0}; // Denotes which fp_stack index ([0, 2]) is currently being set.
 
 	do{
-		iteration_parity[0] = !iteration_parity[0];
 		bool stable = true;
-		if (is_thread0)
-			fp_stack[0][(uint)!iteration_parity[0]].store(true, cuda::memory_order_relaxed);
+		if (is_thread0){
+			/* Resets the next fp_stack index in advance. */
+			fp_stack[0][FP_RESET(iter_idx[0])].store(true, cuda::memory_order_relaxed);
+		}
 
 
 		TOGGLE_STEP_PARITY(Node);
@@ -419,25 +427,32 @@ __global__ void schedule_kernel(){
 		grid.sync();
 
 		do{
-			iteration_parity[1] = !iteration_parity[1];
 			bool stable = true;
-			if (is_thread0)
-				fp_stack[1][(uint)!iteration_parity[1]].store(true, cuda::memory_order_relaxed);
+			if (is_thread0){
+				/* Resets the next fp_stack index in advance. */
+				fp_stack[1][FP_RESET(iter_idx[1])].store(true, cuda::memory_order_relaxed);
+			}
 
 
 			TOGGLE_STEP_PARITY(Edge);
 			nrof_instances = edge->nrof_instances2(STEP_PARITY(Edge));
 			executeStep<Edge_compute_fwd_bwd>(nrof_instances, grid, block, &stable);
 			edge->update_counters(!STEP_PARITY(Edge));
-			if(!stable)
-				clear_stack(1, iteration_parity[1]);
+			if(!stable){
+				clear_stack(1, iter_idx);
+			}
+			/* The next index to set is the one that has been reset. */
+			iter_idx[1] = FP_RESET(iter_idx[1]);
 			grid.sync();
-		} while(!fp_stack[1][(uint)iteration_parity[1]].load(cuda::memory_order_relaxed));
+		} while(!fp_stack[1][FP_READ(iter_idx[1])].load(cuda::memory_order_relaxed));
 
-		if(!stable)
-			clear_stack(0, iteration_parity[0]);
+		if(!stable){
+			clear_stack(0, iter_idx);
+		}
+		/* The next index to set is the one that has been reset. */
+		iter_idx[0] = FP_RESET(iter_idx[0]);
 		grid.sync();
-	} while(!fp_stack[0][(uint)iteration_parity[0]].load(cuda::memory_order_relaxed));
+	} while(!fp_stack[0][FP_READ(iter_idx[0])].load(cuda::memory_order_relaxed));
 
 
 	TOGGLE_STEP_PARITY(Node);
@@ -475,7 +490,7 @@ int main(int argc, char **argv) {
 
 	cuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
 	cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack);
-	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 2 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
+	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
 
 	void* schedule_kernel_args[] = {};
 	auto dims = ADL::get_launch_dims(188, (void*)schedule_kernel);
