@@ -91,8 +91,8 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 	this->instantiated_instances = info->nrof_instances + 1; // null-instance
 	this->active_instances = info->nrof_instances + 1;
 	this->created_instances = info->nrof_instances + 1;
-	this->executing_instances[0] = info->nrof_instances + 1;
-	this->executing_instances[1] = info->nrof_instances + 1;
+	this->executing_instances[0].store(info->nrof_instances + 1, cuda::memory_order_relaxed);
+	this->executing_instances[1].store(info->nrof_instances + 1, cuda::memory_order_relaxed);
 	this->capacity = capacity;
 	this->is_initialised = true;
 }
@@ -102,7 +102,9 @@ __host__ __device__ inst_size Struct::nrof_instances(void){
 }
 
 __host__ __device__ inst_size Struct::nrof_instances2(bool step_parity){
-	return executing_instances[(int)step_parity];
+	error, check this & alternating fixpoint logic.
+	executing_instances[(uint)step_parity].fetch_max(executing_instances[(uint)!step_parity].load(cuda::memory_order_relaxed));
+	return executing_instances[(uint)step_parity];
 }
 
 __host__ __device__ inst_size Struct::difference(void){
