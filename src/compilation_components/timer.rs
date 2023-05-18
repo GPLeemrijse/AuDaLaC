@@ -37,7 +37,7 @@ impl CompileComponent for Timer {
 			\tcudaEventSynchronize(stop);
 			\tfloat ms = 0;
 			\tcudaEventElapsedTime(&ms, start, stop);
-			\tprintf(\"Total walltime: %0.2f ms\\n\");
+			\tprintf(\"Total walltime: %0.2f ms\\n\", ms);
 		"})
 	}
 }
