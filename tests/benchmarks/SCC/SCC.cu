@@ -1,8 +1,8 @@
 #define I_PER_THREAD 16
 #define THREADS_PER_BLOCK 256
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
-#define STORE(A, B) A.store(B, cuda::memory_order_release)
-#define LOAD(A) A.load(cuda::memory_order_acquire)
+#define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
+#define LOAD(A) A.load(cuda::memory_order_relaxed)
 #define FP_DEPTH 2
 #define NodeSet_MASK (1ULL << 0)
 #define Node_MASK (1ULL << 1)
@@ -240,7 +240,7 @@ __device__ __inline__ void print_NodeSet(const RefType self,
 }
 
 __device__ void NodeSet_allocate_sets(const RefType self,
-											  bool* stable){
+									  bool* stable){
 	
 	if ((LOAD(nodeset->pivot_f_b[self]) != (RefType)0)) {
 		if ((LOAD(nodeset->pivot_nf_nb[self]) == (RefType)0)) {
@@ -273,7 +273,7 @@ __device__ void NodeSet_allocate_sets(const RefType self,
 }
 
 __device__ void NodeSet_initialise_pivot_fwd_bwd(const RefType self,
-														 bool* stable){
+												 bool* stable){
 	
 	if ((!LOAD(nodeset->scc[self]))) {
 		// pivot_f_b.fwd := true;
@@ -311,7 +311,7 @@ __device__ __inline__ void print_Node(const RefType self,
 }
 
 __device__ void Node_pivots_nominate(const RefType self,
-											 bool* stable){
+									 bool* stable){
 	
 	if ((!LOAD(nodeset->scc[LOAD(node->set[self])]))) {
 		BoolType f = LOAD(node->fwd[self]);
@@ -336,7 +336,7 @@ __device__ void Node_pivots_nominate(const RefType self,
 }
 
 __device__ void Node_divide_into_sets_reset_fwd_bwd(const RefType self,
-															bool* stable){
+													bool* stable){
 	
 	BoolType f = LOAD(node->fwd[self]);
 	BoolType b = LOAD(node->bwd[self]);
@@ -366,7 +366,7 @@ __device__ __inline__ void print_Edge(const RefType self,
 }
 
 __device__ void Edge_compute_fwd_bwd(const RefType self,
-											 bool* stable){
+									 bool* stable){
 	
 	if ((LOAD(node->set[LOAD(edge->t[self])]) == LOAD(node->set[LOAD(edge->s[self])]))) {
 		if (LOAD(node->fwd[LOAD(edge->s[self])])) {
@@ -469,14 +469,14 @@ int main(int argc, char **argv) {
 	}
 
 	std::vector<InitFile::StructInfo> structs = InitFile::parse(argv[1]);
-	cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 2097152);
+	cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 4194304);
 	CHECK(cudaHostRegister(&host_Edge, sizeof(Edge), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_NodeSet, sizeof(NodeSet), cudaHostRegisterDefault));
 
-	host_Edge.initialise(&structs[0], 1000);
-	host_Node.initialise(&structs[1], 1000);
-	host_NodeSet.initialise(&structs[2], 1000);
+	host_Edge.initialise(&structs[0], 10000);
+	host_Node.initialise(&structs[1], 10000);
+	host_NodeSet.initialise(&structs[2], 10000);
 
 	CHECK(cudaDeviceSynchronize());
 
@@ -491,9 +491,14 @@ int main(int argc, char **argv) {
 	cuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
 	cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack);
 	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start);
+
 
 	void* schedule_kernel_args[] = {};
-	auto dims = ADL::get_launch_dims(188, (void*)schedule_kernel);
+	auto dims = ADL::get_launch_dims(1875, (void*)schedule_kernel);
 
 	CHECK(
 		cudaLaunchCooperativeKernel(
@@ -506,5 +511,10 @@ int main(int argc, char **argv) {
 	CHECK(cudaDeviceSynchronize());
 
 
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	float ms = 0;
+	cudaEventElapsedTime(&ms, start, stop);
+	printf("Total walltime: %0.2f ms\n");
 
 }

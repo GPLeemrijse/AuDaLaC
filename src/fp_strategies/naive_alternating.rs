@@ -77,8 +77,8 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 		formatdoc!("
 			\tcuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
 			\tcudaGetSymbolAddress((void **)&fp_stack_address, fp_stack);
-			\tCHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));"
-		)
+			\tCHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
+		")
 	}
 
 	fn requires_intra_fixpoint_sync(&self) -> bool {

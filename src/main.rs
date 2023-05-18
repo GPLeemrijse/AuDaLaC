@@ -46,6 +46,7 @@ fn main() {
         (author: "GPLeemrijse <g.p.leemrijse@student.tue.nl>")
         (about: "Parses \"ADL\" programs")
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
+        (@arg time: -t --time "Print timing information.")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
         (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") possible_value("in-kernel") default_value("coalesced") "Which compiler to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
@@ -64,6 +65,7 @@ fn main() {
     .get_matches();
 
     let print_ast = args.is_present("print_ast");
+    let time = args.is_present("time");
     let init_file = args.is_present("init_file");
     let print_unstable = args.is_present("printunstable");
     let nrof_instances_per_struct : usize = *args.get_one("nrofinstances").unwrap();
@@ -170,7 +172,8 @@ fn main() {
                                     &*fp_strat,
                                     &step_transpiler,
                                     &work_divisor
-                                )
+                                ),
+                                &Timer::new()
                             ]);
                         },
                         _ => unreachable!()
