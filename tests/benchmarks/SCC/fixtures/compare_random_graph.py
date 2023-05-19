@@ -90,10 +90,12 @@ lines_cpp = [];
 
 
 # Make standard output format
-for l in output[:-2]: # Skip trailing nl and nrof components
+for l in output[:-3]: # Skip trailing nl and nrof components
 	nodes = [int(node) for node in l.strip().split(" ")];
 	lines_cpp.append(" ".join([str(i) for i in sorted(nodes)]));
+print(output[-2]);
 lines_cpp.sort();
+
 
 
 if lines_adl != lines_cpp:
