@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate lalrpop_util;
+use codespan_reporting::diagnostic::Label;
+use codespan_reporting::diagnostic::Diagnostic;
 use crate::in_kernel_compiler::{WorkDivisor, DivisionStrategy};
 use crate::transpilation_traits::FPStrategy;
 use crate::fp_strategies::NaiveAlternatingFixpoint;
@@ -15,7 +17,7 @@ use crate::coalesced_compiler::*;
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use codespan_reporting::term::{self};
-
+use lalrpop_util::ParseError;
 use crate::ast_validator::validate_ast;
 use crate::init_file_generator::generate_init_file;
 use crate::adl::ProgramParser;
@@ -190,7 +192,24 @@ fn main() {
             }
         }
         Err(e) => {
-            panic!("{:?}", e)
+            let range = match e {
+                ParseError::InvalidToken { location } => location..(location + 1),
+                ParseError::UnrecognizedEOF {location, expected: _ } => location..(location + 1),
+                ParseError::UnrecognizedToken { token, expected: _ } => token.0..token.2,
+                ParseError::ExtraToken { token } => token.0..token.2,
+                _ => panic!("{:?}", e)
+            };
+
+            let d_err = Diagnostic::error()
+                                    .with_message("Parsing error.")
+                                    .with_labels(vec![
+                                        Label::primary((), range).with_message("here")
+                                    ]);
+            let file = SimpleFile::new(adl_file_loc, adl_program_text);
+            let writer = StandardStream::stderr(ColorChoice::Always);
+            let config = codespan_reporting::term::Config::default();
+
+            let _ = term::emit(&mut writer.lock(), &config, &file, &d_err);
         }
     }
 }

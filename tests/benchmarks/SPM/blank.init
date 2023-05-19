@@ -1,0 +1,7 @@
+ADL structures 3
+Edge Node Node Measure Measure
+Measure Bool Nat Nat
+Node Nat Bool Measure Measure Measure
+Edge instances 0
+Measure instances 0
+Node instances 0

@@ -70,7 +70,7 @@ struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 			// Result is strictly greater up to v.p than w.rho, or Top 
 			m.top := w.rho.top;
 			if !m.top then {
-				Bool incr = false;
+				Bool incr := false;
 				
 				// Attempt to increase least significant measure
 				if v.p >= 3 && w.rho.p3 < max.p3 then {
@@ -97,17 +97,17 @@ struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 	top {
 		// if m is not top then the minimum candidate is also not top
 		if v.owner && !m.top then {
-			v.candidate.top = false;
+			v.candidate.top := false;
 		}
 
 		// if m is not top then the maximum candidate is also top
 		if !v.owner && m.top then {
-			v.candidate.top = true;
+			v.candidate.top := true;
 		}
 	}
 
 	priority_1 {
-		if !v.candidate.top {
+		if !v.candidate.top then {
 			if (v.owner  && m.p1 < v.candidate.p1) ||
 			   (!v.owner && m.p1 > v.candidate.p1) then {
 				v.candidate.p1 := m.p1;
@@ -116,7 +116,7 @@ struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 	}
 
 	priority_3 {
-		if !v.candidate.top && v.candidate.p1 == m.p1 {
+		if !v.candidate.top && v.candidate.p1 == m.p1 then {
 			if (v.owner  && m.p3 < v.candidate.p3) ||
 			   (!v.owner && m.p3 > v.candidate.p3) then {
 				v.candidate.p3 := m.p3;
@@ -139,19 +139,18 @@ struct Measure(top : Bool, p1 : Nat, p3 : Nat) {
 		Node Z := Node(3, even, Measure(false, 0, 0), Measure(false, 0, 0), max);
 		Node Z_p := Node(3, even, Measure(false, 0, 0), Measure(false, 0, 0), max);
 
-		Edge(X, X, Measure(false, 0, 0), max);
-		Edge(X, X_p, Measure(false, 0, 0), max);
-		Edge(X_p, Y, Measure(false, 0, 0), max);
-		Edge(X_p, Z, Measure(false, 0, 0), max);
-		Edge(Y, Y_p, Measure(false, 0, 0), max);
-		Edge(Y, W, Measure(false, 0, 0), max);
-		
-		Edge(Y_p, Y, Measure(false, 0, 0), max);
-		Edge(Y_p, X, Measure(false, 0, 0), max);
-		Edge(W, W, Measure(false, 0, 0), max);
-		Edge(W, Z, Measure(false, 0, 0), max);
-		Edge(Z, Z_p, Measure(false, 0, 0), max);
-		Edge(Z_p, Z_p, Measure(false, 0, 0), max);
+		Edge e1 := Edge(X, X, Measure(false, 0, 0), max);
+		Edge e2 := Edge(X, X_p, Measure(false, 0, 0), max);
+		Edge e3 := Edge(X_p, Y, Measure(false, 0, 0), max);
+		Edge e4 := Edge(X_p, Z, Measure(false, 0, 0), max);
+		Edge e5 := Edge(Y, Y_p, Measure(false, 0, 0), max);
+		Edge e6 := Edge(Y, W, Measure(false, 0, 0), max);
+		Edge e7 := Edge(Y_p, Y, Measure(false, 0, 0), max);
+		Edge e8 := Edge(Y_p, X, Measure(false, 0, 0), max);
+		Edge e9 := Edge(W, W, Measure(false, 0, 0), max);
+		Edge e10 := Edge(W, Z, Measure(false, 0, 0), max);
+		Edge e11 := Edge(Z, Z_p, Measure(false, 0, 0), max);
+		Edge e12 := Edge(Z_p, Z_p, Measure(false, 0, 0), max);
 	}
 }
 
