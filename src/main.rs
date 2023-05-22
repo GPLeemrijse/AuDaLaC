@@ -148,7 +148,8 @@ fn main() {
 
                             let step_transpiler = StepBodyTranspiler::new(
                                 &type_info,
-                                true
+                                true,
+                                print_unstable
                             );
 
                             let work_divisor = WorkDivisor::new(

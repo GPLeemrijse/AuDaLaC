@@ -6,15 +6,17 @@ use indoc::formatdoc;
 
 pub struct StepBodyTranspiler<'a> {
 	var_exp_type_info : &'a HashMap<*const Exp, Vec<Type>>,
-	use_step_parity : bool
+	use_step_parity : bool,
+	print_unstable : bool,
 }
 
 
 impl StepBodyTranspiler<'_> {
-	pub fn new<'a>(type_info : &'a HashMap<*const Exp, Vec<Type>>, use_step_parity : bool) -> StepBodyTranspiler<'a> {
+	pub fn new<'a>(type_info : &'a HashMap<*const Exp, Vec<Type>>, use_step_parity : bool, print_unstable : bool) -> StepBodyTranspiler<'a> {
 		StepBodyTranspiler{
 			var_exp_type_info : type_info,
-			use_step_parity
+			use_step_parity,
+			print_unstable
 		}
 	}
 
@@ -61,9 +63,15 @@ impl StepBodyTranspiler<'_> {
 								 .unwrap()
 						);
 
+						let param_str_param = if self.print_unstable {
+							format!(", \"{owner_type_name}.{param}\"")
+						} else {
+							"".to_string()
+						};
+
 						formatdoc!{"
 							{indent}// {lhs_exp} := {rhs_exp};
-							{indent}SetParam<{par_type_name}>({owner_exp}, {owner_type_name_lwr}->{param}, {rhs_as_c}, stable);"
+							{indent}SetParam<{par_type_name}>({owner_exp}, {owner_type_name_lwr}->{param}, {rhs_as_c}, stable{param_str_param});"
 						}
 					} else {
 						format!("{indent}{lhs_as_c} = {rhs_as_c};")
@@ -174,17 +182,33 @@ impl StepBodyTranspiler<'_> {
 	}
 
 	fn set_param_function(&self) -> String {
-		formatdoc!("
-			template<typename T>
-			__device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {{
-			    if (owner != 0){{
-			    	T old_val = LOAD(params[owner]);
-			    	if (old_val != new_val){{
-			    		STORE(params[owner], new_val);
-			    		*stable = false;
-			    	}}
-			    }}
-			}}
-		")
+		if self.print_unstable {
+			formatdoc!("
+				template<typename T>
+				__device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable, const char* par_str) {{
+					if (owner != 0){{
+						T old_val = LOAD(params[owner]);
+						if (old_val != new_val){{
+							STORE(params[owner], new_val);
+							*stable = false;
+							printf(\"%s was set (%u).\\n\", par_str, owner);
+						}}
+					}}
+				}}
+			")
+		} else {
+			formatdoc!("
+				template<typename T>
+				__device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {{
+					if (owner != 0){{
+						T old_val = LOAD(params[owner]);
+						if (old_val != new_val){{
+							STORE(params[owner], new_val);
+							*stable = false;
+						}}
+					}}
+				}}
+			")
+		}
 	}
 }
