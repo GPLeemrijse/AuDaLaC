@@ -1,40 +1,17 @@
 
 struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Measure) {
-	
-	reset_candidate {
-		if owner then {
-			candidate.top := true;
-			candidate.p1 := max.p1;
-			candidate.p3 := max.p3;
-		}
-
-		if !owner then {
-			candidate.top := false;
-			candidate.p1 := 0;
-			candidate.p3 := 0;
-		}
-	}
 
 	max_candidate {
-		Bool copy := false;
-		if candidate.top then {
-			copy := true;
-		}
-		if !candidate.top then {
-			if candidate.p1 > rho.p1 then {
-				copy := true;
-			}
-			if candidate.p1 <= rho.p1 then {
-				if candidate.p3 > rho.p3 then {
-					copy := true;
-				}	
-			}
-		}
+		if candidate != null && !rho.top then {
+			Bool copy := candidate.top ||
+						 (candidate.p1 > rho.p1) ||
+						 (candidate.p1 <= rho.p1 && candidate.p3 > rho.p3);
 
-		if copy then {
-			rho.top := candidate.top;
-			rho.p1 := candidate.p1;
-			rho.p3 := candidate.p3;
+			if copy then {
+				rho.top := candidate.top;
+				rho.p1 := candidate.p1;
+				rho.p3 := candidate.p3;
+			}
 		}
 	}
 }
@@ -42,95 +19,130 @@ struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Mea
 struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 
 	prog {
-		// m is (least) equivalent up to v.p to w.rho
-		m.top := w.rho.top;
+		Bool top_old := m.top;
+		Nat p1_old := m.p1;
+		Nat p3_old := m.p3;
 
-		if !m.top then {
-			if v.p >= 1 then {
-				m.p1 := w.rho.p1;
-			}
-			if v.p < 1 then {
-				m.p1 := 0;
-			}
+		// Even
+		if v.p % 2 == 0 then {
+			// m is (least) equivalent up to v.p to w.rho
+			m.top := w.rho.top;
 
-			if v.p >= 3 then {
-				m.p3 := w.rho.p3;
-			}
-			if v.p < 3 then {
-				m.p3 := 0;
-			}
+			if !m.top then {
+				if v.p >= 1 then {
+					m.p1 := w.rho.p1;
+				}
+				if v.p < 1 then {
+					m.p1 := 0;
+				}
 
-			// Increase if Odd
-			if v.p % 2 == 1 then {
+				if v.p >= 3 then {
+					m.p3 := w.rho.p3;
+				}
+				if v.p < 3 then {
+					m.p3 := 0;
+				}
+			}
+		}
+
+		// Odd
+		if v.p % 2 == 1 then {
+			// Result is strictly greater up to v.p than w.rho, or Top 
+			m.top := w.rho.top;
+			if !m.top then {
 				Bool incr := false;
-					
+				
 				// Attempt to increase least significant measure
-				if v.p >= 3 && m.p3 < max.p3 then {
-					m.p3 := m.p3 + 1;
+				if v.p >= 3 && w.rho.p3 < max.p3 then {
+					m.p3 := w.rho.p3 + 1;
 					incr := true;
 				}
 				// If not increased, check next priority.
 				if !incr then {
 					m.p3 := 0;
 					// incrementing p1 possible
-					if v.p >= 1 && m.p1 < max.p1 then {
-						m.p1 := m.p1 + 1;
+					if v.p >= 1 && w.rho.p1 < max.p1 then {
+						m.p1 := w.rho.p1 + 1;
 						incr := true;
 					}
 					// If p1 couldn't be incremented, Top is the only option.
 					if !incr then {
-						m.p1 := 0;
 						m.top := true;
 					}
 				}
 			}
 		}
+		Bool is_stable := top_old == m.top && p1_old == m.p1 && p3_old == m.p3;
+
+		if !is_stable && v.candidate == m then {
+			v.candidate := null;
+		}
 	}
 	
 	top {
-		// if m is not top then the minimum candidate is also not top
-		if v.owner && !m.top then {
-			v.candidate.top := false;
+		/*	Nominate yourself as minimum (because owner is even) candidate
+			if you are not top but the current candidate is, or the current 
+			candidate is null.
+		*/
+		if v.owner && (v.candidate == null || (!m.top && v.candidate.top)) then {
+			v.candidate := m;
 		}
 
-		// if m is not top then the maximum candidate is also top
-		if !v.owner && m.top then {
-			v.candidate.top := true;
+		/*	Nominate yourself as maximum (because owner is odd) candidate
+			if you are top but the current candidate is not, or the current
+			candidate is null.
+		*/
+		if !v.owner && (v.candidate == null || (m.top && !v.candidate.top)) then {
+			v.candidate := m;
 		}
 	}
 
 	priority_1 {
-		if !v.candidate.top then {
+		/*	First make sure you share the higher significance measures
+			with the candidate (which is now guaranteed not to be null).
+		*/
+		if v.candidate.top == m.top then {
+			/*	If the owner is even and you have a lower p1 measure,
+				or the owner is odd and you have a higher p1 measure,
+				then nominate yourself as candidate.
+			*/
 			if (v.owner  && m.p1 < v.candidate.p1) ||
 			   (!v.owner && m.p1 > v.candidate.p1) then {
-				v.candidate.p1 := m.p1;
+				v.candidate := m;
 			}
 		}	
 	}
 
 	priority_3 {
-		if !v.candidate.top && v.candidate.p1 == m.p1 then {
+		/*	First make sure you share the higher significance measures
+			with the candidate (which is now guaranteed not to be null).
+		*/
+		if v.candidate.top == m.top && v.candidate.p1 == m.p1 then {
+			/*	If the owner is even and you have a lower p3 measure,
+				or the owner is odd and you have a higher p3 measure,
+				then nominate yourself as candidate.
+			*/
 			if (v.owner  && m.p3 < v.candidate.p3) ||
 			   (!v.owner && m.p3 > v.candidate.p3) then {
-				v.candidate.p3 := m.p3;
+				v.candidate := m;
 			}
 		}
 	}
 }
 
 struct Measure(top : Bool, p1 : Nat, p3 : Nat) {
-	init {
+	init_slide18 {
 		Bool even := true;
 		Bool odd := false;
 		Measure max := Measure(false, 2, 3);
 
-		Node X := Node(1, odd, Measure(false, 0, 0), Measure(false, 0, 0), max);
-		Node X_p := Node(1, even, Measure(false, 0, 0), Measure(false, 0, 0), max);
-		Node Y_p := Node(2, even, Measure(false, 0, 0), Measure(false, 0, 0), max);
-		Node Y := Node(2, odd, Measure(false, 0, 0), Measure(false, 0, 0), max);
-		Node W := Node(3, even, Measure(false, 0, 0), Measure(false, 0, 0), max);
-		Node Z := Node(3, even, Measure(false, 0, 0), Measure(false, 0, 0), max);
-		Node Z_p := Node(3, even, Measure(false, 0, 0), Measure(false, 0, 0), max);
+		Node X := Node(1, odd, Measure(false, 0, 0), null, max);
+		Node X_p := Node(1, even, Measure(false, 0, 0), null, max);
+		Node Y_p := Node(2, even, Measure(false, 0, 0), null, max);
+		Node Y := Node(2, odd, Measure(false, 0, 0), null, max);
+		Node W := Node(3, even, Measure(false, 0, 0), null, max);
+		Node Z := Node(3, even, Measure(false, 0, 0), null, max);
+		Node Z_p := Node(3, even, Measure(false, 0, 0), null, max);
 
 		Edge e1 := Edge(X, X, Measure(false, 0, 0), max);
 		Edge e2 := Edge(X, X_p, Measure(false, 0, 0), max);
@@ -145,15 +157,45 @@ struct Measure(top : Bool, p1 : Nat, p3 : Nat) {
 		Edge e11 := Edge(Z, Z_p, Measure(false, 0, 0), max);
 		Edge e12 := Edge(Z_p, Z_p, Measure(false, 0, 0), max);
 	}
+
+	init_fig6a {
+		Bool even := true;
+		Bool odd := false;
+		Measure max := Measure(false, 2, 2);
+
+		Node A := Node(2, even, Measure(false, 0, 0), null, max);
+		Node B := Node(2, even, Measure(false, 0, 0), null, max);
+		Node C := Node(1, odd, Measure(false, 0, 0), null, max);
+		Node D := Node(1, odd, Measure(false, 0, 0), null, max);
+		Node E := Node(0, even, Measure(false, 0, 0), null, max);
+		Node F := Node(0, even, Measure(false, 0, 0), null, max);
+		Node G := Node(3, odd, Measure(false, 0, 0), null, max);
+		Node H := Node(3, odd, Measure(false, 0, 0), null, max);
+
+		Edge e1 := Edge(A, B, Measure(false, 0, 0), max);
+		Edge e2 := Edge(B, A, Measure(false, 0, 0), max);
+		Edge e3 := Edge(C, B, Measure(false, 0, 0), max);
+		Edge e4 := Edge(C, D, Measure(false, 0, 0), max);
+		Edge e5 := Edge(D, C, Measure(false, 0, 0), max);
+		Edge e6 := Edge(E, D, Measure(false, 0, 0), max);
+		Edge e7 := Edge(E, F, Measure(false, 0, 0), max);
+		Edge e8 := Edge(F, E, Measure(false, 0, 0), max);
+		Edge e9 := Edge(G, F, Measure(false, 0, 0), max);
+		Edge e10 := Edge(G, H, Measure(false, 0, 0), max);
+		Edge e11 := Edge(H, G, Measure(false, 0, 0), max);
+		Edge e12 := Edge(A, H, Measure(false, 0, 0), max);
+		Edge e13 := Edge(D, A, Measure(false, 0, 0), max);
+		Edge e14 := Edge(H, E, Measure(false, 0, 0), max);
+		Edge e15 := Edge(F, C, Measure(false, 0, 0), max);
+		Edge e16 := Edge(B, G, Measure(false, 0, 0), max);
+	}
 }
 
 
-init <
-Node.print <
+init_fig6a <
 Fix (
 	prog <
-	reset_candidate <
-	top <
+	Fix(top) <
 	Fix(priority_1) <
 	Fix(priority_3) <
 	max_candidate
