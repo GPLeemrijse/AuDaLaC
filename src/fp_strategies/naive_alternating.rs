@@ -91,7 +91,7 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 		if self.fp_depth > 0 {
 			formatdoc!("
 				\tcuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
-				\tcudaGetSymbolAddress((void **)&fp_stack_address, fp_stack);
+				\tCHECK(cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack));
 				\tCHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));"
 			)
 		} else {
