@@ -138,7 +138,7 @@ impl SingleKernelSchedule<'_> {
 			let func_name;
 			let mut counters_to_update;
 			if step_name == "print" {
-				func_name = format!("print_{struct_name}");
+				func_name = format!("{struct_name}_print");
 				counters_to_update = vec![struct_name];
 			} else {
 				let strct = self.program.struct_by_name(struct_name).unwrap();
@@ -210,7 +210,7 @@ impl SingleKernelSchedule<'_> {
 	}
 
 	fn print_as_c_function(&self, strct : &ADLStruct, _fp_level : usize) -> String {
-		let func_name = format!("print_{}", strct.name);
+		let func_name = format!("{}_print", strct.name);
 		let func_header = format!("__device__ void {func_name}");
 
 		let params = self.kernel_parameters(true);
