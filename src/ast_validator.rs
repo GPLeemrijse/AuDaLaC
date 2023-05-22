@@ -435,6 +435,7 @@ fn check_statement_block<'ast>(
             IfThen(cond, statements1, statements2, cond_loc) => {
                 check_ifthen(cond, statements1, statements2, cond_loc, context);
             }
+            InlineCpp(_) => ()
         }
     }
 }

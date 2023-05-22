@@ -210,6 +210,7 @@ pub enum Stat {
     IfThen(Box<Exp>, Vec<Stat>, Vec<Stat>, Loc),
     Declaration(Type, String, Box<Exp>, Loc),
     Assignment(Box<Exp>, Box<Exp>, Loc),
+    InlineCpp(String),
 }
 
 impl Stat {
@@ -229,7 +230,8 @@ impl Stat {
             },
             Declaration(_, _, e, _)|Assignment(_, e, _) => {
                 result.append(&mut e.visit(f_exp));
-            }
+            },
+            _ => ()
         }
         result
     }

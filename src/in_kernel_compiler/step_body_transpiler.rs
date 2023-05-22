@@ -69,6 +69,7 @@ impl StepBodyTranspiler<'_> {
 						format!("{indent}{lhs_as_c} = {rhs_as_c};")
 					}
 				},
+				InlineCpp(cpp) => format!("{indent}{cpp}")
 			};
 			stmt_vec.push(statement_as_string);
 		}

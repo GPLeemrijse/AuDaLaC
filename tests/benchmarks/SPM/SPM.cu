@@ -250,6 +250,14 @@ __device__ void Node_max_candidate(const RefType self,
 	}
 }
 
+__device__ void Node_print_result(const RefType self,
+								  bool* stable){
+	
+	if (LOAD(measure->top[LOAD(node->rho[self])])) {
+		printf("%u\n", self);
+	}
+}
+
 __device__ void Edge_print(const RefType self,
 						   bool* stable){
 	if (self != 0) {
@@ -549,10 +557,10 @@ __global__ void schedule_kernel(){
 	} while(!fp_stack[0][FP_READ(iter_idx[0])].load(cuda::memory_order_relaxed));
 
 
-	TOGGLE_STEP_PARITY(Measure);
-	nrof_instances = measure->nrof_instances2(STEP_PARITY(Measure));
-	executeStep<Measure_print>(nrof_instances, grid, block, &stable);
-	measure->update_counters(!STEP_PARITY(Measure));
+	TOGGLE_STEP_PARITY(Node);
+	nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
+	executeStep<Node_print_result>(nrof_instances, grid, block, &stable);
+	node->update_counters(!STEP_PARITY(Node));
 }
 
 

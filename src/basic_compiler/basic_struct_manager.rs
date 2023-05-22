@@ -280,6 +280,7 @@ impl BasicStructManager<'_> {
 							format!("{p} = {e_comp};\n")
 						}
 					},
+					InlineCpp(cpp) => cpp.to_string()
 				}
 			);
 		}

@@ -14,6 +14,12 @@ struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Mea
 			}
 		}
 	}
+
+	print_result {
+		if rho.top then {
+			$$printf("%u\n", self);
+		}
+	}
 }
 
 struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
@@ -222,4 +228,4 @@ Fix (
 	Fix(priority_3) <
 	max_candidate
 ) <
-Measure.print
+print_result

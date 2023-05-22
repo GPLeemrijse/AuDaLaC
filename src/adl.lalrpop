@@ -16,6 +16,7 @@ match {
     "Nat" => "Nat",
     "Int" => "Int",
     "Bool" => "Bool",
+    r"\$\$[^\n]*" => INLINECPP,
     r#""[^"]*""# => STRING,
     r"(0|[1-9][0-9]*)" => NAT,
     r"-[1-9][0-9]*" => INT,
@@ -104,6 +105,7 @@ pub Stat: Stat = {
     "if" <start:@L> <e:Exp> <end:@R> "then" "{" <s:Stats> "}" => Stat::IfThen(Box::new(e), s, vec![], (start, end)),
     <start:@L> <t:Type> <id:SimpleID> ":=" <e:Exp> ";" <end:@R> => Stat::Declaration(t, id, Box::new(e), (start, end)),
     <start:@L> <v:Var_Exp> ":=" <e:Exp> ";" <end:@R> => Stat::Assignment(Box::new(v), Box::new(e), (start, end)),
+    <cpp:INLINECPP> => Stat::InlineCpp(cpp[2..].to_string())
 }
 
 Var_Exp: Exp = {

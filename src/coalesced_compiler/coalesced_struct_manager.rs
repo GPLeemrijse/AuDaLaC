@@ -423,7 +423,8 @@ impl CoalescedStructManager<'_> {
 					} else {
 						format!("{indent}{parts_as_c} = {e_as_c};")
 					}
-				},
+				}
+				InlineCpp(cpp) => format!("{indent}{cpp}"),
 			};
 			stmt_vec.push(statement_as_string);
 		}
