@@ -40,7 +40,7 @@ pub fn as_c_literal(l : &Literal) -> String {
         IntLit(i) => format!("{}", i),
         BoolLit(b) => format!("{}", if *b {"true"} else {"false"}),
         StringLit(s) => format!("\"{}\"", s),
-        NullLit => format!("({})0", as_c_type(&Type::Named(String::new()))),// index based!
+        NullLit => "0".to_string(),// index based!
         ThisLit => "self".to_string(),
     }
 }

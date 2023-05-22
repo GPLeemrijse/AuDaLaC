@@ -51,13 +51,19 @@ impl StepBodyTranspiler<'_> {
 						let (owner_exp, owner_type) = owner.expect("Expected an owner for a parameter assignment.");
 						let parts_vec = lhs_exp.get_parts();
 						let param = parts_vec.last().unwrap();
-						let owner_type_obj = owner_type.name()
-													   .expect("non-named type as owner is illegal")
-													   .to_lowercase();
+						let owner_type_name = owner_type.name()
+														.expect("non-named type as owner is illegal");
+						let owner_type_name_lwr = owner_type_name.to_lowercase();
+
+						let types = self.var_exp_type_info.get(&(&**lhs_exp as *const Exp)).expect("Could not find var expression in type info.");
+						let par_type_name = as_c_type(
+							types.last()
+								 .unwrap()
+						);
 
 						formatdoc!{"
 							{indent}// {lhs_exp} := {rhs_exp};
-							{indent}SetParam({owner_exp}, {owner_type_obj}->{param}, {rhs_as_c}, stable);"
+							{indent}SetParam<{par_type_name}>({owner_exp}, {owner_type_name_lwr}->{param}, {rhs_as_c}, stable);"
 						}
 					} else {
 						format!("{indent}{lhs_as_c} = {rhs_as_c};")
