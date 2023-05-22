@@ -136,22 +136,34 @@ impl SingleKernelSchedule<'_> {
 			let struct_name_lwr = struct_name.to_lowercase();
 			
 			let func_name;
+			let mut counters_to_update;
 			if step_name == "print" {
 				func_name = format!("print_{struct_name}");
+				counters_to_update = vec![struct_name];
 			} else {
 				let strct = self.program.struct_by_name(struct_name).unwrap();
 				let step = strct.step_by_name(step_name).unwrap();
 				func_name = self.step_function_name(strct, step);
+				counters_to_update = step.constructors();
+
+				if !counters_to_update.contains(&struct_name) {
+					counters_to_update.push(struct_name);
+				}
 			}
 
-			let parity_value = format!("STEP_PARITY({struct_name})");
-			let nrof_instances = format!("{struct_name_lwr}->nrof_instances2({parity_value})");
+			let nrof_instances = format!("{struct_name_lwr}->nrof_instances2(STEP_PARITY({struct_name}))");
+			let counter_updates = counters_to_update.iter()
+													.map(|c|
+														format!("\n{indent}{}->update_counters(!STEP_PARITY({c}));", c.to_lowercase())
+													)
+													.collect::<Vec<String>>()
+													.join("");
+
 
 			formatdoc!{"
 				{indent}TOGGLE_STEP_PARITY({struct_name});
 				{indent}nrof_instances = {nrof_instances};
-				{indent}executeStep<{func_name}>(nrof_instances, grid, block, &stable);
-				{indent}{struct_name_lwr}->update_counters(!{parity_value});"
+				{indent}executeStep<{func_name}>(nrof_instances, grid, block, &stable);{counter_updates}"
 			}
 		} else {
 			unreachable!()
