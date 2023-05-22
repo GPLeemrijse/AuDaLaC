@@ -28,7 +28,7 @@ impl FPStrategy for NaiveAlternatingFixpoint {
 
 				__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH][3];
 
-				__device__ __inline__ void clear_stack(int lvl, uint8_t* iter_idx) {{
+				__device__ void clear_stack(int lvl, uint8_t* iter_idx) {{
 					/*	Clears the stack on the FP_SET side.
 						The FP_RESET and FP_READ sides should remain the same.
 					*/

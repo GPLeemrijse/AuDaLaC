@@ -199,7 +199,7 @@ impl SingleKernelSchedule<'_> {
 
 	fn print_as_c_function(&self, strct : &ADLStruct, _fp_level : usize) -> String {
 		let func_name = format!("print_{}", strct.name);
-		let func_header = format!("__device__ __inline__ void {func_name}");
+		let func_header = format!("__device__ void {func_name}");
 
 		let params = self.kernel_parameters(true);
 
