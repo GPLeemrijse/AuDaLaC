@@ -3,26 +3,36 @@ use indoc::formatdoc;
 
 
 pub struct NaiveFixpoint {
-
+	fp_depth : usize
 }
 
 impl NaiveFixpoint {
-	pub fn new() -> NaiveFixpoint {
+	pub fn new(fp_depth : usize) -> NaiveFixpoint {
 		NaiveFixpoint {
+			fp_depth
 		}
 	}
 }
 
 impl FPStrategy for NaiveFixpoint {
 	fn global_decl(&self) -> String {
+		let fp_depth = self.fp_depth;
+		let stack_and_clear = if fp_depth > 0 {
+			formatdoc!{"
+				__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH];
+
+				__device__ __inline__ void clear_stack(int lvl) {{
+					while(lvl >= 0){{
+						fp_stack[lvl--].store(false, cuda::memory_order_relaxed);
+					}}
+				}}"
+			}
+		} else {
+			"".to_string()
+		};
 		formatdoc!{"
-			__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH];
-			
-			__device__ __inline__ void clear_stack(int lvl) {{
-				while(lvl >= 0){{
-					fp_stack[lvl--].store(false, cuda::memory_order_relaxed);
-				}}
-			}}"
+			#define FP_DEPTH {fp_depth}
+			{stack_and_clear}"
 		}
 	}
 

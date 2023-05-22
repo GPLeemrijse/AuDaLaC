@@ -132,8 +132,8 @@ fn main() {
                         "in-kernel" => {
 
                             let fp_strat : Box<dyn FPStrategy> = match voting_strat {
-                                "naive" => Box::new(NaiveFixpoint::new()),
-                                "naive-alternating" => Box::new(NaiveAlternatingFixpoint::new()),
+                                "naive" => Box::new(NaiveFixpoint::new(program.schedule.fixpoint_depth())),
+                                "naive-alternating" => Box::new(NaiveAlternatingFixpoint::new(program.schedule.fixpoint_depth())),
                                 _ => panic!("voting strategy not found.")
                             };
 

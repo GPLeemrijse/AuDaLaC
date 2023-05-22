@@ -237,7 +237,6 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	}
 
 	fn defines(&self) -> Option<String> {
-		let fp_depth = self.program.schedule.fixpoint_depth();
 		let masks = self.program
 						.structs
 						.iter()
@@ -247,7 +246,6 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 						.join("\n");
 
 		Some(formatdoc!("
-				#define FP_DEPTH {fp_depth}
 				{masks}
 				#define STEP_PARITY(STRUCT) ((bool)(struct_step_parity & STRUCT ## _MASK))
 				#define TOGGLE_STEP_PARITY(STRUCT) {{struct_step_parity ^= STRUCT ## _MASK;}}

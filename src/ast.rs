@@ -50,7 +50,7 @@ pub enum Schedule {
 }
 
 impl Schedule {
-    pub fn fixpoint_depth(&self) -> u32 {
+    pub fn fixpoint_depth(&self) -> usize {
         use crate::ast::Schedule::*;
         match self {
             Sequential(s1, s2, _) => std::cmp::max(s1.fixpoint_depth(), s2.fixpoint_depth()),
