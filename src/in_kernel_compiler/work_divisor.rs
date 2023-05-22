@@ -50,18 +50,32 @@ impl WorkDivisor<'_> {
 
 		match self.division_strategy {
 			BlockSizeIncrease => {
-				formatdoc!("
-					\tfor(int i = 0; i < I_PER_THREAD; i++){{
-					\t\tconst RefType self = block.size() * (i + grid.block_rank() * I_PER_THREAD) + block.thread_rank();
-					\t\tif (self >= nrof_instances) break;"
-				)
+				if self.instances_per_thread > 1 {
+					formatdoc!("
+						\tfor(int i = 0; i < I_PER_THREAD; i++){{
+						\t\tconst RefType self = block.size() * (i + grid.block_rank() * I_PER_THREAD) + block.thread_rank();
+						\t\tif (self >= nrof_instances) break;"
+					)
+				} else {
+					formatdoc!("
+						\tconst RefType self = block.size() * grid.block_rank() + block.thread_rank();
+						\tif (self >= nrof_instances) break;"
+					)
+				}
 			},
 			GridSizeIncrease => {
-				formatdoc!("
-					\tfor(int i = 0; i < I_PER_THREAD; i++){{
-					\t\tconst RefType self = grid.thread_rank() + i * grid.size();
-					\t\tif (self >= nrof_instances) break;"
-				)
+				if self.instances_per_thread > 1 {
+					formatdoc!("
+						\tfor(int i = 0; i < I_PER_THREAD; i++){{
+						\t\tconst RefType self = grid.thread_rank() + i * grid.size();
+						\t\tif (self >= nrof_instances) break;"
+					)
+				} else {
+					formatdoc!("
+						\tconst RefType self = grid.thread_rank();
+						\tif (self >= nrof_instances) break;"
+					)
+				}
 			},
 		}
 	}
@@ -89,16 +103,16 @@ impl CompileComponent for WorkDivisor<'_> {
 		let loop_header = self.loop_header();
 		let execution = if self.print_unstable {
 			formatdoc!("
-				\tbool __stable = true;
-				\tStep(self, &__stable);
-				\tif (!__stable) {{
-				\t	printf(\"Step %s was unstable (instance %u)\\n\", step_str, self);
-				\t	*stable = false;
-				\t}}"
+				\t\tbool __stable = true;
+				\t\tStep(self, &__stable);
+				\t\tif (!__stable) {{
+				\t\t\tprintf(\"Step %s was unstable (instance %u)\\n\", step_str, self);
+				\t\t\t*stable = false;
+				\t\t}}"
 			)
 		} else {
 			formatdoc!("
-				\tStep(self, stable);"
+				\t\tStep(self, stable);"
 			)
 		};
 
@@ -114,10 +128,9 @@ impl CompileComponent for WorkDivisor<'_> {
 			__device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_block block, bool* stable{step_str_par}){{
 			{loop_header}
 
-			{execution}
-				}}
+			{execution}{}
 			}}
-		"))
+		", if self.instances_per_thread > 1 { "\n	}" } else {""}))
 	}
 
 	fn kernels(&self) -> Option<String> { None }
