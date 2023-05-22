@@ -103,6 +103,7 @@ fn main() {
     }
 
     let adl_program = ProgramParser::new().parse(&adl_program_text);
+    let mut errors = Vec::new();
 
     match adl_program {
         Ok(program) => {
@@ -113,9 +114,11 @@ fn main() {
             } else if init_file {
                 generate_init_file(&program, output_writer);
             } else {
-                let (errors, type_info) = validate_ast(&program);
+                let (validation_errors, type_info) = validate_ast(&program);
 
-                if errors.is_empty() {
+                if !validation_errors.is_empty(){
+                    errors.append(&mut validation_errors.iter().map(|e| e.to_diagnostic()).collect());
+                } else {
                     let result : String;
 
                     match compiler {
@@ -180,18 +183,9 @@ fn main() {
                     }
                     
                     output_writer.write(result.as_bytes()).expect("Could not write to output file.");
-                } else { // Print errors
-                    let file = SimpleFile::new(adl_file_loc, adl_program_text);
-                    let writer = StandardStream::stderr(ColorChoice::Always);
-                    let config = codespan_reporting::term::Config::default();
-
-                    for e in errors {
-                        let diagnostic = e.to_diagnostic();
-                        let _term_result = term::emit(&mut writer.lock(), &config, &file, &diagnostic);
-                    }
                 }
             }
-        }
+        },
         Err(e) => {
             let range = match e {
                 ParseError::InvalidToken { location } => location..(location + 1),
@@ -206,11 +200,15 @@ fn main() {
                                     .with_labels(vec![
                                         Label::primary((), range).with_message("here")
                                     ]);
-            let file = SimpleFile::new(adl_file_loc, adl_program_text);
-            let writer = StandardStream::stderr(ColorChoice::Always);
-            let config = codespan_reporting::term::Config::default();
-
-            let _ = term::emit(&mut writer.lock(), &config, &file, &d_err);
+            errors.push(d_err);
         }
+    }
+
+    let file = SimpleFile::new(adl_file_loc, adl_program_text);
+    let writer = StandardStream::stderr(ColorChoice::Always);
+    let config = codespan_reporting::term::Config::default();
+
+    for e in errors {
+        let _term_result = term::emit(&mut writer.lock(), &config, &file, &e);
     }
 }
