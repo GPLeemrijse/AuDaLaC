@@ -49,6 +49,8 @@ namespace InitFile {
     std::vector<StructInfo> parse(const char* init_file) {
         std::ifstream infile(init_file);
 
+        uint line_nr = 0;
+
         std::string line;
         std::getline(infile, line);
         
@@ -68,6 +70,7 @@ namespace InitFile {
         /* Parse the structure parameter declarations */
         for (int s = 0; s < nrof_structs; s++){
             std::getline(infile, line);
+            line_nr++;
             std::stringstream iss(line);
 
             iss >> struct_info[s].name; // Read in name
@@ -82,6 +85,7 @@ namespace InitFile {
         for (int strct = 0; strct < nrof_structs; strct++){
             StructInfo* s_info = &struct_info[strct];
             std::getline(infile, line);
+            line_nr++;
             
             std::string name;
             std::string middle_part;
@@ -93,7 +97,8 @@ namespace InitFile {
             bool middle_part_instances = middle_part.compare("instances") == 0;
             
             // Error if wrong input received
-            if (!starts_with_name || !middle_part_instances || nrof_instances < 1) {
+            if (!starts_with_name || !middle_part_instances) {
+                fprintf(stderr, "Line nr: %u\n", line_nr);
                 throw std::invalid_argument("Wrong structure instances header.");
             }
 
@@ -118,6 +123,7 @@ namespace InitFile {
 
             for (int inst = 0; inst < nrof_instances; inst++){
                 std::getline(infile, line);
+                line_nr++;
                 std::istringstream iss(line);
                 int64_t par_value;
                 for (int p = 0; p < nrof_params; p++){
