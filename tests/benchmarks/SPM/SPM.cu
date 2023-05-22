@@ -3,7 +3,6 @@
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
 #define LOAD(A) A.load(cuda::memory_order_relaxed)
-#define FP_DEPTH 2
 #define Node_MASK (1ULL << 0)
 #define Edge_MASK (1ULL << 1)
 #define Measure_MASK (1ULL << 2)
@@ -187,6 +186,7 @@ __device__ Edge* __restrict__ edge;
 __device__ Measure* __restrict__ measure;
 __device__ Node* __restrict__ node;
 
+#define FP_DEPTH 2
 /* Transform an iter_idx into the fp_stack index
    associated with that operation.
 */
@@ -196,7 +196,7 @@ __device__ Node* __restrict__ node;
 
 __device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH][3];
 
-__device__ __inline__ void clear_stack(int lvl, uint8_t* iter_idx) {
+__device__ void clear_stack(int lvl, uint8_t* iter_idx) {
 	/*	Clears the stack on the FP_SET side.
 		The FP_RESET and FP_READ sides should remain the same.
 	*/
@@ -213,7 +213,7 @@ __device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_bl
 		const RefType self = block.size() * (i + grid.block_rank() * I_PER_THREAD) + block.thread_rank();
 		if (self >= nrof_instances) break;
 
-		Step(self, stable);
+	Step(self, stable);
 	}
 }
 template<typename T>
@@ -227,63 +227,31 @@ __device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T 
     }
 }
 
-__device__ __inline__ void print_Node(const RefType self,
-									  bool* stable){
+__device__ void Node_print(const RefType self,
+						   bool* stable){
 	if (self != 0) {
 		printf("Node(%u): p=%u, owner=%u, rho=%u, candidate=%u, max=%u\n", self, LOAD(node->p[self]), LOAD(node->owner[self]), LOAD(node->rho[self]), LOAD(node->candidate[self]), LOAD(node->max[self]));
-	}
-}
-
-__device__ void Node_reset_candidate(const RefType self,
-									 bool* stable){
-	
-	if (LOAD(node->owner[self])) {
-		// candidate.top := true;
-		SetParam(LOAD(node->candidate[self]), measure->top, true, stable);
-		// candidate.p1 := max.p1;
-		SetParam(LOAD(node->candidate[self]), measure->p1, LOAD(measure->p1[LOAD(node->max[self])]), stable);
-		// candidate.p3 := max.p3;
-		SetParam(LOAD(node->candidate[self]), measure->p3, LOAD(measure->p3[LOAD(node->max[self])]), stable);
-	}
-	if ((!LOAD(node->owner[self]))) {
-		// candidate.top := false;
-		SetParam(LOAD(node->candidate[self]), measure->top, false, stable);
-		// candidate.p1 := 0;
-		SetParam(LOAD(node->candidate[self]), measure->p1, 0, stable);
-		// candidate.p3 := 0;
-		SetParam(LOAD(node->candidate[self]), measure->p3, 0, stable);
 	}
 }
 
 __device__ void Node_max_candidate(const RefType self,
 								   bool* stable){
 	
-	BoolType copy = false;
-	if (LOAD(measure->top[LOAD(node->candidate[self])])) {
-		copy = true;
-	}
-	if ((!LOAD(measure->top[LOAD(node->candidate[self])]))) {
-		if ((LOAD(measure->p1[LOAD(node->candidate[self])]) > LOAD(measure->p1[LOAD(node->rho[self])]))) {
-			copy = true;
+	if (((LOAD(node->candidate[self]) != 0) && (!LOAD(measure->top[LOAD(node->rho[self])])))) {
+		BoolType copy = ((LOAD(measure->top[LOAD(node->candidate[self])]) || (LOAD(measure->p1[LOAD(node->candidate[self])]) > LOAD(measure->p1[LOAD(node->rho[self])]))) || ((LOAD(measure->p1[LOAD(node->candidate[self])]) <= LOAD(measure->p1[LOAD(node->rho[self])])) && (LOAD(measure->p3[LOAD(node->candidate[self])]) > LOAD(measure->p3[LOAD(node->rho[self])]))));
+		if (copy) {
+			// rho.top := candidate.top;
+			SetParam<BoolType>(LOAD(node->rho[self]), measure->top, LOAD(measure->top[LOAD(node->candidate[self])]), stable);
+			// rho.p1 := candidate.p1;
+			SetParam<NatType>(LOAD(node->rho[self]), measure->p1, LOAD(measure->p1[LOAD(node->candidate[self])]), stable);
+			// rho.p3 := candidate.p3;
+			SetParam<NatType>(LOAD(node->rho[self]), measure->p3, LOAD(measure->p3[LOAD(node->candidate[self])]), stable);
 		}
-		if ((LOAD(measure->p1[LOAD(node->candidate[self])]) <= LOAD(measure->p1[LOAD(node->rho[self])]))) {
-			if ((LOAD(measure->p3[LOAD(node->candidate[self])]) > LOAD(measure->p3[LOAD(node->rho[self])]))) {
-				copy = true;
-			}
-		}
-	}
-	if (copy) {
-		// rho.top := candidate.top;
-		SetParam(LOAD(node->rho[self]), measure->top, LOAD(measure->top[LOAD(node->candidate[self])]), stable);
-		// rho.p1 := candidate.p1;
-		SetParam(LOAD(node->rho[self]), measure->p1, LOAD(measure->p1[LOAD(node->candidate[self])]), stable);
-		// rho.p3 := candidate.p3;
-		SetParam(LOAD(node->rho[self]), measure->p3, LOAD(measure->p3[LOAD(node->candidate[self])]), stable);
 	}
 }
 
-__device__ __inline__ void print_Edge(const RefType self,
-									  bool* stable){
+__device__ void Edge_print(const RefType self,
+						   bool* stable){
 	if (self != 0) {
 		printf("Edge(%u): v=%u, w=%u, m=%u, max=%u\n", self, LOAD(edge->v[self]), LOAD(edge->w[self]), LOAD(edge->m[self]), LOAD(edge->max[self]));
 	}
@@ -292,75 +260,83 @@ __device__ __inline__ void print_Edge(const RefType self,
 __device__ void Edge_prog(const RefType self,
 						  bool* stable){
 	
+	BoolType top_old = LOAD(measure->top[LOAD(edge->m[self])]);
+	NatType p1_old = LOAD(measure->p1[LOAD(edge->m[self])]);
+	NatType p3_old = LOAD(measure->p3[LOAD(edge->m[self])]);
 	if (((LOAD(node->p[LOAD(edge->v[self])]) % 2) == 0)) {
 		// m.top := w.rho.top;
-		SetParam(LOAD(edge->m[self]), measure->top, LOAD(measure->top[LOAD(node->rho[LOAD(edge->w[self])])]), stable);
+		SetParam<BoolType>(LOAD(edge->m[self]), measure->top, LOAD(measure->top[LOAD(node->rho[LOAD(edge->w[self])])]), stable);
 		if ((!LOAD(measure->top[LOAD(edge->m[self])]))) {
 			if ((LOAD(node->p[LOAD(edge->v[self])]) >= 1)) {
 				// m.p1 := w.rho.p1;
-				SetParam(LOAD(edge->m[self]), measure->p1, LOAD(measure->p1[LOAD(node->rho[LOAD(edge->w[self])])]), stable);
+				SetParam<NatType>(LOAD(edge->m[self]), measure->p1, LOAD(measure->p1[LOAD(node->rho[LOAD(edge->w[self])])]), stable);
 			}
 			if ((LOAD(node->p[LOAD(edge->v[self])]) < 1)) {
 				// m.p1 := 0;
-				SetParam(LOAD(edge->m[self]), measure->p1, 0, stable);
+				SetParam<NatType>(LOAD(edge->m[self]), measure->p1, 0, stable);
 			}
 			if ((LOAD(node->p[LOAD(edge->v[self])]) >= 3)) {
 				// m.p3 := w.rho.p3;
-				SetParam(LOAD(edge->m[self]), measure->p3, LOAD(measure->p3[LOAD(node->rho[LOAD(edge->w[self])])]), stable);
+				SetParam<NatType>(LOAD(edge->m[self]), measure->p3, LOAD(measure->p3[LOAD(node->rho[LOAD(edge->w[self])])]), stable);
 			}
 			if ((LOAD(node->p[LOAD(edge->v[self])]) < 3)) {
 				// m.p3 := 0;
-				SetParam(LOAD(edge->m[self]), measure->p3, 0, stable);
+				SetParam<NatType>(LOAD(edge->m[self]), measure->p3, 0, stable);
 			}
 		}
 	}
 	if (((LOAD(node->p[LOAD(edge->v[self])]) % 2) == 1)) {
 		// m.top := w.rho.top;
-		SetParam(LOAD(edge->m[self]), measure->top, LOAD(measure->top[LOAD(node->rho[LOAD(edge->w[self])])]), stable);
+		SetParam<BoolType>(LOAD(edge->m[self]), measure->top, LOAD(measure->top[LOAD(node->rho[LOAD(edge->w[self])])]), stable);
 		if ((!LOAD(measure->top[LOAD(edge->m[self])]))) {
 			BoolType incr = false;
 			if (((LOAD(node->p[LOAD(edge->v[self])]) >= 3) && (LOAD(measure->p3[LOAD(node->rho[LOAD(edge->w[self])])]) < LOAD(measure->p3[LOAD(edge->max[self])])))) {
 				// m.p3 := w.rho.p3 + 1;
-				SetParam(LOAD(edge->m[self]), measure->p3, (LOAD(measure->p3[LOAD(node->rho[LOAD(edge->w[self])])]) + 1), stable);
+				SetParam<NatType>(LOAD(edge->m[self]), measure->p3, (LOAD(measure->p3[LOAD(node->rho[LOAD(edge->w[self])])]) + 1), stable);
 				incr = true;
 			}
 			if ((!incr)) {
 				// m.p3 := 0;
-				SetParam(LOAD(edge->m[self]), measure->p3, 0, stable);
+				SetParam<NatType>(LOAD(edge->m[self]), measure->p3, 0, stable);
 				if (((LOAD(node->p[LOAD(edge->v[self])]) >= 1) && (LOAD(measure->p1[LOAD(node->rho[LOAD(edge->w[self])])]) < LOAD(measure->p1[LOAD(edge->max[self])])))) {
 					// m.p1 := w.rho.p1 + 1;
-					SetParam(LOAD(edge->m[self]), measure->p1, (LOAD(measure->p1[LOAD(node->rho[LOAD(edge->w[self])])]) + 1), stable);
+					SetParam<NatType>(LOAD(edge->m[self]), measure->p1, (LOAD(measure->p1[LOAD(node->rho[LOAD(edge->w[self])])]) + 1), stable);
 					incr = true;
 				}
 				if ((!incr)) {
 					// m.top := true;
-					SetParam(LOAD(edge->m[self]), measure->top, true, stable);
+					SetParam<BoolType>(LOAD(edge->m[self]), measure->top, true, stable);
 				}
 			}
 		}
+	}
+	BoolType is_stable = (((top_old == LOAD(measure->top[LOAD(edge->m[self])])) && (p1_old == LOAD(measure->p1[LOAD(edge->m[self])]))) && (p3_old == LOAD(measure->p3[LOAD(edge->m[self])])));
+	if (((!is_stable) && (LOAD(node->candidate[LOAD(edge->v[self])]) == LOAD(edge->m[self])))) {
+		// v.candidate := null;
+		SetParam<RefType>(LOAD(edge->v[self]), node->candidate, 0, stable);
 	}
 }
 
 __device__ void Edge_top(const RefType self,
 						 bool* stable){
 	
-	if ((LOAD(node->owner[LOAD(edge->v[self])]) && (!LOAD(measure->top[LOAD(edge->m[self])])))) {
-		// v.candidate.top := false;
-		SetParam(LOAD(node->candidate[LOAD(edge->v[self])]), measure->top, false, stable);
+	if ((LOAD(node->owner[LOAD(edge->v[self])]) && ((LOAD(node->candidate[LOAD(edge->v[self])]) == 0) || ((!LOAD(measure->top[LOAD(edge->m[self])])) && LOAD(measure->top[LOAD(node->candidate[LOAD(edge->v[self])])]))))) {
+		// v.candidate := m;
+		SetParam<RefType>(LOAD(edge->v[self]), node->candidate, LOAD(edge->m[self]), stable);
 	}
-	if (((!LOAD(node->owner[LOAD(edge->v[self])])) && LOAD(measure->top[LOAD(edge->m[self])]))) {
-		// v.candidate.top := true;
-		SetParam(LOAD(node->candidate[LOAD(edge->v[self])]), measure->top, true, stable);
+	if (((!LOAD(node->owner[LOAD(edge->v[self])])) && ((LOAD(node->candidate[LOAD(edge->v[self])]) == 0) || (LOAD(measure->top[LOAD(edge->m[self])]) && (!LOAD(measure->top[LOAD(node->candidate[LOAD(edge->v[self])])])))))) {
+		// v.candidate := m;
+		SetParam<RefType>(LOAD(edge->v[self]), node->candidate, LOAD(edge->m[self]), stable);
 	}
 }
 
 __device__ void Edge_priority_1(const RefType self,
 								bool* stable){
 	
-	if ((!LOAD(measure->top[LOAD(node->candidate[LOAD(edge->v[self])])]))) {
+	if ((LOAD(measure->top[LOAD(node->candidate[LOAD(edge->v[self])])]) == LOAD(measure->top[LOAD(edge->m[self])]))) {
 		if (((LOAD(node->owner[LOAD(edge->v[self])]) && (LOAD(measure->p1[LOAD(edge->m[self])]) < LOAD(measure->p1[LOAD(node->candidate[LOAD(edge->v[self])])]))) || ((!LOAD(node->owner[LOAD(edge->v[self])])) && (LOAD(measure->p1[LOAD(edge->m[self])]) > LOAD(measure->p1[LOAD(node->candidate[LOAD(edge->v[self])])]))))) {
-			// v.candidate.p1 := m.p1;
-			SetParam(LOAD(node->candidate[LOAD(edge->v[self])]), measure->p1, LOAD(measure->p1[LOAD(edge->m[self])]), stable);
+			// v.candidate := m;
+			SetParam<RefType>(LOAD(edge->v[self]), node->candidate, LOAD(edge->m[self]), stable);
 		}
 	}
 }
@@ -368,34 +344,34 @@ __device__ void Edge_priority_1(const RefType self,
 __device__ void Edge_priority_3(const RefType self,
 								bool* stable){
 	
-	if (((!LOAD(measure->top[LOAD(node->candidate[LOAD(edge->v[self])])])) && (LOAD(measure->p1[LOAD(node->candidate[LOAD(edge->v[self])])]) == LOAD(measure->p1[LOAD(edge->m[self])])))) {
+	if (((LOAD(measure->top[LOAD(node->candidate[LOAD(edge->v[self])])]) == LOAD(measure->top[LOAD(edge->m[self])])) && (LOAD(measure->p1[LOAD(node->candidate[LOAD(edge->v[self])])]) == LOAD(measure->p1[LOAD(edge->m[self])])))) {
 		if (((LOAD(node->owner[LOAD(edge->v[self])]) && (LOAD(measure->p3[LOAD(edge->m[self])]) < LOAD(measure->p3[LOAD(node->candidate[LOAD(edge->v[self])])]))) || ((!LOAD(node->owner[LOAD(edge->v[self])])) && (LOAD(measure->p3[LOAD(edge->m[self])]) > LOAD(measure->p3[LOAD(node->candidate[LOAD(edge->v[self])])]))))) {
-			// v.candidate.p3 := m.p3;
-			SetParam(LOAD(node->candidate[LOAD(edge->v[self])]), measure->p3, LOAD(measure->p3[LOAD(edge->m[self])]), stable);
+			// v.candidate := m;
+			SetParam<RefType>(LOAD(edge->v[self]), node->candidate, LOAD(edge->m[self]), stable);
 		}
 	}
 }
 
-__device__ __inline__ void print_Measure(const RefType self,
-										 bool* stable){
+__device__ void Measure_print(const RefType self,
+							  bool* stable){
 	if (self != 0) {
 		printf("Measure(%u): top=%u, p1=%u, p3=%u\n", self, LOAD(measure->top[self]), LOAD(measure->p1[self]), LOAD(measure->p3[self]));
 	}
 }
 
-__device__ void Measure_init(const RefType self,
-							 bool* stable){
+__device__ void Measure_init_slide18(const RefType self,
+									 bool* stable){
 	
 	BoolType even = true;
 	BoolType odd = false;
 	RefType max = measure->create_instance(false, 2, 3, stable);
-	RefType X = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType X_p = node->create_instance(1, even, measure->create_instance(false, 0, 0, stable), measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType Y_p = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType Y = node->create_instance(2, odd, measure->create_instance(false, 0, 0, stable), measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType W = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType Z = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType Z_p = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType X = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType X_p = node->create_instance(1, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType Y_p = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType Y = node->create_instance(2, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType W = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType Z = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType Z_p = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
 	RefType e1 = edge->create_instance(X, X, measure->create_instance(false, 0, 0, stable), max, stable);
 	RefType e2 = edge->create_instance(X, X_p, measure->create_instance(false, 0, 0, stable), max, stable);
 	RefType e3 = edge->create_instance(X_p, Y, measure->create_instance(false, 0, 0, stable), max, stable);
@@ -410,6 +386,59 @@ __device__ void Measure_init(const RefType self,
 	RefType e12 = edge->create_instance(Z_p, Z_p, measure->create_instance(false, 0, 0, stable), max, stable);
 }
 
+__device__ void Measure_init_fig6a(const RefType self,
+								   bool* stable){
+	
+	BoolType even = true;
+	BoolType odd = false;
+	RefType max = measure->create_instance(false, 2, 2, stable);
+	RefType A = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType B = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType C = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType D = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType E = node->create_instance(0, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType F = node->create_instance(0, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType G = node->create_instance(3, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType H = node->create_instance(3, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType e1 = edge->create_instance(A, B, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e2 = edge->create_instance(B, A, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e3 = edge->create_instance(C, B, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e4 = edge->create_instance(C, D, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e5 = edge->create_instance(D, C, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e6 = edge->create_instance(E, D, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e7 = edge->create_instance(E, F, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e8 = edge->create_instance(F, E, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e9 = edge->create_instance(G, F, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e10 = edge->create_instance(G, H, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e11 = edge->create_instance(H, G, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e12 = edge->create_instance(A, H, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e13 = edge->create_instance(D, A, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e14 = edge->create_instance(H, E, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e15 = edge->create_instance(F, C, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e16 = edge->create_instance(B, G, measure->create_instance(false, 0, 0, stable), max, stable);
+}
+
+__device__ void Measure_init_fig5a(const RefType self,
+								   bool* stable){
+	
+	BoolType even = true;
+	BoolType odd = false;
+	RefType max = measure->create_instance(false, 2, 1, stable);
+	RefType A = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType B = node->create_instance(2, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType C = node->create_instance(1, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType D = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType E = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
+	RefType e1 = edge->create_instance(A, B, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e2 = edge->create_instance(B, A, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e3 = edge->create_instance(C, B, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e4 = edge->create_instance(C, D, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e5 = edge->create_instance(D, C, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e6 = edge->create_instance(E, D, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e7 = edge->create_instance(D, E, measure->create_instance(false, 0, 0, stable), max, stable);
+	RefType e8 = edge->create_instance(A, E, measure->create_instance(false, 0, 0, stable), max, stable);
+}
+
 
 __global__ void schedule_kernel(){
 	const grid_group grid = this_grid();
@@ -422,8 +451,10 @@ __global__ void schedule_kernel(){
 
 	TOGGLE_STEP_PARITY(Measure);
 	nrof_instances = measure->nrof_instances2(STEP_PARITY(Measure));
-	executeStep<Measure_init>(nrof_instances, grid, block, &stable);
+	executeStep<Measure_init_fig5a>(nrof_instances, grid, block, &stable);
+	edge->update_counters(!STEP_PARITY(Edge));
 	measure->update_counters(!STEP_PARITY(Measure));
+	node->update_counters(!STEP_PARITY(Node));
 
 	grid.sync();
 
@@ -442,19 +473,26 @@ __global__ void schedule_kernel(){
 
 		grid.sync();
 
-		TOGGLE_STEP_PARITY(Node);
-		nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
-		executeStep<Node_reset_candidate>(nrof_instances, grid, block, &stable);
-		node->update_counters(!STEP_PARITY(Node));
+		do{
+			bool stable = true;
+			if (is_thread0){
+				/* Resets the next fp_stack index in advance. */
+				fp_stack[1][FP_RESET(iter_idx[1])].store(true, cuda::memory_order_relaxed);
+			}
 
-		grid.sync();
 
-		TOGGLE_STEP_PARITY(Edge);
-		nrof_instances = edge->nrof_instances2(STEP_PARITY(Edge));
-		executeStep<Edge_top>(nrof_instances, grid, block, &stable);
-		edge->update_counters(!STEP_PARITY(Edge));
+			TOGGLE_STEP_PARITY(Edge);
+			nrof_instances = edge->nrof_instances2(STEP_PARITY(Edge));
+			executeStep<Edge_top>(nrof_instances, grid, block, &stable);
+			edge->update_counters(!STEP_PARITY(Edge));
+			if(!stable){
+				clear_stack(1, iter_idx);
+			}
+			/* The next index to set is the one that has been reset. */
+			iter_idx[1] = FP_RESET(iter_idx[1]);
+			grid.sync();
+		} while(!fp_stack[1][FP_READ(iter_idx[1])].load(cuda::memory_order_relaxed));
 
-		grid.sync();
 
 		do{
 			bool stable = true;
@@ -510,6 +548,11 @@ __global__ void schedule_kernel(){
 		grid.sync();
 	} while(!fp_stack[0][FP_READ(iter_idx[0])].load(cuda::memory_order_relaxed));
 
+
+	TOGGLE_STEP_PARITY(Measure);
+	nrof_instances = measure->nrof_instances2(STEP_PARITY(Measure));
+	executeStep<Measure_print>(nrof_instances, grid, block, &stable);
+	measure->update_counters(!STEP_PARITY(Measure));
 }
 
 
@@ -540,7 +583,7 @@ int main(int argc, char **argv) {
 	CHECK(cudaMemcpyToSymbol(node, &loc_node, sizeof(Node * const)));
 
 	cuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
-	cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack);
+	CHECK(cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack));
 	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
 
 	void* schedule_kernel_args[] = {};

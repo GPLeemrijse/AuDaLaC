@@ -74,6 +74,7 @@ struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 		}
 		Bool is_stable := top_old == m.top && p1_old == m.p1 && p3_old == m.p3;
 
+		/* If m is v's candidate, and m changed, reset v's candidate. */
 		if !is_stable && v.candidate == m then {
 			v.candidate := null;
 		}
@@ -189,10 +190,31 @@ struct Measure(top : Bool, p1 : Nat, p3 : Nat) {
 		Edge e15 := Edge(F, C, Measure(false, 0, 0), max);
 		Edge e16 := Edge(B, G, Measure(false, 0, 0), max);
 	}
+
+	init_fig5a {
+		Bool even := true;
+		Bool odd := false;
+		Measure max := Measure(false, 2, 1);
+
+		Node A := Node(3, even, Measure(false, 0, 0), null, max);
+		Node B := Node(2, odd, Measure(false, 0, 0), null, max);
+		Node C := Node(1, even, Measure(false, 0, 0), null, max);
+		Node D := Node(1, odd, Measure(false, 0, 0), null, max);
+		Node E := Node(2, even, Measure(false, 0, 0), null, max);
+
+		Edge e1 := Edge(A, B, Measure(false, 0, 0), max);
+		Edge e2 := Edge(B, A, Measure(false, 0, 0), max);
+		Edge e3 := Edge(C, B, Measure(false, 0, 0), max);
+		Edge e4 := Edge(C, D, Measure(false, 0, 0), max);
+		Edge e5 := Edge(D, C, Measure(false, 0, 0), max);
+		Edge e6 := Edge(E, D, Measure(false, 0, 0), max);
+		Edge e7 := Edge(D, E, Measure(false, 0, 0), max);
+		Edge e8 := Edge(A, E, Measure(false, 0, 0), max);
+	}
 }
 
 
-init_fig6a <
+init_fig5a <
 Fix (
 	prog <
 	Fix(top) <
