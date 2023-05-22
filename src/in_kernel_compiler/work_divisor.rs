@@ -14,16 +14,18 @@ pub struct WorkDivisor<'a> {
 	threads_per_block : usize,
 	allocated_per_instance : usize,
 	division_strategy : DivisionStrategy,
+	print_unstable : bool,
 }
 
 impl WorkDivisor<'_> {
-	pub fn new(program : &Program, instances_per_thread : usize, threads_per_block : usize, allocated_per_instance : usize, 	division_strategy : DivisionStrategy,) -> WorkDivisor {
+	pub fn new(program : &Program, instances_per_thread : usize, threads_per_block : usize, allocated_per_instance : usize, division_strategy : DivisionStrategy, print_unstable : bool) -> WorkDivisor {
 		WorkDivisor {
 			program,
 			instances_per_thread,
 			threads_per_block,
 			allocated_per_instance,
 			division_strategy,
+			print_unstable
 		}
 	}
 
@@ -35,6 +37,13 @@ impl WorkDivisor<'_> {
 		)
 	}
 
+	pub fn execute_step(&self, kernel_name : &String) -> String {
+		if self.print_unstable {
+			formatdoc!("executeStep<{kernel_name}>(nrof_instances, grid, block, &stable, \"{kernel_name}\");")
+		} else {
+			formatdoc!("executeStep<{kernel_name}>(nrof_instances, grid, block, &stable);")
+		}
+	}
 
 	fn loop_header(&self) -> String {
 		use DivisionStrategy::*;
@@ -78,14 +87,34 @@ impl CompileComponent for WorkDivisor<'_> {
 	
 	fn functions(&self) -> Option<String> {
 		let loop_header = self.loop_header();
+		let execution = if self.print_unstable {
+			formatdoc!("
+				\tbool __stable = true;
+				\tStep(self, &__stable);
+				\tif (!__stable) {{
+				\t	printf(\"Step %s was unstable (instance %u)\\n\", step_str, self);
+				\t	*stable = false;
+				\t}}"
+			)
+		} else {
+			formatdoc!("
+				\tStep(self, stable);"
+			)
+		};
+
+		let step_str_par = if self.print_unstable {
+			", const char* step_str"
+		} else {
+			""
+		};
 
 		Some(formatdoc!("
 			typedef void(*step_func)(RefType, bool*);
 			template <step_func Step>
-			__device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_block block, bool* stable){{
+			__device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_block block, bool* stable{step_str_par}){{
 			{loop_header}
 
-					Step(self, stable);
+			{execution}
 				}}
 			}}
 		"))

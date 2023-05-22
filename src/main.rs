@@ -153,7 +153,8 @@ fn main() {
                                 instances_per_thread,
                                 threads_per_block, // tpb
                                 nrof_instances_per_struct,
-                                div_strat
+                                div_strat,
+                                print_unstable
                             );
 
                             result = transpile::transpile2(vec![

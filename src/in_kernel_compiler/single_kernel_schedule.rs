@@ -159,11 +159,12 @@ impl SingleKernelSchedule<'_> {
 													.collect::<Vec<String>>()
 													.join("");
 
+			let step_execution = self.work_divisor.execute_step(&func_name);
 
 			formatdoc!{"
 				{indent}TOGGLE_STEP_PARITY({struct_name});
 				{indent}nrof_instances = {nrof_instances};
-				{indent}executeStep<{func_name}>(nrof_instances, grid, block, &stable);{counter_updates}"
+				{indent}{step_execution}{counter_updates}"
 			}
 		} else {
 			unreachable!()
