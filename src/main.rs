@@ -173,7 +173,7 @@ fn main() {
                                     &step_transpiler,
                                     &work_divisor
                                 ),
-                                &Timer::new()
+                                &Timer::new(time)
                             ]);
                         },
                         _ => unreachable!()

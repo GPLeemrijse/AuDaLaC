@@ -3,11 +3,13 @@ use crate::transpilation_traits::*;
 use indoc::formatdoc;
 
 pub struct Timer {
+	active : bool
 }
 
 impl Timer {
-	pub fn new() -> Timer{
+	pub fn new(active: bool) -> Timer{
 		Timer {
+			active
 		}
 	}
 }
@@ -22,22 +24,30 @@ impl CompileComponent for Timer {
 	fn kernels(&self) -> Option<String> { None }
 
 	fn pre_main(&self) -> Option<String> {
-		Some(formatdoc!{"
-			\tcudaEvent_t start, stop;
-			\tcudaEventCreate(&start);
-			\tcudaEventCreate(&stop);
-			\tcudaEventRecord(start);
-		"})
+		if self.active {
+			Some(formatdoc!{"
+				\tcudaEvent_t start, stop;
+				\tcudaEventCreate(&start);
+				\tcudaEventCreate(&stop);
+				\tcudaEventRecord(start);
+			"})
+		} else {
+			None
+		}
 	}
 
 	fn main(&self) -> Option<String> { None }
 	fn post_main(&self) -> Option<String> {
-		Some(formatdoc!{"
-			\tcudaEventRecord(stop);
-			\tcudaEventSynchronize(stop);
-			\tfloat ms = 0;
-			\tcudaEventElapsedTime(&ms, start, stop);
-			\tprintf(\"Total walltime: %0.2f ms\\n\", ms);
-		"})
+		if self.active {
+			Some(formatdoc!{"
+				\tcudaEventRecord(stop);
+				\tcudaEventSynchronize(stop);
+				\tfloat ms = 0;
+				\tcudaEventElapsedTime(&ms, start, stop);
+				\tprintf(\"Total walltime: %0.2f ms\\n\", ms);
+			"})
+		} else {
+			None
+		}
 	}
 }
