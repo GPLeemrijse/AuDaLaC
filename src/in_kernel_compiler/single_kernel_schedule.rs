@@ -327,20 +327,24 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 			{kernel_schedule_body}
 			}}
 		"})
-    }
+	}
 
-    fn pre_main(&self) -> Option<String> {
-        Some(self.fp.initialise())
-    }
+	fn pre_main(&self) -> Option<String> {
+		let kernel_name = SingleKernelSchedule::KERNEL_NAME;
+		let get_dims = self.work_divisor.get_dims(kernel_name);
 
-    fn main(&self) -> Option<String> {
-        let kernel_name = SingleKernelSchedule::KERNEL_NAME;
-        let get_dims = self.work_divisor.get_dims(kernel_name);
+		let mut result = self.fp.initialise();
+		result.push_str(&formatdoc!("
 
-        Some(formatdoc! {"
 			\tvoid* {kernel_name}_args[] = {{}};
 			\tauto dims = {get_dims};
+		"));
+		Some(result)
+	}
 
+	fn main(&self) -> Option<String> {
+		let kernel_name = SingleKernelSchedule::KERNEL_NAME;
+		Some(formatdoc!{"
 			\tCHECK(
 			\t	cudaLaunchCooperativeKernel(
 			\t		(void*){kernel_name},
@@ -349,7 +353,6 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 			\t		{kernel_name}_args
 			\t	)
 			\t);
-			\tCHECK(cudaDeviceSynchronize());
 		"})
     }
 

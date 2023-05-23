@@ -5,8 +5,12 @@
 #include <cstdio>
 #include <vector>
 #include <stack>
+#include <chrono>
+
 
 using namespace std;
+using namespace std::chrono;
+
 
 vector<vector<uint>> graph;              //store graph's adjacency list
 vector<vector<uint>> transpose_graph;    //store transpose graph's adjacency list
@@ -104,9 +108,17 @@ int main(void){
         graph[u].push_back(v);
         transpose_graph[v].push_back(u);
     }
-    
+
+    auto t1 = high_resolution_clock::now();
     int components= kosarajuSCC(n);
+    auto t2 = high_resolution_clock::now();
     cout<< "Components: "<< components <<endl;
+
+    duration<double, std::milli> ms = t2 - t1;
+
+    std::cout << "Total walltime CPP "
+              << ms.count()
+              << " ms\n";
     
     
     return 0;

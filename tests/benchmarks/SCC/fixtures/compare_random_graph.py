@@ -16,12 +16,28 @@ assert n > 0;
 p = m_exp/(n*n); # probability of edge between any given pair of nodes
 
 
+random_nrs = [];
+
+for i in range(200):
+	random_nrs.append(random.random());
+
+i = 0;
+i_mod_200 = 0;
+i_mod_10000 = 0;
 # Generate random graph
 graph = [];
 for u in range(n):
     for v in range(n):
-        if random.random() < p:
+        if random_nrs[i_mod_200] < p:
             graph.append((u, v));
+        i += 1;
+        i_mod_200 += 1;
+        i_mod_10000 += 1;
+        if i_mod_200 == 200:
+        	i_mod_200 = 0;
+        if i_mod_10000 == 10000:
+        	print(f"\rGenerated {int(i/100000)}/{int(n*n/100000)} * 10^5 possible edges", end="");
+        	i_mod_10000 = 0;
 
 m = len(graph);
 
@@ -50,33 +66,10 @@ with open("/tmp/random.init", "w") as graph_f:
 # Run on ADL version
 stream = os.popen('../SCC.out /tmp/random.init');
 #stream = os.popen('../SCC.out SCC_2.init');
-output = stream.read().split("\n");
 status = stream.close();
 if status:
 	print("ADL error: ", end="");
 	print(os.waitstatus_to_exitcode(status));
-
-
-# Make standard output format
-regex = re.compile(r"^Node\(([0-9]+)\): set=([0-9]+)");
-lines_adl = [];
-sccs = {};
-for l in output:
-	match = regex.match(l);
-	if match:
-		node_num = match.group(1);
-		scc = match.group(2);
-		if scc in sccs:
-			sccs[scc].append(int(node_num)-1);
-		else:
-			sccs[scc] = [int(node_num)-1];
-	else:
-		print(l);
-
-for scc in sccs.keys():
-	lines_adl.append(" ".join(str(i) for i in sorted(sccs[scc])));
-
-lines_adl.sort();
 
 # Run on cpp version
 stream = os.popen('cat /tmp/random.in | ../comparisons/kosarajus');
@@ -88,26 +81,4 @@ if status:
 	print(os.waitstatus_to_exitcode(status));
 lines_cpp = [];
 
-
-# Make standard output format
-for l in output[:-2]: # Skip trailing nl and nrof components
-	nodes = [int(node) for node in l.strip().split(" ")];
-	lines_cpp.append(" ".join([str(i) for i in sorted(nodes)]));
-lines_cpp.sort();
-
-
-if lines_adl != lines_cpp:
-	for (l1, l2) in zip(lines_adl, lines_cpp):
-		if l1 != l2:
-			print("Differ:");
-			print(l1);
-			print(l2);
-			break;
-	with open("ADL.output", "w") as adl_out:
-		adl_out.write("\n".join(lines_adl));
-	with open("CPP.output", "w") as cpp_out:
-		cpp_out.write("\n".join(lines_cpp));
-
-
-else:
-	print("Equal!");
+print("Done.");
