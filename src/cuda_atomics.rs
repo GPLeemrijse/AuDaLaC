@@ -2,16 +2,16 @@ pub enum MemOrder {
     Weak,
     Relaxed,
     AcqRel,
-    SeqCons
+    SeqCons,
 }
 
 pub enum MemoryOperation {
     Load,
-    Store
+    Store,
 }
 
 impl MemOrder {
-    pub fn from_str(s : &str) -> MemOrder {
+    pub fn from_str(s: &str) -> MemOrder {
         match s {
             "weak" => MemOrder::Weak,
             "relaxed" => MemOrder::Relaxed,
@@ -30,20 +30,24 @@ impl MemOrder {
             (MemOrder::Weak, _) => panic!("Weak order should not be translated to c."),
             (MemOrder::Relaxed, _) => "cuda::memory_order_relaxed".to_string(),
             (MemOrder::SeqCons, _) => "cuda::memory_order_seq_cst".to_string(),
-            (MemOrder::AcqRel, Some(MemoryOperation::Load)) => "cuda::memory_order_acquire".to_string(),
-            (MemOrder::AcqRel, Some(MemoryOperation::Store)) => "cuda::memory_order_release".to_string(),
-            _ => panic!("Unsupported combination of memory order and operation.")
+            (MemOrder::AcqRel, Some(MemoryOperation::Load)) => {
+                "cuda::memory_order_acquire".to_string()
+            }
+            (MemOrder::AcqRel, Some(MemoryOperation::Store)) => {
+                "cuda::memory_order_release".to_string()
+            }
+            _ => panic!("Unsupported combination of memory order and operation."),
         }
     }
 }
 
 pub enum Scope {
     System,
-    Device
+    Device,
 }
 
 impl Scope {
-    pub fn from_str(s : &str) -> Scope {
+    pub fn from_str(s: &str) -> Scope {
         match s {
             "system" => Scope::System,
             "device" => Scope::Device,
@@ -54,7 +58,8 @@ impl Scope {
     pub fn as_cuda_scope(&self) -> String {
         (match self {
             Scope::System => "cuda::thread_scope_system",
-            Scope::Device => "cuda::thread_scope_device"
-        }).to_string()
+            Scope::Device => "cuda::thread_scope_device",
+        })
+        .to_string()
     }
 }

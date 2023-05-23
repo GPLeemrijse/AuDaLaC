@@ -1,7 +1,7 @@
-use crate::ast::Type;
 use crate::ast::Literal;
+use crate::ast::Type;
 
-pub fn as_c_type(t : &Type) -> String {
+pub fn as_c_type(t: &Type) -> String {
     use Type::*;
     match t {
         Named(..) => "RefType".to_string(),
@@ -13,7 +13,7 @@ pub fn as_c_type(t : &Type) -> String {
     }
 }
 
-pub fn as_type_enum(t : &Type) -> String {
+pub fn as_type_enum(t: &Type) -> String {
     use Type::*;
     match t {
         Named(..) => "Ref".to_string(),
@@ -25,7 +25,7 @@ pub fn as_type_enum(t : &Type) -> String {
     }
 }
 
-pub fn as_printf(t : &Type) -> String {
+pub fn as_printf(t: &Type) -> String {
     use Type::*;
     match t {
         Named(_) => "%u",
@@ -34,17 +34,18 @@ pub fn as_printf(t : &Type) -> String {
         Int => "%d",
         Bool => "%u",
         Null => "%u",
-    }.to_string()
+    }
+    .to_string()
 }
 
-pub fn as_c_literal(l : &Literal) -> String {
+pub fn as_c_literal(l: &Literal) -> String {
     use Literal::*;
     match l {
         NatLit(n) => format!("{}", n),
         IntLit(i) => format!("{}", i),
-        BoolLit(b) => format!("{}", if *b {"true"} else {"false"}),
+        BoolLit(b) => format!("{}", if *b { "true" } else { "false" }),
         StringLit(s) => format!("\"{}\"", s),
-        NullLit => "0".to_string(),// index based!
+        NullLit => "0".to_string(), // index based!
         ThisLit => "self".to_string(),
     }
 }

@@ -1,46 +1,44 @@
 #[macro_use]
 extern crate lalrpop_util;
-use codespan_reporting::diagnostic::Label;
-use codespan_reporting::diagnostic::Diagnostic;
-use crate::in_kernel_compiler::{WorkDivisor, DivisionStrategy};
-use crate::transpilation_traits::FPStrategy;
-use crate::fp_strategies::NaiveAlternatingFixpoint;
-use crate::in_kernel_compiler::StepBodyTranspiler;
-use crate::fp_strategies::NaiveFixpoint;
-use crate::compilation_components::*;
-use crate::in_kernel_compiler::SingleKernelSchedule;
-use std::io::BufWriter;
-use std::fs::File;
-use std::io::Write;
+use crate::adl::ProgramParser;
+use crate::ast_validator::validate_ast;
 use crate::basic_compiler::*;
 use crate::coalesced_compiler::*;
+use crate::compilation_components::*;
+use crate::cuda_atomics::{MemOrder, Scope};
+use crate::fp_strategies::NaiveAlternatingFixpoint;
+use crate::fp_strategies::NaiveFixpoint;
+use crate::in_kernel_compiler::SingleKernelSchedule;
+use crate::in_kernel_compiler::StepBodyTranspiler;
+use crate::in_kernel_compiler::{DivisionStrategy, WorkDivisor};
+use crate::init_file_generator::generate_init_file;
+use crate::transpilation_traits::FPStrategy;
+use codespan_reporting::diagnostic::Diagnostic;
+use codespan_reporting::diagnostic::Label;
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use codespan_reporting::term::{self};
 use lalrpop_util::ParseError;
-use crate::ast_validator::validate_ast;
-use crate::init_file_generator::generate_init_file;
-use crate::adl::ProgramParser;
 use std::fs;
-use crate::cuda_atomics::{MemOrder, Scope};
+use std::fs::File;
+use std::io::BufWriter;
+use std::io::Write;
 
 use clap::clap_app;
 mod ast;
-mod cuda_atomics;
 mod ast_validator;
-mod transpilation_traits;
 mod basic_compiler;
 mod coalesced_compiler;
-mod init_file_generator;
-mod transpile;
 mod compilation_components;
-mod in_kernel_compiler;
+mod cuda_atomics;
 mod fp_strategies;
+mod in_kernel_compiler;
+mod init_file_generator;
+mod transpilation_traits;
+mod transpile;
 mod utils;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
-
-
 
 fn main() {
     let args = clap_app!(ADL =>
@@ -68,34 +66,27 @@ fn main() {
     let print_ast = args.is_present("print_ast");
     let init_file = args.is_present("init_file");
     let print_unstable = args.is_present("printunstable");
-    let nrof_instances_per_struct : usize = *args.get_one("nrofinstances").unwrap();
-    let buffer_size : usize = *args.get_one("buffersize").unwrap();
-    let instances_per_thread : usize = *args.get_one("instsperthread").unwrap();
-    let threads_per_block : usize = *args.get_one("threads_per_block").unwrap();
-    let printnthinst : usize = *args.get_one("printnthinst").unwrap();
+    let nrof_instances_per_struct: usize = *args.get_one("nrofinstances").unwrap();
+    let buffer_size: usize = *args.get_one("buffersize").unwrap();
+    let instances_per_thread: usize = *args.get_one("instsperthread").unwrap();
+    let threads_per_block: usize = *args.get_one("threads_per_block").unwrap();
+    let printnthinst: usize = *args.get_one("printnthinst").unwrap();
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output");
-    let compiler : &str = args.value_of("compiler").unwrap();
-    let voting_strat : &str = args.value_of("voting").unwrap();
-    let division_strat : &str = args.value_of("division_strat").unwrap();
+    let compiler: &str = args.value_of("compiler").unwrap();
+    let voting_strat: &str = args.value_of("voting").unwrap();
+    let division_strat: &str = args.value_of("division_strat").unwrap();
     let memorder = MemOrder::from_str(args.value_of("memorder").unwrap());
     let scope = Scope::from_str(args.value_of("scope").unwrap());
-    
 
     let adl_program_text = fs::read_to_string(adl_file_loc).expect("Could not open ADL file.");
 
     let mut output_writer = match output_file {
-        Some(x) => {
-            Box::new(BufWriter::new(
-                File::create(x)
-                      .expect("Could not open output file.")
-            )) as Box<dyn Write>
-        },
-        None => Box::new(BufWriter::new(
-            std::io::stdout()
-        )) as Box<dyn Write>
+        Some(x) => Box::new(BufWriter::new(
+            File::create(x).expect("Could not open output file."),
+        )) as Box<dyn Write>,
+        None => Box::new(BufWriter::new(std::io::stdout())) as Box<dyn Write>,
     };
-
 
     if print_ast && init_file {
         eprintln!("Use either --print-ast (-p) or --init-file (-i), not both.");
@@ -108,49 +99,65 @@ fn main() {
     match adl_program {
         Ok(program) => {
             if print_ast {
-                output_writer.write(
-                    format!("{:#?}\n", program).as_bytes()
-                ).expect("Could not write to output file.");
+                output_writer
+                    .write(format!("{:#?}\n", program).as_bytes())
+                    .expect("Could not write to output file.");
             } else if init_file {
                 generate_init_file(&program, output_writer);
             } else {
                 let (validation_errors, type_info) = validate_ast(&program);
 
-                if !validation_errors.is_empty(){
-                    errors.append(&mut validation_errors.iter().map(|e| e.to_diagnostic()).collect());
+                if !validation_errors.is_empty() {
+                    errors.append(
+                        &mut validation_errors
+                            .iter()
+                            .map(|e| e.to_diagnostic())
+                            .collect(),
+                    );
                 } else {
-                    let result : String;
+                    let result: String;
 
                     match compiler {
                         "basic" => {
-                            let struct_manager = BasicStructManager::new(&program, nrof_instances_per_struct);
+                            let struct_manager =
+                                BasicStructManager::new(&program, nrof_instances_per_struct);
                             let schedule_manager = BasicScheduleManager::new(&program);
                             result = transpile::transpile(&schedule_manager, &struct_manager);
-                        },
+                        }
                         "coalesced" => {
-                            let struct_manager = CoalescedStructManager::new(&program, nrof_instances_per_struct, memorder, scope);
-                            let schedule_manager = CoalescedScheduleManager::new(&program, &struct_manager, printnthinst, print_unstable);
+                            let struct_manager = CoalescedStructManager::new(
+                                &program,
+                                nrof_instances_per_struct,
+                                memorder,
+                                scope,
+                            );
+                            let schedule_manager = CoalescedScheduleManager::new(
+                                &program,
+                                &struct_manager,
+                                printnthinst,
+                                print_unstable,
+                            );
                             result = transpile::transpile(&schedule_manager, &struct_manager);
-                        },
+                        }
                         "in-kernel" => {
-
-                            let fp_strat : Box<dyn FPStrategy> = match voting_strat {
-                                "naive" => Box::new(NaiveFixpoint::new(program.schedule.fixpoint_depth())),
-                                "naive-alternating" => Box::new(NaiveAlternatingFixpoint::new(program.schedule.fixpoint_depth())),
-                                _ => panic!("voting strategy not found.")
+                            let fp_strat: Box<dyn FPStrategy> = match voting_strat {
+                                "naive" => {
+                                    Box::new(NaiveFixpoint::new(program.schedule.fixpoint_depth()))
+                                }
+                                "naive-alternating" => Box::new(NaiveAlternatingFixpoint::new(
+                                    program.schedule.fixpoint_depth(),
+                                )),
+                                _ => panic!("voting strategy not found."),
                             };
 
                             let div_strat = match division_strat {
                                 "blocksize" => DivisionStrategy::BlockSizeIncrease,
                                 "gridsize" => DivisionStrategy::GridSizeIncrease,
-                                _ => panic!("division strategy not found.")
+                                _ => panic!("division strategy not found."),
                             };
 
-                            let step_transpiler = StepBodyTranspiler::new(
-                                &type_info,
-                                true,
-                                print_unstable
-                            );
+                            let step_transpiler =
+                                StepBodyTranspiler::new(&type_info, true, print_unstable);
 
                             let work_divisor = WorkDivisor::new(
                                 &program,
@@ -158,11 +165,11 @@ fn main() {
                                 threads_per_block, // tpb
                                 nrof_instances_per_struct,
                                 div_strat,
-                                print_unstable
+                                print_unstable,
                             );
 
                             result = transpile::transpile2(vec![
-                                &InitFileReader{},
+                                &InitFileReader {},
                                 &PrintbufferSizeAdjuster::new(buffer_size),
                                 &work_divisor,
                                 &StructManagers::new(
@@ -170,37 +177,40 @@ fn main() {
                                     nrof_instances_per_struct,
                                     &memorder,
                                     scope,
-                                    true
+                                    true,
                                 ),
                                 &SingleKernelSchedule::new(
                                     &program,
                                     &*fp_strat,
                                     &step_transpiler,
-                                    &work_divisor
-                                )
+                                    &work_divisor,
+                                ),
                             ]);
-                        },
-                        _ => unreachable!()
+                        }
+                        _ => unreachable!(),
                     }
-                    
-                    output_writer.write(result.as_bytes()).expect("Could not write to output file.");
+
+                    output_writer
+                        .write(result.as_bytes())
+                        .expect("Could not write to output file.");
                 }
             }
-        },
+        }
         Err(e) => {
             let range = match e {
                 ParseError::InvalidToken { location } => location..(location + 1),
-                ParseError::UnrecognizedEOF {location, expected: _ } => location..(location + 1),
+                ParseError::UnrecognizedEOF {
+                    location,
+                    expected: _,
+                } => location..(location + 1),
                 ParseError::UnrecognizedToken { token, expected: _ } => token.0..token.2,
                 ParseError::ExtraToken { token } => token.0..token.2,
-                _ => panic!("{:?}", e)
+                _ => panic!("{:?}", e),
             };
 
             let d_err = Diagnostic::error()
-                                    .with_message("Parsing error.")
-                                    .with_labels(vec![
-                                        Label::primary((), range).with_message("here")
-                                    ]);
+                .with_message("Parsing error.")
+                .with_labels(vec![Label::primary((), range).with_message("here")]);
             errors.push(d_err);
         }
     }

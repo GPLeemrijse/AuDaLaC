@@ -1,6 +1,5 @@
-use std::collections::BTreeSet;
 use crate::ast::{ADLStruct, Step};
-
+use std::collections::BTreeSet;
 
 pub trait ScheduleManager {
     fn add_includes(&self, set: &mut BTreeSet<&str>);
@@ -26,7 +25,6 @@ pub trait StructManager {
     fn kernel_name(&self, strct: &ADLStruct, step: &Step) -> String;
 }
 
-
 pub trait CompileComponent {
     fn add_includes(&self, set: &mut BTreeSet<&str>);
     fn defines(&self) -> Option<String>;
@@ -44,9 +42,9 @@ pub trait FPStrategy {
     fn top_of_kernel_decl(&self) -> String;
     fn pre_iteration(&self, lvl: usize) -> String;
     fn post_iteration(&self, lvl: usize) -> String;
-    fn is_stable(&self, lvl : usize) -> String;
+    fn is_stable(&self, lvl: usize) -> String;
 
-    fn set_unstable(&self, lvl : usize) -> String;
+    fn set_unstable(&self, lvl: usize) -> String;
 
     fn initialise(&self) -> String;
     fn requires_intra_fixpoint_sync(&self) -> bool;

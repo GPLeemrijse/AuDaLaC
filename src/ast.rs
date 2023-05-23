@@ -12,33 +12,34 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn struct_by_name(&self, name : &String) -> Option<&ADLStruct>{
-        self.structs.iter()
-                    .find(|s| &s.name == name)
+    pub fn struct_by_name(&self, name: &String) -> Option<&ADLStruct> {
+        self.structs.iter().find(|s| &s.name == name)
     }
 
-    pub fn step_by_name(&self, struct_name : &String, step_name : &String) -> Option<&Step>{
-        self.structs.iter()
-                    .find(|s| &s.name == struct_name)?
-                    .step_by_name(step_name)
+    pub fn step_by_name(&self, struct_name: &String, step_name: &String) -> Option<&Step> {
+        self.structs
+            .iter()
+            .find(|s| &s.name == struct_name)?
+            .step_by_name(step_name)
     }
 
-    pub fn has_any_step_by_name(&self, step_name : &String) -> bool {
-        self.structs.iter()
-                    .any(|strct| strct.step_by_name(step_name).is_some())
+    pub fn has_any_step_by_name(&self, step_name: &String) -> bool {
+        self.structs
+            .iter()
+            .any(|strct| strct.step_by_name(step_name).is_some())
     }
 
     pub fn get_step_to_structs(&self) -> HashMap<&String, Vec<&ADLStruct>> {
-        let mut s2s : HashMap<&String, Vec<&ADLStruct>> = HashMap::new();
+        let mut s2s: HashMap<&String, Vec<&ADLStruct>> = HashMap::new();
 
         for strct in &self.structs {
             for step in &strct.steps {
                 s2s.entry(&step.name)
-                   .and_modify(|v| v.push(strct))
-                   .or_insert(vec![strct]);
+                    .and_modify(|v| v.push(strct))
+                    .or_insert(vec![strct]);
             }
         }
-        return s2s
+        return s2s;
     }
 }
 
@@ -56,7 +57,7 @@ impl Schedule {
         match self {
             Sequential(s1, s2, _) => std::cmp::max(s1.fixpoint_depth(), s2.fixpoint_depth()),
             Fixpoint(s, _) => s.fixpoint_depth() + 1,
-            _ => 0
+            _ => 0,
         }
     }
 
@@ -71,7 +72,7 @@ impl Schedule {
         use crate::ast::Schedule::*;
         match self {
             Sequential(s, _, _) => s.earliest_subschedule(),
-            StepCall(..)|TypedStepCall(..)|Fixpoint(..) => &self
+            StepCall(..) | TypedStepCall(..) | Fixpoint(..) => &self,
         }
     }
 }
@@ -83,7 +84,7 @@ pub struct Step {
     pub loc: Loc,
 }
 
-fn remove_duplicates<T: Ord>(vec : &mut Vec<T>){
+fn remove_duplicates<T: Ord>(vec: &mut Vec<T>) {
     vec.sort();
     vec.dedup();
 }
@@ -92,11 +93,17 @@ impl Step {
     /* Performs 'f_expr' on all expressions and 'f_stmt' on all statements.
        Collects all unique results.
     */
-    pub fn visit<'a, T: 'a + Ord>(&'a self, f_stmt: fn(&'a Stat) -> Vec<T>, f_exp: fn(&'a Exp) -> Vec<T>) -> Vec<T> {
-        let mut results = self.statements.iter()
-                                     .map(|s| s.visit(f_stmt, f_exp))
-                                     .flatten()
-                                     .collect::<Vec<T>>();
+    pub fn visit<'a, T: 'a + Ord>(
+        &'a self,
+        f_stmt: fn(&'a Stat) -> Vec<T>,
+        f_exp: fn(&'a Exp) -> Vec<T>,
+    ) -> Vec<T> {
+        let mut results = self
+            .statements
+            .iter()
+            .map(|s| s.visit(f_stmt, f_exp))
+            .flatten()
+            .collect::<Vec<T>>();
 
         remove_duplicates(&mut results);
         return results;
@@ -113,7 +120,7 @@ impl Step {
                 } else {
                     Vec::new()
                 }
-            }
+            },
         )
     }
 
@@ -127,7 +134,7 @@ impl Step {
                     Vec::new()
                 }
             },
-            |_| Vec::new()
+            |_| Vec::new(),
         )
     }
 }
@@ -141,14 +148,12 @@ pub struct ADLStruct {
 }
 
 impl ADLStruct {
-    pub fn step_by_name(&self, name : &String) -> Option<&Step> {
-        self.steps.iter()
-                  .find(|s| &s.name == name)
+    pub fn step_by_name(&self, name: &String) -> Option<&Step> {
+        self.steps.iter().find(|s| &s.name == name)
     }
 
-    pub fn parameter_by_name(&self, name : &String) -> Option<&(String, Type, Loc)> {
-        self.parameters.iter()
-                  .find(|p| &p.0 == name)
+    pub fn parameter_by_name(&self, name: &String) -> Option<&(String, Type, Loc)> {
+        self.parameters.iter().find(|p| &p.0 == name)
     }
 }
 
@@ -169,26 +174,22 @@ impl Exp {
             BinOp(e1, _, e2, _) => {
                 result.append(&mut e1.visit(f_exp));
                 result.append(&mut e2.visit(f_exp));
-            },
+            }
             UnOp(_, e, _) => {
                 result.append(&mut e.visit(f_exp));
-            },
+            }
             Constructor(_, exps, _) => {
-                result.append(&mut exps.iter()
-                                       .map(|e| e.visit(f_exp))
-                                       .flatten()
-                                       .collect()
-                );
-            },
-            _ => ()
+                result.append(&mut exps.iter().map(|e| e.visit(f_exp)).flatten().collect());
+            }
+            _ => (),
         }
         result
     }
 
-    pub fn get_parts(&self) -> &Vec<String>{
+    pub fn get_parts(&self) -> &Vec<String> {
         match self {
             Exp::Var(parts, _) => parts,
-            _ => panic!()
+            _ => panic!(),
         }
     }
 }
@@ -199,9 +200,16 @@ impl Display for Exp {
         match self {
             BinOp(l, o, r, _) => write!(f, "{l} {o} {r}"),
             UnOp(o, e, _) => write!(f, "{o}{e}"),
-            Constructor(n, exps, _) => write!(f, "{n}({})", exps.iter().map(|e| format!("{e}")).collect::<Vec<String>>().join(", ")),
+            Constructor(n, exps, _) => write!(
+                f,
+                "{n}({})",
+                exps.iter()
+                    .map(|e| format!("{e}"))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
             Var(parts, _) => write!(f, "{}", parts.join(".")),
-            Lit(l, _) => write!(f, "{l}")
+            Lit(l, _) => write!(f, "{l}"),
         }
     }
 }
@@ -215,24 +223,30 @@ pub enum Stat {
 }
 
 impl Stat {
-    pub fn visit<'a, T: 'a + Ord>(&'a self, f_stmt: fn(&'a Stat) -> Vec<T>, f_exp: fn(&'a Exp) -> Vec<T>) -> Vec<T> {
+    pub fn visit<'a, T: 'a + Ord>(
+        &'a self,
+        f_stmt: fn(&'a Stat) -> Vec<T>,
+        f_exp: fn(&'a Exp) -> Vec<T>,
+    ) -> Vec<T> {
         use Stat::*;
         let mut result = f_stmt(self);
 
         match self {
             IfThen(cond, stmts1, strmts2, _) => {
-                result.append(&mut stmts1.iter()
-                                   .chain(strmts2.iter())
-                                   .map(|s| s.visit(f_stmt, f_exp))
-                                   .flatten()
-                                   .chain(cond.visit(f_exp))
-                                   .collect::<Vec<T>>()
+                result.append(
+                    &mut stmts1
+                        .iter()
+                        .chain(strmts2.iter())
+                        .map(|s| s.visit(f_stmt, f_exp))
+                        .flatten()
+                        .chain(cond.visit(f_exp))
+                        .collect::<Vec<T>>(),
                 );
-            },
-            Declaration(_, _, e, _)|Assignment(_, e, _) => {
+            }
+            Declaration(_, _, e, _) | Assignment(_, e, _) => {
                 result.append(&mut e.visit(f_exp));
-            },
-            _ => ()
+            }
+            _ => (),
         }
         result
     }
@@ -245,7 +259,7 @@ pub enum Type {
     Nat,
     Int,
     Bool,
-    Null
+    Null,
 }
 
 impl Type {
@@ -261,7 +275,7 @@ impl Type {
     pub fn name(&self) -> Option<&String> {
         match self {
             Type::Named(s) => Some(s),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -275,7 +289,7 @@ impl Display for Type {
             Nat => write!(f, "Nat"),
             Int => write!(f, "Int"),
             Bool => write!(f, "Bool"),
-            Null => write!(f, "NullType")
+            Null => write!(f, "NullType"),
         }
     }
 }
@@ -299,7 +313,7 @@ impl Display for Literal {
             BoolLit(v) => write!(f, "{v}"),
             StringLit(v) => write!(f, "\"{v}\""),
             NullLit => write!(f, "null"),
-            ThisLit => write!(f, "this")
+            ThisLit => write!(f, "this"),
         }
     }
 }
@@ -358,12 +372,12 @@ impl Display for UnOpcode {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::*;
     use crate::adl::ExpParser;
     use crate::adl::ScheduleParser;
     use crate::adl::StatParser;
     use crate::adl::StepsParser;
     use crate::adl::StructsParser;
+    use crate::ast::*;
     use lalrpop_util::ParseError::User;
 
     #[test]
@@ -432,7 +446,10 @@ mod tests {
                 Box::new(Exp::Lit(Literal::BoolLit(true), (3, 7))),
                 vec![
                     Stat::Assignment(
-                        Box::new(Exp::Var(vec!["id".to_string(), "id2".to_string()], (15, 21))),
+                        Box::new(Exp::Var(
+                            vec!["id".to_string(), "id2".to_string()],
+                            (15, 21),
+                        )),
                         Box::new(Exp::Lit(Literal::NullLit, (25, 29))),
                         (15, 30),
                     ),

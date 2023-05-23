@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
 use crate::ast::*;
 use codespan_reporting::diagnostic::Diagnostic;
 use codespan_reporting::diagnostic::Label;
 use core::ops::Range;
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ValidationError {
@@ -129,7 +129,7 @@ impl ValidationError {
             NoNullLiteralForType(Some(t)) => {
                 format!("The null literal is not defined for type {}.", t)
             }
-            ReservedKeyword(kw) => format!("The token '{}' is a reserved keyword.", kw)
+            ReservedKeyword(kw) => format!("The token '{}' is a reserved keyword.", kw),
         }
     }
 
@@ -176,19 +176,16 @@ impl ErrorContext {
     }
 }
 
-fn is_reserved<'ast>(name : &String) -> bool {
-    let reserved_keywords = HashSet::from([
-        "fprintf",
-        "printf",
-    ].map(|e| e.to_string()));
+fn is_reserved<'ast>(name: &String) -> bool {
+    let reserved_keywords = HashSet::from(["fprintf", "printf"].map(|e| e.to_string()));
 
     return reserved_keywords.contains(name);
 }
-    
+
 fn check_no_reserved_keywords_structs<'ast>(
-    structs: &'ast Vec<ADLStruct>,    
-    context: &mut BlockEvaluationContext<'ast>
-){
+    structs: &'ast Vec<ADLStruct>,
+    context: &mut BlockEvaluationContext<'ast>,
+) {
     for s in structs {
         if is_reserved(&s.name) {
             context.errors.push(ValidationError {
@@ -200,11 +197,10 @@ fn check_no_reserved_keywords_structs<'ast>(
     }
 }
 
-
 fn check_no_reserved_keywords_parameters<'ast>(
     params: &'ast [(String, Type, Loc)],
     context: &mut BlockEvaluationContext<'ast>,
-){
+) {
     for (n, _, l) in params {
         if is_reserved(n) {
             context.errors.push(ValidationError {
@@ -219,7 +215,7 @@ fn check_no_reserved_keywords_parameters<'ast>(
 fn check_no_reserved_keywords_steps<'ast>(
     steps: &'ast Vec<Step>,
     context: &mut BlockEvaluationContext<'ast>,
-){
+) {
     for s in steps {
         if is_reserved(&s.name) {
             context.errors.push(ValidationError {
@@ -231,7 +227,6 @@ fn check_no_reserved_keywords_steps<'ast>(
     }
 }
 
-
 #[derive(Debug)]
 struct BlockEvaluationContext<'ast> {
     current_struct_name: Option<&'ast String>,
@@ -239,7 +234,7 @@ struct BlockEvaluationContext<'ast> {
     program: &'ast Program,
     vars: Vec<Vec<(String, Type, Loc)>>,
     errors: Vec<ValidationError>,
-    var_exp_type_info: HashMap<*const Exp, Vec<Type>>
+    var_exp_type_info: HashMap<*const Exp, Vec<Type>>,
 }
 
 impl<'eval, 'ast> BlockEvaluationContext<'ast> {
@@ -265,14 +260,16 @@ impl<'eval, 'ast> BlockEvaluationContext<'ast> {
     }
 }
 
-pub fn validate_ast<'ast>(ast: &'ast Program) -> (Vec<ValidationError>, HashMap<*const Exp, Vec<Type>>) {
+pub fn validate_ast<'ast>(
+    ast: &'ast Program,
+) -> (Vec<ValidationError>, HashMap<*const Exp, Vec<Type>>) {
     let mut context = BlockEvaluationContext {
         current_struct_name: None,
         current_step_name: None,
         program: ast,
         vars: Vec::new(),
         errors: Vec::new(),
-        var_exp_type_info: HashMap::new()
+        var_exp_type_info: HashMap::new(),
     };
 
     // All Structs must have a unique name and not reserved keywords
@@ -325,10 +322,7 @@ fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationC
     use crate::ast::Schedule::*;
     match schedule {
         StepCall(step_name, loc) => {
-            if !context
-                .program
-                .has_any_step_by_name(step_name)
-            {
+            if !context.program.has_any_step_by_name(step_name) {
                 context.errors.push(ValidationError {
                     error_type: ValidationErrorType::UndefinedStep,
                     context: ErrorContext {
@@ -418,10 +412,7 @@ fn check_uniqueness_of_steps<'ast>(
     }
 }
 
-fn check_statement_block<'ast>(
-    block: &'ast Vec<Stat>,
-    context: &mut BlockEvaluationContext<'ast>,
-) {
+fn check_statement_block<'ast>(block: &'ast Vec<Stat>, context: &mut BlockEvaluationContext<'ast>) {
     for stmt in block {
         use crate::ast::Stat::*;
 
@@ -435,19 +426,18 @@ fn check_statement_block<'ast>(
             IfThen(cond, statements1, statements2, cond_loc) => {
                 check_ifthen(cond, statements1, statements2, cond_loc, context);
             }
-            InlineCpp(_) => ()
+            InlineCpp(_) => (),
         }
     }
 }
 
 fn check_declaration<'ast>(
-    decl_type : &'ast Type,
-    id : &'ast String,
-    exp : &'ast Box<Exp>,
-    loc : &'ast (usize, usize),
-    context: &mut BlockEvaluationContext<'ast>
-    ){
-
+    decl_type: &'ast Type,
+    id: &'ast String,
+    exp: &'ast Box<Exp>,
+    loc: &'ast (usize, usize),
+    context: &mut BlockEvaluationContext<'ast>,
+) {
     // Throws an error if decl_type is undefined
     if type_is_defined(decl_type, context, *loc) {
         // Make sure id is not used before
@@ -459,15 +449,10 @@ fn check_declaration<'ast>(
             });
         } else {
             // check type of exp
-            if let Some(exp_type) =
-                get_expr_type(exp, context)
-            {
+            if let Some(exp_type) = get_expr_type(exp, context) {
                 if !exp_type.can_be_coerced_to_type(decl_type) {
                     context.errors.push(ValidationError {
-                        error_type: ValidationErrorType::TypeMismatch(
-                            decl_type.clone(),
-                            exp_type,
-                        ),
+                        error_type: ValidationErrorType::TypeMismatch(decl_type.clone(), exp_type),
                         context: ErrorContext::from_block_context(context),
                         loc: *loc,
                     });
@@ -489,11 +474,11 @@ fn check_declaration<'ast>(
 }
 
 fn check_assignment<'ast>(
-    parts : &'ast Box<Exp>,
-    exp : &'ast Box<Exp>,
-    loc : &'ast Loc,
-    context: &mut BlockEvaluationContext<'ast>
-    ){
+    parts: &'ast Box<Exp>,
+    exp: &'ast Box<Exp>,
+    loc: &'ast Loc,
+    context: &mut BlockEvaluationContext<'ast>,
+) {
     // Can the type of LHS be determined?
     if let Some((var_type, _)) = get_var_type(parts, context, loc) {
         // Can the type of RHS be determined?
@@ -511,20 +496,17 @@ fn check_assignment<'ast>(
 }
 
 fn check_ifthen<'ast>(
-    cond : &'ast Box<Exp>,
-    statements_true : &'ast Vec<Stat>,
-    statements_false : &'ast Vec<Stat>,
-    cond_loc : &'ast Loc,
-    context: &mut BlockEvaluationContext<'ast>
-    ){
+    cond: &'ast Box<Exp>,
+    statements_true: &'ast Vec<Stat>,
+    statements_false: &'ast Vec<Stat>,
+    cond_loc: &'ast Loc,
+    context: &mut BlockEvaluationContext<'ast>,
+) {
     if let Some(cond_type) = get_expr_type(cond, context) {
         // Booleans have no Null value
         if cond_type != Type::Bool {
             context.errors.push(ValidationError {
-                error_type: ValidationErrorType::TypeMismatch(
-                    Type::Bool,
-                    cond_type,
-                ),
+                error_type: ValidationErrorType::TypeMismatch(Type::Bool, cond_type),
                 context: ErrorContext::from_block_context(context),
                 loc: *cond_loc,
             });
@@ -541,19 +523,17 @@ fn check_ifthen<'ast>(
     context.pop_var_scope();
 }
 
-
 /// Returns the type of a `Var`: part1.part2.part3, and the location of the original definition
 fn get_var_type<'ast>(
     parts_exp: &'ast Exp,
     context: &mut BlockEvaluationContext<'ast>,
     loc: &'ast Loc,
 ) -> Option<(Type, Loc)> {
-    
     let parts = parts_exp.get_parts();
 
-    let mut part_types : Vec<Type> = Vec::new();
+    let mut part_types: Vec<Type> = Vec::new();
 
-    // Get type of first part by looking in the current context 
+    // Get type of first part by looking in the current context
     let mut found_type: Option<(Type, Loc)>;
     found_type = get_type_from_context(&parts[0], context);
 
@@ -565,7 +545,7 @@ fn get_var_type<'ast>(
         });
         return None;
     }
-    
+
     let mut idx = 1; // start at 1 as first part is already done
     let mut premature_break = false;
     while idx < parts.len() {
@@ -575,10 +555,10 @@ fn get_var_type<'ast>(
             found_type = get_type_from_scope(
                 &parts[idx],
                 &context
-                .program
-                .struct_by_name(&s)
-                .unwrap() // assured by get_type_from_context not returning None
-                .parameters
+                    .program
+                    .struct_by_name(&s)
+                    .unwrap() // assured by get_type_from_context not returning None
+                    .parameters,
             );
         } else {
             idx += 1;
@@ -591,8 +571,8 @@ fn get_var_type<'ast>(
     if found_type.is_none() || premature_break {
         context.errors.push(ValidationError {
             error_type: ValidationErrorType::UndefinedField(
-                parts[idx-2].clone(),
-                parts[idx-1].clone(),
+                parts[idx - 2].clone(),
+                parts[idx - 1].clone(),
             ),
             context: ErrorContext::from_block_context(context),
             loc: *loc,
@@ -600,10 +580,12 @@ fn get_var_type<'ast>(
     } else {
         /* Completely legal Var expression, so we add to the type info. */
         part_types.push(found_type.as_ref().unwrap().0.clone());
-        context.var_exp_type_info.insert(parts_exp as *const Exp, part_types);
+        context
+            .var_exp_type_info
+            .insert(parts_exp as *const Exp, part_types);
     }
 
-    return found_type
+    return found_type;
 }
 
 fn type_is_defined<'ast>(t: &Type, context: &mut BlockEvaluationContext<'ast>, loc: Loc) -> bool {
@@ -741,16 +723,14 @@ fn get_expr_type<'ast>(
             }
         }
         Var(_, loc) => get_var_type(expr, context, loc).map(|(t, _)| t),
-        Lit(lit, _) => {
-            match lit {
-                NatLit(_) => Some(Nat),
-                IntLit(_) => Some(Int),
-                BoolLit(_) => Some(Bool),
-                StringLit(_) => Some(String),
-                NullLit => Some(Null),
-                ThisLit => Some(Named(context.current_struct_name.unwrap().clone())),
-            }
-        }
+        Lit(lit, _) => match lit {
+            NatLit(_) => Some(Nat),
+            IntLit(_) => Some(Int),
+            BoolLit(_) => Some(Bool),
+            StringLit(_) => Some(String),
+            NullLit => Some(Null),
+            ThisLit => Some(Named(context.current_struct_name.unwrap().clone())),
+        },
     }
 }
 
@@ -788,7 +768,7 @@ fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<
         (String, _, String) if is_equality(op) => Some(Bool),
         (Bool, _, Bool) if is_equality(op) => Some(Bool),
         (Bool, _, Bool) if is_boolean_logic(op) => Some(Bool),
-        (Named(..)|Null, _, Named(..)|Null) if is_equality(op) || is_ordering(op) => Some(Bool),
+        (Named(..) | Null, _, Named(..) | Null) if is_equality(op) || is_ordering(op) => Some(Bool),
         (..) => None,
     }
 }
@@ -914,7 +894,6 @@ mod tests {
         );
     }
 
-
     #[test]
     fn test_validate_var_type_undef_first_part() {
         let program_string = r#"struct A(a : Int, b : A){init{b.a := 1; c.a := 2;}} init"#;
@@ -980,7 +959,8 @@ mod tests {
 
     #[test]
     fn test_validate_var_type_index_non_named() {
-        let program_string = r#"struct A(a : Int){} struct B(b : A){ init {b.a.extra_index := 1;}} init"#;
+        let program_string =
+            r#"struct A(a : Int){} struct B(b : A){ init {b.a.extra_index := 1;}} init"#;
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
@@ -1001,21 +981,27 @@ mod tests {
 
     #[test]
     fn test_validate_var_type_correct() {
-        use crate::ast::*;
         use crate::ast::Type::*;
+        use crate::ast::*;
 
-        let program_string = r#"struct A(a : Int, ab : B){} struct B(b : A){ init {b.ab.b.a := 1; b.a := 1;}} init"#;
+        let program_string =
+            r#"struct A(a : Int, ab : B){} struct B(b : A){ init {b.ab.b.a := 1; b.a := 1;}} init"#;
         let program = ProgramParser::new()
             .parse(program_string)
             .expect("ParseError.");
         let (errors, type_info) = validate_ast(&program);
         assert!(errors.is_empty());
-        let mut sorted_info : Vec<&Vec<Type>> = type_info.values().collect();
+        let mut sorted_info: Vec<&Vec<Type>> = type_info.values().collect();
         sorted_info.sort();
         assert_eq!(
             sorted_info,
             vec![
-                &vec![Named("A".to_string()), Named("B".to_string()), Named("A".to_string()), Int],
+                &vec![
+                    Named("A".to_string()),
+                    Named("B".to_string()),
+                    Named("A".to_string()),
+                    Int
+                ],
                 &vec![Named("A".to_string()), Int]
             ]
         );
