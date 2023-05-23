@@ -19,6 +19,8 @@ use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use codespan_reporting::term::{self};
 use lalrpop_util::ParseError;
+use std::collections::HashMap;
+use std::error::Error;
 use std::fs;
 use std::fs::File;
 use std::io::BufWriter;
@@ -40,6 +42,20 @@ mod utils;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
+/* https://github.com/clap-rs/clap/blob/master/examples/typed-derive.rs */
+fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error + Send + Sync + 'static>>
+where
+    T: std::str::FromStr,
+    T::Err: Error + Send + Sync + 'static,
+    U: std::str::FromStr,
+    U::Err: Error + Send + Sync + 'static,
+{
+    let pos = s
+        .find('=')
+        .ok_or_else(|| format!("invalid KEY=value: no `=` found in `{s}`"))?;
+    Ok((s[..pos].parse()?, s[pos + 1..].parse()?))
+}
+
 fn main() {
     let args = clap_app!(ADL =>
         (version: "0.1")
@@ -53,7 +69,7 @@ fn main() {
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg division_strat: -D --division_strat possible_value("blocksize") possible_value("gridsize") default_value("blocksize") "What division strategy to use. 'blocksize' lets blocks execute a continuous sequence of instances, while 'gridsize' evenly distributes over the blocks.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
-        (@arg nrofinstances: -N --nrofinstances +takes_value default_value("1000") value_parser(clap::value_parser!(usize)) "nrof struct instances memory is allocated for.")
+        (@arg nrofinstances: -N --nrofinstances +takes_value multiple(true) value_parser(parse_key_val::<String, usize>) "nrof struct instances memory is allocated for.")
         (@arg instsperthread: -M --instsperthread +takes_value default_value("8") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
         (@arg threads_per_block: -T --threadsperblock +takes_value default_value("256") value_parser(clap::value_parser!(usize)) "Number of threads per block.")
         (@arg buffersize: -b --buffersize +takes_value default_value("4096") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
@@ -68,7 +84,11 @@ fn main() {
     let time = args.is_present("time");
     let init_file = args.is_present("init_file");
     let print_unstable = args.is_present("printunstable");
-    let nrof_instances_per_struct: usize = *args.get_one("nrofinstances").unwrap();
+    let mut nrof_instances_per_struct: HashMap<String, usize> = args
+        .get_many::<(String, usize)>("nrofinstances")
+        .unwrap_or_default()
+        .map(|(s, n)| (s.clone(), *n))
+        .collect();
     let buffer_size: usize = *args.get_one("buffersize").unwrap();
     let instances_per_thread: usize = *args.get_one("instsperthread").unwrap();
     let threads_per_block: usize = *args.get_one("threads_per_block").unwrap();
@@ -118,7 +138,11 @@ fn main() {
                     );
                 } else {
                     let result: String;
-
+                    for strct in &program.structs {
+                        if !nrof_instances_per_struct.contains_key(&strct.name) {
+                            nrof_instances_per_struct.insert(strct.name.clone(), 1000);
+                        }
+                    }
                     match compiler {
                         "basic" => {
                             let struct_manager =
@@ -165,7 +189,7 @@ fn main() {
                                 &program,
                                 instances_per_thread,
                                 threads_per_block, // tpb
-                                nrof_instances_per_struct,
+                                &nrof_instances_per_struct,
                                 div_strat,
                                 print_unstable,
                             );
@@ -176,7 +200,7 @@ fn main() {
                                 &work_divisor,
                                 &StructManagers::new(
                                     &program,
-                                    nrof_instances_per_struct,
+                                    &nrof_instances_per_struct,
                                     &memorder,
                                     scope,
                                     true,

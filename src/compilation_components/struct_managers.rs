@@ -8,10 +8,11 @@ use crate::MemOrder;
 use crate::Scope;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 
 pub struct StructManagers<'a> {
     program: &'a Program,
-    nrof_structs: usize,
+    allocated_per_instance: &'a HashMap<String, usize>,
     memorder: &'a MemOrder,
     scope: Scope,
     use_step_parity: bool,
@@ -20,14 +21,14 @@ pub struct StructManagers<'a> {
 impl StructManagers<'_> {
     pub fn new<'a>(
         program: &'a Program,
-        nrof_structs: usize,
+        allocated_per_instance: &'a HashMap<String, usize>,
         memorder: &'a MemOrder,
         scope: Scope,
         use_step_parity: bool,
     ) -> StructManagers<'a> {
         StructManagers {
             program,
-            nrof_structs,
+            allocated_per_instance,
             memorder,
             scope,
             use_step_parity,
@@ -234,8 +235,15 @@ impl CompileComponent for StructManagers<'_> {
 
         for (idx, struct_name) in struct_names.iter().enumerate() {
             let s_name_lwr = struct_name.to_lowercase();
+            let allocated_space = self
+                .allocated_per_instance
+                .get(*struct_name)
+                .expect("Wrong struct name supplied to -N.");
+
             registers.push_str(&format!{"\tCHECK(cudaHostRegister(&host_{struct_name}, sizeof({struct_name}), cudaHostRegisterDefault));\n"});
-            inits.push_str(&format!{"\thost_{struct_name}.initialise(&structs[{idx}], {});\n", self.nrof_structs});
+            inits.push_str(
+                &format! {"\thost_{struct_name}.initialise(&structs[{idx}], {allocated_space});\n"},
+            );
             to_device.push_str(&format!{"\t{struct_name} * const loc_{s_name_lwr} = ({struct_name}*)host_{struct_name}.to_device();\n"});
             memcpy.push_str(&format!{"\tCHECK(cudaMemcpyToSymbol({s_name_lwr}, &loc_{s_name_lwr}, sizeof({struct_name} * const)));\n"});
         }

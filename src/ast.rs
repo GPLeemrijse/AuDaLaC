@@ -1,6 +1,7 @@
 pub type Loc = (usize, usize);
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fmt;
 use std::fmt::Display;
 
@@ -41,6 +42,25 @@ impl Program {
         }
         return s2s;
     }
+
+    pub fn executors(&self) -> HashSet<&String> {
+        let s2s = self.get_step_to_structs();
+        let mut calls = Vec::new();
+        self.schedule.step_calls(&mut calls);
+
+        let mut result = HashSet::new();
+        for c in calls {
+            match c {
+                (None, step) => s2s.get(step).unwrap().iter().for_each(|strct| {
+                    result.insert(&strct.name);
+                }),
+                (Some(strct), _) => {
+                    result.insert(strct);
+                }
+            }
+        }
+        result
+    }
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -73,6 +93,20 @@ impl Schedule {
         match self {
             Sequential(s, _, _) => s.earliest_subschedule(),
             StepCall(..) | TypedStepCall(..) | Fixpoint(..) => &self,
+        }
+    }
+
+    pub fn step_calls<'a>(&'a self, result: &mut Vec<(Option<&'a String>, &'a String)>) {
+        use crate::ast::Schedule::*;
+
+        match self {
+            StepCall(step, _) => result.push((None, step)),
+            TypedStepCall(strct, step, _) => result.push((Some(strct), step)),
+            Sequential(s1, s2, _) => {
+                s1.step_calls(result);
+                s2.step_calls(result);
+            }
+            Fixpoint(s, _) => s.step_calls(result),
         }
     }
 }

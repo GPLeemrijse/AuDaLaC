@@ -5,6 +5,7 @@ use crate::cuda_atomics::{MemOrder, Scope};
 use crate::transpilation_traits::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 
 pub struct CoalescedStructManager<'a> {
     pub program: &'a Program,
@@ -257,13 +258,13 @@ impl StructManager for CoalescedStructManager<'_> {
 impl CoalescedStructManager<'_> {
     pub fn new<'a>(
         program: &'a Program,
-        nrof_structs: usize,
+        nrof_structs: HashMap<String, usize>,
         memorder: MemOrder,
         scope: Scope,
     ) -> CoalescedStructManager<'a> {
         CoalescedStructManager {
             program,
-            nrof_structs,
+            nrof_structs: nrof_structs.iter().map(|(s, n)| n).sum(),
             memorder,
             scope,
         }

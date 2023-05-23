@@ -2,6 +2,7 @@ use crate::ast::Program;
 use crate::transpilation_traits::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 
 pub enum DivisionStrategy {
     BlockSizeIncrease,
@@ -12,20 +13,20 @@ pub struct WorkDivisor<'a> {
     program: &'a Program,
     instances_per_thread: usize,
     threads_per_block: usize,
-    allocated_per_instance: usize,
+    allocated_per_instance: &'a HashMap<String, usize>,
     division_strategy: DivisionStrategy,
     print_unstable: bool,
 }
 
-impl WorkDivisor<'_> {
+impl<'a> WorkDivisor<'a> {
     pub fn new(
-        program: &Program,
+        program: &'a Program,
         instances_per_thread: usize,
         threads_per_block: usize,
-        allocated_per_instance: usize,
+        allocated_per_instance: &'a HashMap<String, usize>,
         division_strategy: DivisionStrategy,
         print_unstable: bool,
-    ) -> WorkDivisor {
+    ) -> WorkDivisor<'a> {
         WorkDivisor {
             program,
             instances_per_thread,
@@ -37,7 +38,18 @@ impl WorkDivisor<'_> {
     }
 
     pub fn get_dims(&self, kernel_name: &str) -> String {
-        let nrof_instances = self.allocated_per_instance; // Only one struct type at a time for now
+        let executors = self.program.executors();
+        let executors_allocated_size = executors
+            .iter()
+            .map(|strct| {
+                self.allocated_per_instance
+                    .get(*strct)
+                    .expect("Wrong struct name supplied to -N.")
+            })
+            .max()
+            .unwrap();
+
+        let nrof_instances = executors_allocated_size;
         let nrof_threads =
             (nrof_instances + self.instances_per_thread - 1) / self.instances_per_thread;
         formatdoc!(

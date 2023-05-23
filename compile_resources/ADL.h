@@ -70,7 +70,7 @@ namespace ADL {
       int needed_blocks = (nrof_threads + tpb - 1)/tpb;
 
       if (needed_blocks > max_blocks) {
-         fprintf(stderr, "Needed %u blocks, but %u blocks is the maximum.\nAdjust instances per thread (-M).\n", needed_blocks, max_blocks);
+         fprintf(stderr, "Needed %u blocks, but %u blocks is the maximum.\nAdjust instances per thread (-M), or allocate for fewer instances (-N).\n", needed_blocks, max_blocks);
       }
       assert(needed_blocks <= max_blocks);
 

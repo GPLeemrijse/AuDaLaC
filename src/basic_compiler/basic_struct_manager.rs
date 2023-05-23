@@ -3,6 +3,7 @@ use crate::basic_compiler::*;
 use crate::transpilation_traits::*;
 use indoc::{formatdoc, indoc};
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 
 pub struct BasicStructManager<'a> {
     program: &'a Program,
@@ -255,10 +256,10 @@ impl StructManager for BasicStructManager<'_> {
 }
 
 impl BasicStructManager<'_> {
-    pub fn new(program: &Program, nrof_structs: usize) -> BasicStructManager {
+    pub fn new(program: &Program, nrof_structs: HashMap<String, usize>) -> BasicStructManager {
         BasicStructManager {
             program,
-            nrof_structs,
+            nrof_structs: nrof_structs.iter().map(|(s, n)| n).sum(),
         }
     }
 
@@ -346,6 +347,7 @@ mod tests {
     use crate::ast::Type::*;
     use crate::ast::*;
     use crate::BasicStructManager;
+    use std::collections::HashMap;
 
     #[test]
     fn test_nested_constructors() {
@@ -400,7 +402,10 @@ mod tests {
         program.structs.push(strct_a);
         program.structs.push(strct_b);
 
-        let basic_sm: BasicStructManager = BasicStructManager::new(&program, 10);
+        let mut allocated_space = HashMap::new();
+        allocated_space.insert("test".to_string(), 10);
+
+        let basic_sm: BasicStructManager = BasicStructManager::new(&program, allocated_space);
 
         let body = basic_sm.make_body(
             &program.structs[0].steps[0].statements,
