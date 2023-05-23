@@ -327,24 +327,26 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 			{kernel_schedule_body}
 			}}
 		"})
-	}
+    }
 
-	fn pre_main(&self) -> Option<String> {
-		let kernel_name = SingleKernelSchedule::KERNEL_NAME;
-		let get_dims = self.work_divisor.get_dims(kernel_name);
+    fn pre_main(&self) -> Option<String> {
+        let kernel_name = SingleKernelSchedule::KERNEL_NAME;
+        let get_dims = self.work_divisor.get_dims(kernel_name);
 
-		let mut result = self.fp.initialise();
-		result.push_str(&formatdoc!("
+        let mut result = self.fp.initialise();
+        result.push_str(&formatdoc!(
+            "
 
 			\tvoid* {kernel_name}_args[] = {{}};
 			\tauto dims = {get_dims};
-		"));
-		Some(result)
-	}
+		"
+        ));
+        Some(result)
+    }
 
-	fn main(&self) -> Option<String> {
-		let kernel_name = SingleKernelSchedule::KERNEL_NAME;
-		Some(formatdoc!{"
+    fn main(&self) -> Option<String> {
+        let kernel_name = SingleKernelSchedule::KERNEL_NAME;
+        Some(formatdoc! {"
 			\tCHECK(
 			\t	cudaLaunchCooperativeKernel(
 			\t		(void*){kernel_name},

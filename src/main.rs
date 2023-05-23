@@ -187,7 +187,7 @@ fn main() {
                                     &step_transpiler,
                                     &work_divisor,
                                 ),
-                                &Timer::new(time)
+                                &Timer::new(time),
                             ]);
                         }
                         _ => unreachable!(),
