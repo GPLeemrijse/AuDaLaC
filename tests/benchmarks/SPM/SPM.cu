@@ -1,4 +1,4 @@
-#define I_PER_THREAD 16
+#define I_PER_THREAD 140
 #define THREADS_PER_BLOCK 256
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
@@ -263,7 +263,7 @@ __device__ void Node_print_odd(const RefType self,
 							   bool* stable){
 	
 	if ((self == 0)) {
-		printf("Number of odd won cycles = %u\n", nrof_odd_wins);
+		printf("Number of odd won vertices = %u\n", nrof_odd_wins);
 	}
 }
 
@@ -521,9 +521,9 @@ int main(int argc, char **argv) {
 	CHECK(cudaHostRegister(&host_Measure, sizeof(Measure), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
 
-	host_Edge.initialise(&structs[0], 545000);
-	host_Measure.initialise(&structs[1], 545000);
-	host_Node.initialise(&structs[2], 545000);
+	host_Edge.initialise(&structs[0], 7236208);
+	host_Measure.initialise(&structs[1], 7236208);
+	host_Node.initialise(&structs[2], 7236208);
 
 	CHECK(cudaDeviceSynchronize());
 
@@ -538,9 +538,13 @@ int main(int argc, char **argv) {
 	cuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
 	CHECK(cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack));
 	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
-
 	void* schedule_kernel_args[] = {};
-	auto dims = ADL::get_launch_dims(34063, (void*)schedule_kernel);
+	auto dims = ADL::get_launch_dims(51688, (void*)schedule_kernel);
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start);
+
 
 	CHECK(
 		cudaLaunchCooperativeKernel(
@@ -550,8 +554,12 @@ int main(int argc, char **argv) {
 			schedule_kernel_args
 		)
 	);
-	CHECK(cudaDeviceSynchronize());
 
 
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	float ms = 0;
+	cudaEventElapsedTime(&ms, start, stop);
+	fprintf(stderr, "Total walltime GPU: %0.2f ms\n", ms);
 
 }

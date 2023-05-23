@@ -38,6 +38,9 @@ __host__ void* Struct::to_device(void* allocated_ptr) {
 
 __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity){
 	assert_correct_info(info);
+	if (info->nrof_instances >= capacity) {
+		fprintf(stderr, "Error: %u instances supplied while the capacity is %u.\n", info->nrof_instances, capacity);
+	}
 	assert (info->nrof_instances < capacity);
 
 	void** params = get_parameters();

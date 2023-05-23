@@ -116,7 +116,7 @@ int main(void){
 
     duration<double, std::milli> ms = t2 - t1;
 
-    std::cout << "Total walltime CPP "
+    std::cerr << "Total walltime CPU: "
               << ms.count()
               << " ms\n";
     

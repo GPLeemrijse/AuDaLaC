@@ -1,9 +1,8 @@
-#define I_PER_THREAD 16
+#define I_PER_THREAD 10
 #define THREADS_PER_BLOCK 256
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
 #define LOAD(A) A.load(cuda::memory_order_relaxed)
-#define FP_DEPTH 2
 #define NodeSet_MASK (1ULL << 0)
 #define Node_MASK (1ULL << 1)
 #define Edge_MASK (1ULL << 2)
@@ -192,6 +191,8 @@ __device__ Edge* __restrict__ edge;
 __device__ Node* __restrict__ node;
 __device__ NodeSet* __restrict__ nodeset;
 
+
+#define FP_DEPTH 2
 /* Transform an iter_idx into the fp_stack index
    associated with that operation.
 */
@@ -201,7 +202,7 @@ __device__ NodeSet* __restrict__ nodeset;
 
 __device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH][3];
 
-__device__ __inline__ void clear_stack(int lvl, uint8_t* iter_idx) {
+__device__ void clear_stack(int lvl, uint8_t* iter_idx) {
 	/*	Clears the stack on the FP_SET side.
 		The FP_RESET and FP_READ sides should remain the same.
 	*/
@@ -223,17 +224,17 @@ __device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_bl
 }
 template<typename T>
 __device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {
-    if (owner != 0){
-    	T old_val = LOAD(params[owner]);
-    	if (old_val != new_val){
-    		STORE(params[owner], new_val);
-    		*stable = false;
-    	}
-    }
+	if (owner != 0){
+		T old_val = LOAD(params[owner]);
+		if (old_val != new_val){
+			STORE(params[owner], new_val);
+			*stable = false;
+		}
+	}
 }
 
-__device__ __inline__ void print_NodeSet(const RefType self,
-										 bool* stable){
+__device__ void NodeSet_print(const RefType self,
+							  bool* stable){
 	if (self != 0) {
 		printf("NodeSet(%u): pivot_f_b=%u, pivot_f_nb=%u, pivot_nf_b=%u, pivot_nf_nb=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, LOAD(nodeset->pivot_f_b[self]), LOAD(nodeset->pivot_f_nb[self]), LOAD(nodeset->pivot_nf_b[self]), LOAD(nodeset->pivot_nf_nb[self]), LOAD(nodeset->scc[self]), LOAD(nodeset->f_and_b[self]), LOAD(nodeset->not_f_and_b[self]), LOAD(nodeset->f_and_not_b[self]));
 	}
@@ -242,33 +243,33 @@ __device__ __inline__ void print_NodeSet(const RefType self,
 __device__ void NodeSet_allocate_sets(const RefType self,
 									  bool* stable){
 	
-	if ((LOAD(nodeset->pivot_f_b[self]) != (RefType)0)) {
-		if ((LOAD(nodeset->pivot_nf_nb[self]) == (RefType)0)) {
+	if ((LOAD(nodeset->pivot_f_b[self]) != 0)) {
+		if ((LOAD(nodeset->pivot_nf_nb[self]) == 0)) {
 			// f_and_b := this;
-			SetParam(self, nodeset->f_and_b, self, stable);
+			SetParam<RefType>(self, nodeset->f_and_b, self, stable);
 			// scc := true;
-			SetParam(self, nodeset->scc, true, stable);
+			SetParam<BoolType>(self, nodeset->scc, true, stable);
 			// pivot_f_b := null;
-			SetParam(self, nodeset->pivot_f_b, (RefType)0, stable);
+			SetParam<RefType>(self, nodeset->pivot_f_b, 0, stable);
 		}
-		if ((LOAD(nodeset->pivot_nf_nb[self]) != (RefType)0)) {
+		if ((LOAD(nodeset->pivot_nf_nb[self]) != 0)) {
 			// f_and_b := NodeSet(null, null, null, null, true, null, null, null);
-			SetParam(self, nodeset->f_and_b, nodeset->create_instance((RefType)0, (RefType)0, (RefType)0, (RefType)0, true, (RefType)0, (RefType)0, (RefType)0, stable), stable);
+			SetParam<RefType>(self, nodeset->f_and_b, nodeset->create_instance(0, 0, 0, 0, true, 0, 0, 0, stable), stable);
 			// pivot_f_b := null;
-			SetParam(self, nodeset->pivot_f_b, (RefType)0, stable);
+			SetParam<RefType>(self, nodeset->pivot_f_b, 0, stable);
 		}
 	}
-	if ((LOAD(nodeset->pivot_f_nb[self]) != (RefType)0)) {
+	if ((LOAD(nodeset->pivot_f_nb[self]) != 0)) {
 		// f_and_not_b := NodeSet(null, pivot_f_nb, null, null, false, null, null, null);
-		SetParam(self, nodeset->f_and_not_b, nodeset->create_instance((RefType)0, LOAD(nodeset->pivot_f_nb[self]), (RefType)0, (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, stable), stable);
+		SetParam<RefType>(self, nodeset->f_and_not_b, nodeset->create_instance(0, LOAD(nodeset->pivot_f_nb[self]), 0, 0, false, 0, 0, 0, stable), stable);
 		// pivot_f_nb := null;
-		SetParam(self, nodeset->pivot_f_nb, (RefType)0, stable);
+		SetParam<RefType>(self, nodeset->pivot_f_nb, 0, stable);
 	}
-	if ((LOAD(nodeset->pivot_nf_b[self]) != (RefType)0)) {
+	if ((LOAD(nodeset->pivot_nf_b[self]) != 0)) {
 		// not_f_and_b := NodeSet(null, null, pivot_nf_b, null, false, null, null, null);
-		SetParam(self, nodeset->not_f_and_b, nodeset->create_instance((RefType)0, (RefType)0, LOAD(nodeset->pivot_nf_b[self]), (RefType)0, false, (RefType)0, (RefType)0, (RefType)0, stable), stable);
+		SetParam<RefType>(self, nodeset->not_f_and_b, nodeset->create_instance(0, 0, LOAD(nodeset->pivot_nf_b[self]), 0, false, 0, 0, 0, stable), stable);
 		// pivot_nf_b := null;
-		SetParam(self, nodeset->pivot_nf_b, (RefType)0, stable);
+		SetParam<RefType>(self, nodeset->pivot_nf_b, 0, stable);
 	}
 }
 
@@ -277,34 +278,34 @@ __device__ void NodeSet_initialise_pivot_fwd_bwd(const RefType self,
 	
 	if ((!LOAD(nodeset->scc[self]))) {
 		// pivot_f_b.fwd := true;
-		SetParam(LOAD(nodeset->pivot_f_b[self]), node->fwd, true, stable);
+		SetParam<BoolType>(LOAD(nodeset->pivot_f_b[self]), node->fwd, true, stable);
 		// pivot_f_b.bwd := true;
-		SetParam(LOAD(nodeset->pivot_f_b[self]), node->bwd, true, stable);
+		SetParam<BoolType>(LOAD(nodeset->pivot_f_b[self]), node->bwd, true, stable);
 		// pivot_f_b := null;
-		SetParam(self, nodeset->pivot_f_b, (RefType)0, stable);
+		SetParam<RefType>(self, nodeset->pivot_f_b, 0, stable);
 		// pivot_f_nb.fwd := true;
-		SetParam(LOAD(nodeset->pivot_f_nb[self]), node->fwd, true, stable);
+		SetParam<BoolType>(LOAD(nodeset->pivot_f_nb[self]), node->fwd, true, stable);
 		// pivot_f_nb.bwd := true;
-		SetParam(LOAD(nodeset->pivot_f_nb[self]), node->bwd, true, stable);
+		SetParam<BoolType>(LOAD(nodeset->pivot_f_nb[self]), node->bwd, true, stable);
 		// pivot_f_nb := null;
-		SetParam(self, nodeset->pivot_f_nb, (RefType)0, stable);
+		SetParam<RefType>(self, nodeset->pivot_f_nb, 0, stable);
 		// pivot_nf_b.fwd := true;
-		SetParam(LOAD(nodeset->pivot_nf_b[self]), node->fwd, true, stable);
+		SetParam<BoolType>(LOAD(nodeset->pivot_nf_b[self]), node->fwd, true, stable);
 		// pivot_nf_b.bwd := true;
-		SetParam(LOAD(nodeset->pivot_nf_b[self]), node->bwd, true, stable);
+		SetParam<BoolType>(LOAD(nodeset->pivot_nf_b[self]), node->bwd, true, stable);
 		// pivot_nf_b := null;
-		SetParam(self, nodeset->pivot_nf_b, (RefType)0, stable);
+		SetParam<RefType>(self, nodeset->pivot_nf_b, 0, stable);
 		// pivot_nf_nb.fwd := true;
-		SetParam(LOAD(nodeset->pivot_nf_nb[self]), node->fwd, true, stable);
+		SetParam<BoolType>(LOAD(nodeset->pivot_nf_nb[self]), node->fwd, true, stable);
 		// pivot_nf_nb.bwd := true;
-		SetParam(LOAD(nodeset->pivot_nf_nb[self]), node->bwd, true, stable);
+		SetParam<BoolType>(LOAD(nodeset->pivot_nf_nb[self]), node->bwd, true, stable);
 		// pivot_nf_nb := null;
-		SetParam(self, nodeset->pivot_nf_nb, (RefType)0, stable);
+		SetParam<RefType>(self, nodeset->pivot_nf_nb, 0, stable);
 	}
 }
 
-__device__ __inline__ void print_Node(const RefType self,
-									  bool* stable){
+__device__ void Node_print(const RefType self,
+						   bool* stable){
 	if (self != 0) {
 		printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, LOAD(node->set[self]), LOAD(node->fwd[self]), LOAD(node->bwd[self]));
 	}
@@ -318,19 +319,19 @@ __device__ void Node_pivots_nominate(const RefType self,
 		BoolType b = LOAD(node->bwd[self]);
 		if ((f && b)) {
 			// set.pivot_f_b := this;
-			SetParam(LOAD(node->set[self]), nodeset->pivot_f_b, self, stable);
+			SetParam<RefType>(LOAD(node->set[self]), nodeset->pivot_f_b, self, stable);
 		}
 		if ((f && (!b))) {
 			// set.pivot_f_nb := this;
-			SetParam(LOAD(node->set[self]), nodeset->pivot_f_nb, self, stable);
+			SetParam<RefType>(LOAD(node->set[self]), nodeset->pivot_f_nb, self, stable);
 		}
 		if (((!f) && b)) {
 			// set.pivot_nf_b := this;
-			SetParam(LOAD(node->set[self]), nodeset->pivot_nf_b, self, stable);
+			SetParam<RefType>(LOAD(node->set[self]), nodeset->pivot_nf_b, self, stable);
 		}
 		if (((!f) && (!b))) {
 			// set.pivot_nf_nb := this;
-			SetParam(LOAD(node->set[self]), nodeset->pivot_nf_nb, self, stable);
+			SetParam<RefType>(LOAD(node->set[self]), nodeset->pivot_nf_nb, self, stable);
 		}
 	}
 }
@@ -342,24 +343,24 @@ __device__ void Node_divide_into_sets_reset_fwd_bwd(const RefType self,
 	BoolType b = LOAD(node->bwd[self]);
 	if ((f && b)) {
 		// set := set.f_and_b;
-		SetParam(self, node->set, LOAD(nodeset->f_and_b[LOAD(node->set[self])]), stable);
+		SetParam<RefType>(self, node->set, LOAD(nodeset->f_and_b[LOAD(node->set[self])]), stable);
 	}
 	if (((!f) && b)) {
 		// set := set.not_f_and_b;
-		SetParam(self, node->set, LOAD(nodeset->not_f_and_b[LOAD(node->set[self])]), stable);
+		SetParam<RefType>(self, node->set, LOAD(nodeset->not_f_and_b[LOAD(node->set[self])]), stable);
 	}
 	if ((f && (!b))) {
 		// set := set.f_and_not_b;
-		SetParam(self, node->set, LOAD(nodeset->f_and_not_b[LOAD(node->set[self])]), stable);
+		SetParam<RefType>(self, node->set, LOAD(nodeset->f_and_not_b[LOAD(node->set[self])]), stable);
 	}
 	// fwd := false;
-	SetParam(self, node->fwd, false, stable);
+	SetParam<BoolType>(self, node->fwd, false, stable);
 	// bwd := false;
-	SetParam(self, node->bwd, false, stable);
+	SetParam<BoolType>(self, node->bwd, false, stable);
 }
 
-__device__ __inline__ void print_Edge(const RefType self,
-									  bool* stable){
+__device__ void Edge_print(const RefType self,
+						   bool* stable){
 	if (self != 0) {
 		printf("Edge(%u): s=%u, t=%u\n", self, LOAD(edge->s[self]), LOAD(edge->t[self]));
 	}
@@ -371,11 +372,11 @@ __device__ void Edge_compute_fwd_bwd(const RefType self,
 	if ((LOAD(node->set[LOAD(edge->t[self])]) == LOAD(node->set[LOAD(edge->s[self])]))) {
 		if (LOAD(node->fwd[LOAD(edge->s[self])])) {
 			// t.fwd := true;
-			SetParam(LOAD(edge->t[self]), node->fwd, true, stable);
+			SetParam<BoolType>(LOAD(edge->t[self]), node->fwd, true, stable);
 		}
 		if (LOAD(node->bwd[LOAD(edge->t[self])])) {
 			// s.bwd := true;
-			SetParam(LOAD(edge->s[self]), node->bwd, true, stable);
+			SetParam<BoolType>(LOAD(edge->s[self]), node->bwd, true, stable);
 		}
 	}
 }
@@ -454,11 +455,6 @@ __global__ void schedule_kernel(){
 		grid.sync();
 	} while(!fp_stack[0][FP_READ(iter_idx[0])].load(cuda::memory_order_relaxed));
 
-
-	TOGGLE_STEP_PARITY(Node);
-	nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
-	executeStep<print_Node>(nrof_instances, grid, block, &stable);
-	node->update_counters(!STEP_PARITY(Node));
 }
 
 
@@ -474,9 +470,9 @@ int main(int argc, char **argv) {
 	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_NodeSet, sizeof(NodeSet), cudaHostRegisterDefault));
 
-	host_Edge.initialise(&structs[0], 10000);
-	host_Node.initialise(&structs[1], 10000);
-	host_NodeSet.initialise(&structs[2], 10000);
+	host_Edge.initialise(&structs[0], 500000);
+	host_Node.initialise(&structs[1], 500000);
+	host_NodeSet.initialise(&structs[2], 500000);
 
 	CHECK(cudaDeviceSynchronize());
 
@@ -489,16 +485,15 @@ int main(int argc, char **argv) {
 	CHECK(cudaMemcpyToSymbol(nodeset, &loc_nodeset, sizeof(NodeSet * const)));
 
 	cuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
-	cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack);
+	CHECK(cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack));
 	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
+	void* schedule_kernel_args[] = {};
+	auto dims = ADL::get_launch_dims(50000, (void*)schedule_kernel);
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 	cudaEventRecord(start);
 
-
-	void* schedule_kernel_args[] = {};
-	auto dims = ADL::get_launch_dims(1875, (void*)schedule_kernel);
 
 	CHECK(
 		cudaLaunchCooperativeKernel(
@@ -508,13 +503,12 @@ int main(int argc, char **argv) {
 			schedule_kernel_args
 		)
 	);
-	CHECK(cudaDeviceSynchronize());
 
 
 	cudaEventRecord(stop);
 	cudaEventSynchronize(stop);
 	float ms = 0;
 	cudaEventElapsedTime(&ms, start, stop);
-	printf("Total walltime: %0.2f ms\n");
+	fprintf(stderr, "Total walltime GPU: %0.2f ms\n", ms);
 
 }

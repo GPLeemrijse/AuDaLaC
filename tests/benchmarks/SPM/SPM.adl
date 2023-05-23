@@ -25,7 +25,7 @@ struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Mea
 
 	print_odd {
 		if this == null then {
-			$$printf("Number of odd won cycles = %u\n", nrof_odd_wins);
+			$$printf("Number of odd won vertices = %u\n", nrof_odd_wins);
 		}
 	}
 }
