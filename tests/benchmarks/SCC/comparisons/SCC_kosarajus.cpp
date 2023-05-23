@@ -114,8 +114,10 @@ int main(void){
     auto t2 = high_resolution_clock::now();
     cout<< "Components: "<< components <<endl;
 
+    duration<double, std::milli> ms = t2 - t1;
+
     std::cout << "Total walltime CPP "
-              << duration_cast<milliseconds>(t2 - t1).count()
+              << ms.count()
               << " ms\n";
     
     
