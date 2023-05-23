@@ -271,7 +271,10 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 	}
 
 	fn globals(&self) -> Option<String> {
-		Some(self.fp.global_decl())
+		let mut result = self.program.inline_global_cpp.join("\n");
+		result.push_str("\n");
+		result.push_str(&self.fp.global_decl());
+		Some(result)
 	}
 
 	fn functions(&self) -> Option<String> {

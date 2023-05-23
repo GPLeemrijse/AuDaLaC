@@ -61,7 +61,7 @@ SimpleID : String = {
     },
 }
 
-pub Program: Program = <structs:Structs> <schedule:Schedule> => Program {<>};
+pub Program: Program = <inline_global_cpp:GlobalCpp> <structs:Structs> <schedule:Schedule> => Program {<>};
 
 pub Schedule: Box<Schedule> = {
     <start:@L> <s1:BottomSchedule> "<" <s2:Schedule> <end:@R> => Box::new(Schedule::Sequential(s1, s2, (start, end))),
@@ -98,6 +98,7 @@ Step: Step = {
     <start:@L> <name:SimpleID> "{" <statements:Stats> "}" <end:@R> => Step {name : name, statements: statements, loc : (start, end)}
 }
 
+pub GlobalCpp: Vec<String> = SingleCpp*;
 pub Steps: Vec<Step> = Step*;
 pub Structs: Vec<ADLStruct> = Struct+;
 
@@ -110,6 +111,10 @@ pub Stat: Stat = {
 
 Var_Exp: Exp = {
     <start:@L> <v:Var> <end:@R> => Exp::Var(v, (start, end))
+}
+
+SingleCpp: String = {
+    <cpp:INLINECPP> => cpp[2..].to_string()
 }
 
 Stats = Stat*;

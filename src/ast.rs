@@ -6,6 +6,7 @@ use std::fmt::Display;
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct Program {
+    pub inline_global_cpp: Vec<String>,
     pub structs: Vec<ADLStruct>,
     pub schedule: Box<Schedule>,
 }
