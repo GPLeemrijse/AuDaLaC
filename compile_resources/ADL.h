@@ -74,6 +74,8 @@ namespace ADL {
       }
       assert(needed_blocks <= max_blocks);
 
+      fprintf(stderr, "Launching %u blocks of %u threads = %u threads.\n", needed_blocks, tpb, needed_blocks * tpb);
+
       dim3 dimBlock(tpb, 1, 1);
       dim3 dimGrid(needed_blocks, 1, 1);
       return std::make_tuple(dimGrid, dimBlock);
