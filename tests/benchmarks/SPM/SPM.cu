@@ -1,4 +1,4 @@
-#define I_PER_THREAD 8
+#define I_PER_THREAD 16
 #define THREADS_PER_BLOCK 256
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
@@ -186,6 +186,7 @@ __device__ Edge* __restrict__ edge;
 __device__ Measure* __restrict__ measure;
 __device__ Node* __restrict__ node;
 
+__device__ uint nrof_odd_wins = 0;
 #define FP_DEPTH 2
 /* Transform an iter_idx into the fp_stack index
    associated with that operation.
@@ -218,13 +219,13 @@ __device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_bl
 }
 template<typename T>
 __device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {
-    if (owner != 0){
-    	T old_val = LOAD(params[owner]);
-    	if (old_val != new_val){
-    		STORE(params[owner], new_val);
-    		*stable = false;
-    	}
-    }
+	if (owner != 0){
+		T old_val = LOAD(params[owner]);
+		if (old_val != new_val){
+			STORE(params[owner], new_val);
+			*stable = false;
+		}
+	}
 }
 
 __device__ void Node_print(const RefType self,
@@ -250,11 +251,19 @@ __device__ void Node_max_candidate(const RefType self,
 	}
 }
 
-__device__ void Node_print_result(const RefType self,
-								  bool* stable){
+__device__ void Node_count_odd(const RefType self,
+							   bool* stable){
 	
 	if (((self != 0) && LOAD(measure->top[LOAD(node->rho[self])]))) {
-		printf("Odd wins: %u\n", self);
+		atomicInc(&nrof_odd_wins, 0xffffffff);
+	}
+}
+
+__device__ void Node_print_odd(const RefType self,
+							   bool* stable){
+	
+	if ((self == 0)) {
+		printf("Number of odd won cycles = %u\n", nrof_odd_wins);
 	}
 }
 
@@ -362,91 +371,20 @@ __device__ void Edge_priority_3(const RefType self,
 	}
 }
 
+__device__ void Edge_self_loops_to_top(const RefType self,
+									   bool* stable){
+	
+	if ((((LOAD(edge->v[self]) == LOAD(edge->w[self])) && LOAD(node->owner[LOAD(edge->v[self])])) && ((LOAD(node->p[LOAD(edge->v[self])]) % 2) == 1))) {
+		// v.rho.top := true;
+		SetParam<BoolType>(LOAD(node->rho[LOAD(edge->v[self])]), measure->top, true, stable);
+	}
+}
+
 __device__ void Measure_print(const RefType self,
 							  bool* stable){
 	if (self != 0) {
 		printf("Measure(%u): top=%u, p1=%u, p3=%u\n", self, LOAD(measure->top[self]), LOAD(measure->p1[self]), LOAD(measure->p3[self]));
 	}
-}
-
-__device__ void Measure_init_slide18(const RefType self,
-									 bool* stable){
-	
-	BoolType even = false;
-	BoolType odd = true;
-	RefType max = measure->create_instance(false, 2, 3, stable);
-	RefType X = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType X_p = node->create_instance(1, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType Y_p = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType Y = node->create_instance(2, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType W = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType Z = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType Z_p = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType e1 = edge->create_instance(X, X, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e2 = edge->create_instance(X, X_p, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e3 = edge->create_instance(X_p, Y, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e4 = edge->create_instance(X_p, Z, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e5 = edge->create_instance(Y, Y_p, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e6 = edge->create_instance(Y, W, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e7 = edge->create_instance(Y_p, Y, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e8 = edge->create_instance(Y_p, X, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e9 = edge->create_instance(W, W, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e10 = edge->create_instance(W, Z, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e11 = edge->create_instance(Z, Z_p, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e12 = edge->create_instance(Z_p, Z_p, measure->create_instance(false, 0, 0, stable), max, stable);
-}
-
-__device__ void Measure_init_fig6a(const RefType self,
-								   bool* stable){
-	
-	BoolType even = false;
-	BoolType odd = true;
-	RefType max = measure->create_instance(false, 2, 2, stable);
-	RefType A = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType B = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType C = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType D = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType E = node->create_instance(0, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType F = node->create_instance(0, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType G = node->create_instance(3, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType H = node->create_instance(3, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType e1 = edge->create_instance(A, B, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e2 = edge->create_instance(B, A, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e3 = edge->create_instance(C, B, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e4 = edge->create_instance(C, D, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e5 = edge->create_instance(D, C, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e6 = edge->create_instance(E, D, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e7 = edge->create_instance(E, F, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e8 = edge->create_instance(F, E, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e9 = edge->create_instance(G, F, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e10 = edge->create_instance(G, H, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e11 = edge->create_instance(H, G, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e12 = edge->create_instance(A, H, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e13 = edge->create_instance(D, A, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e14 = edge->create_instance(H, E, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e15 = edge->create_instance(F, C, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e16 = edge->create_instance(B, G, measure->create_instance(false, 0, 0, stable), max, stable);
-}
-
-__device__ void Measure_init_fig5a(const RefType self,
-								   bool* stable){
-	
-	BoolType even = false;
-	BoolType odd = true;
-	RefType max = measure->create_instance(false, 2, 1, stable);
-	RefType A = node->create_instance(3, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType B = node->create_instance(2, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType C = node->create_instance(1, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType D = node->create_instance(1, odd, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType E = node->create_instance(2, even, measure->create_instance(false, 0, 0, stable), 0, max, stable);
-	RefType e1 = edge->create_instance(A, B, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e2 = edge->create_instance(B, A, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e3 = edge->create_instance(C, B, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e4 = edge->create_instance(C, D, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e5 = edge->create_instance(D, C, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e6 = edge->create_instance(E, D, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e7 = edge->create_instance(D, E, measure->create_instance(false, 0, 0, stable), max, stable);
-	RefType e8 = edge->create_instance(A, E, measure->create_instance(false, 0, 0, stable), max, stable);
 }
 
 
@@ -458,6 +396,13 @@ __global__ void schedule_kernel(){
 	uint64_t struct_step_parity = 0; // bitmask
 	bool stable = true; // Only used to compile steps outside fixpoints
 	uint8_t iter_idx[FP_DEPTH] = {0}; // Denotes which fp_stack index ([0, 2]) is currently being set.
+
+	TOGGLE_STEP_PARITY(Edge);
+	nrof_instances = edge->nrof_instances2(STEP_PARITY(Edge));
+	executeStep<Edge_self_loops_to_top>(nrof_instances, grid, block, &stable);
+	edge->update_counters(!STEP_PARITY(Edge));
+
+	grid.sync();
 
 	do{
 		bool stable = true;
@@ -552,7 +497,14 @@ __global__ void schedule_kernel(){
 
 	TOGGLE_STEP_PARITY(Node);
 	nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
-	executeStep<Node_print_result>(nrof_instances, grid, block, &stable);
+	executeStep<Node_count_odd>(nrof_instances, grid, block, &stable);
+	node->update_counters(!STEP_PARITY(Node));
+
+	grid.sync();
+
+	TOGGLE_STEP_PARITY(Node);
+	nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
+	executeStep<Node_print_odd>(nrof_instances, grid, block, &stable);
 	node->update_counters(!STEP_PARITY(Node));
 }
 
@@ -569,9 +521,9 @@ int main(int argc, char **argv) {
 	CHECK(cudaHostRegister(&host_Measure, sizeof(Measure), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
 
-	host_Edge.initialise(&structs[0], 1000);
-	host_Measure.initialise(&structs[1], 1000);
-	host_Node.initialise(&structs[2], 1000);
+	host_Edge.initialise(&structs[0], 545000);
+	host_Measure.initialise(&structs[1], 545000);
+	host_Node.initialise(&structs[2], 545000);
 
 	CHECK(cudaDeviceSynchronize());
 
@@ -588,7 +540,7 @@ int main(int argc, char **argv) {
 	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
 
 	void* schedule_kernel_args[] = {};
-	auto dims = ADL::get_launch_dims(375, (void*)schedule_kernel);
+	auto dims = ADL::get_launch_dims(34063, (void*)schedule_kernel);
 
 	CHECK(
 		cudaLaunchCooperativeKernel(

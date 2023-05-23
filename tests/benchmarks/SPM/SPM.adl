@@ -1,3 +1,5 @@
+$$__device__ uint nrof_odd_wins = 0;
+
 
 struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Measure) {
 
@@ -15,9 +17,15 @@ struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Mea
 		}
 	}
 
-	print_result {
+	count_odd {
 		if this != null && rho.top then {
-			$$printf("Odd wins: %u\n", self);
+			$$atomicInc(&nrof_odd_wins, 0xffffffff);
+		}
+	}
+
+	print_odd {
+		if this == null then {
+			$$printf("Number of odd won cycles = %u\n", nrof_odd_wins);
 		}
 	}
 }
@@ -137,90 +145,18 @@ struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 			}
 		}
 	}
+
+	self_loops_to_top {
+		if v == w && v.owner && v.p % 2 == 1 then {
+			v.rho.top := true;
+		}
+	}
 }
 
 struct Measure(top : Bool, p1 : Nat, p3 : Nat) {
-	init_slide18 {
-		Bool even := false;
-		Bool odd := true;
-		Measure max := Measure(false, 2, 3);
-
-		Node X := Node(1, odd, Measure(false, 0, 0), null, max);
-		Node X_p := Node(1, even, Measure(false, 0, 0), null, max);
-		Node Y_p := Node(2, even, Measure(false, 0, 0), null, max);
-		Node Y := Node(2, odd, Measure(false, 0, 0), null, max);
-		Node W := Node(3, even, Measure(false, 0, 0), null, max);
-		Node Z := Node(3, even, Measure(false, 0, 0), null, max);
-		Node Z_p := Node(3, even, Measure(false, 0, 0), null, max);
-
-		Edge e1 := Edge(X, X, Measure(false, 0, 0), max);
-		Edge e2 := Edge(X, X_p, Measure(false, 0, 0), max);
-		Edge e3 := Edge(X_p, Y, Measure(false, 0, 0), max);
-		Edge e4 := Edge(X_p, Z, Measure(false, 0, 0), max);
-		Edge e5 := Edge(Y, Y_p, Measure(false, 0, 0), max);
-		Edge e6 := Edge(Y, W, Measure(false, 0, 0), max);
-		Edge e7 := Edge(Y_p, Y, Measure(false, 0, 0), max);
-		Edge e8 := Edge(Y_p, X, Measure(false, 0, 0), max);
-		Edge e9 := Edge(W, W, Measure(false, 0, 0), max);
-		Edge e10 := Edge(W, Z, Measure(false, 0, 0), max);
-		Edge e11 := Edge(Z, Z_p, Measure(false, 0, 0), max);
-		Edge e12 := Edge(Z_p, Z_p, Measure(false, 0, 0), max);
-	}
-
-	init_fig6a {
-		Bool even := false;
-		Bool odd := true;
-		Measure max := Measure(false, 2, 2);
-
-		Node A := Node(2, even, Measure(false, 0, 0), null, max);
-		Node B := Node(2, even, Measure(false, 0, 0), null, max);
-		Node C := Node(1, odd, Measure(false, 0, 0), null, max);
-		Node D := Node(1, odd, Measure(false, 0, 0), null, max);
-		Node E := Node(0, even, Measure(false, 0, 0), null, max);
-		Node F := Node(0, even, Measure(false, 0, 0), null, max);
-		Node G := Node(3, odd, Measure(false, 0, 0), null, max);
-		Node H := Node(3, odd, Measure(false, 0, 0), null, max);
-
-		Edge e1 := Edge(A, B, Measure(false, 0, 0), max);
-		Edge e2 := Edge(B, A, Measure(false, 0, 0), max);
-		Edge e3 := Edge(C, B, Measure(false, 0, 0), max);
-		Edge e4 := Edge(C, D, Measure(false, 0, 0), max);
-		Edge e5 := Edge(D, C, Measure(false, 0, 0), max);
-		Edge e6 := Edge(E, D, Measure(false, 0, 0), max);
-		Edge e7 := Edge(E, F, Measure(false, 0, 0), max);
-		Edge e8 := Edge(F, E, Measure(false, 0, 0), max);
-		Edge e9 := Edge(G, F, Measure(false, 0, 0), max);
-		Edge e10 := Edge(G, H, Measure(false, 0, 0), max);
-		Edge e11 := Edge(H, G, Measure(false, 0, 0), max);
-		Edge e12 := Edge(A, H, Measure(false, 0, 0), max);
-		Edge e13 := Edge(D, A, Measure(false, 0, 0), max);
-		Edge e14 := Edge(H, E, Measure(false, 0, 0), max);
-		Edge e15 := Edge(F, C, Measure(false, 0, 0), max);
-		Edge e16 := Edge(B, G, Measure(false, 0, 0), max);
-	}
-
-	init_fig5a {
-		Bool even := false;
-		Bool odd := true;
-		Measure max := Measure(false, 2, 1);
-
-		Node A := Node(3, even, Measure(false, 0, 0), null, max);
-		Node B := Node(2, odd, Measure(false, 0, 0), null, max);
-		Node C := Node(1, even, Measure(false, 0, 0), null, max);
-		Node D := Node(1, odd, Measure(false, 0, 0), null, max);
-		Node E := Node(2, even, Measure(false, 0, 0), null, max);
-
-		Edge e1 := Edge(A, B, Measure(false, 0, 0), max);
-		Edge e2 := Edge(B, A, Measure(false, 0, 0), max);
-		Edge e3 := Edge(C, B, Measure(false, 0, 0), max);
-		Edge e4 := Edge(C, D, Measure(false, 0, 0), max);
-		Edge e5 := Edge(D, C, Measure(false, 0, 0), max);
-		Edge e6 := Edge(E, D, Measure(false, 0, 0), max);
-		Edge e7 := Edge(D, E, Measure(false, 0, 0), max);
-		Edge e8 := Edge(A, E, Measure(false, 0, 0), max);
-	}
 }
 
+self_loops_to_top <
 Fix (
 	prog <
 	Fix(top) <
@@ -228,4 +164,5 @@ Fix (
 	Fix(priority_3) <
 	max_candidate
 ) <
-print_result
+count_odd <
+print_odd
