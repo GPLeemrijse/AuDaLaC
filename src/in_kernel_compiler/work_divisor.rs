@@ -30,7 +30,7 @@ impl WorkDivisor<'_> {
 	}
 
 	pub fn get_dims(&self, kernel_name : &str) -> String {
-		let nrof_instances = self.program.structs.len() * self.allocated_per_instance;
+		let nrof_instances = self.allocated_per_instance; // Only one struct type at a time for now
 		let nrof_threads = (nrof_instances + self.instances_per_thread - 1) / self.instances_per_thread;
 		formatdoc!("
 			ADL::get_launch_dims({nrof_threads}, (void*){kernel_name})"
