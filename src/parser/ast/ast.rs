@@ -372,11 +372,7 @@ impl Display for UnOpcode {
 
 #[cfg(test)]
 mod tests {
-    use crate::adl::ExpParser;
-    use crate::adl::ScheduleParser;
-    use crate::adl::StatParser;
-    use crate::adl::StepsParser;
-    use crate::adl::StructsParser;
+    use crate::parser::*;
     use crate::parser::ast::*;
     use lalrpop_util::ParseError::User;
 

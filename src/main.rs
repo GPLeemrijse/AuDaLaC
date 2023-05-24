@@ -5,7 +5,7 @@ use crate::compiler::components::*;
 use crate::coalesced_compiler::*;
 use crate::compiler::fp_strategies::*;
 use crate::compiler::FPStrategy;
-use crate::adl::ProgramParser;
+use crate::parser::ProgramParser;
 use crate::basic_compiler::*;
 use crate::cuda_atomics::{MemOrder, Scope};
 use crate::compiler::SingleKernelSchedule;
@@ -30,9 +30,6 @@ mod cuda_atomics;
 mod compiler;
 mod init_file_generator;
 mod utils;
-
-
-lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
 fn main() {
     let args = clap_app!(ADL =>
