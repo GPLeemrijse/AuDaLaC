@@ -1,7 +1,7 @@
-use crate::parser::ast::*;
-use crate::compiler::StepBodyCompiler;
 use crate::compiler::compilation_traits::*;
 use crate::compiler::utils::*;
+use crate::compiler::StepBodyCompiler;
+use crate::parser::ast::*;
 use crate::WorkDivisor;
 use indoc::formatdoc;
 use std::collections::BTreeSet;

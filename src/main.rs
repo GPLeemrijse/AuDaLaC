@@ -1,13 +1,13 @@
 #[macro_use]
 extern crate lalrpop_util;
-use crate::compiler::utils::{MemOrder, Scope};
-use crate::parser::validate_ast;
-use crate::compiler::components::*;
 use crate::coalesced_compiler::*;
+use crate::compiler::components::*;
 use crate::compiler::fp_strategies::*;
-use crate::parser::ProgramParser;
+use crate::compiler::utils::{MemOrder, Scope};
 use crate::compiler::*;
 use crate::init_file_generator::generate_init_file;
+use crate::parser::validate_ast;
+use crate::parser::ProgramParser;
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
@@ -19,10 +19,10 @@ use std::io::BufWriter;
 use std::io::Write;
 
 use clap::clap_app;
-mod parser;
 mod coalesced_compiler;
 mod compiler;
 mod init_file_generator;
+mod parser;
 
 fn main() {
     let args = clap_app!(ADL =>
@@ -103,10 +103,12 @@ fn main() {
                         ("in-kernel", "naive") => {
                             Box::new(NaiveFixpoint::new(program.schedule.fixpoint_depth()))
                         }
-                        ("in-kernel", "naive-alternating") => Box::new(NaiveAlternatingFixpoint::new(
-                            program.schedule.fixpoint_depth(),
-                        )),
-                        _ => panic!("Voting strategy not found, or combined with wrong schedule strategy."),
+                        ("in-kernel", "naive-alternating") => Box::new(
+                            NaiveAlternatingFixpoint::new(program.schedule.fixpoint_depth()),
+                        ),
+                        _ => panic!(
+                            "Voting strategy not found, or combined with wrong schedule strategy."
+                        ),
                     };
 
                     let div_strat = match division_strat {
@@ -145,9 +147,9 @@ fn main() {
                             &program,
                             &*fp_strat,
                             &step_transpiler,
-                            &work_divisor
+                            &work_divisor,
                         )),
-                        _ => panic!("Schedule strategy not found.")
+                        _ => panic!("Schedule strategy not found."),
                     };
 
                     let result = compiler::compile2(vec![

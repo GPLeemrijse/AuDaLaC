@@ -1,5 +1,5 @@
-use crate::parser::ast::*;
 use crate::compiler::utils::*;
+use crate::parser::ast::*;
 use indoc::formatdoc;
 use std::collections::HashMap;
 

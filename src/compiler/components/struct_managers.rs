@@ -1,7 +1,7 @@
-use crate::compiler::CompileComponent;
 use crate::as_type_enum;
-use crate::parser::ast::*;
 use crate::compiler::utils::*;
+use crate::compiler::CompileComponent;
+use crate::parser::ast::*;
 use crate::MemOrder;
 use crate::Scope;
 use indoc::formatdoc;

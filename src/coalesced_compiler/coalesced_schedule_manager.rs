@@ -1,4 +1,4 @@
-use crate::compiler::{StructManager, ScheduleManager};
+use crate::compiler::{ScheduleManager, StructManager};
 use crate::parser::ast::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;

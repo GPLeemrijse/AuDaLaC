@@ -1,5 +1,5 @@
-use crate::parser::ast::Program;
 use crate::compiler::compilation_traits::*;
+use crate::parser::ast::Program;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 

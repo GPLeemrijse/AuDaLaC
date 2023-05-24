@@ -372,8 +372,8 @@ impl Display for UnOpcode {
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::*;
     use crate::parser::ast::*;
+    use crate::parser::*;
     use lalrpop_util::ParseError::User;
 
     #[test]
