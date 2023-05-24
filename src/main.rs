@@ -5,11 +5,8 @@ use crate::parser::validate_ast;
 use crate::compiler::components::*;
 use crate::coalesced_compiler::*;
 use crate::compiler::fp_strategies::*;
-use crate::compiler::FPStrategy;
 use crate::parser::ProgramParser;
-use crate::basic_compiler::*;
-use crate::compiler::SingleKernelSchedule;
-use crate::compiler::StepBodyCompiler;
+use crate::compiler::*;
 use crate::init_file_generator::generate_init_file;
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
@@ -23,7 +20,6 @@ use std::io::Write;
 
 use clap::clap_app;
 mod parser;
-mod basic_compiler;
 mod coalesced_compiler;
 mod compiler;
 mod init_file_generator;
@@ -36,7 +32,7 @@ fn main() {
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
         (@arg time: -t --time "Print timing information.")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
-        (@arg compiler: -c --compiler possible_value("basic") possible_value("coalesced") possible_value("in-kernel") default_value("coalesced") "Which compiler to use.")
+        (@arg schedule_strat: -S --schedule_strat possible_value("in-kernel") possible_value("on-host") default_value("coalesced") "Which schedule strategy to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg division_strat: -D --division_strat possible_value("blocksize") possible_value("gridsize") default_value("blocksize") "What division strategy to use. 'blocksize' lets blocks execute a continuous sequence of instances, while 'gridsize' evenly distributes over the blocks.")
@@ -45,7 +41,6 @@ fn main() {
         (@arg instsperthread: -M --instsperthread +takes_value default_value("8") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
         (@arg threads_per_block: -T --threadsperblock +takes_value default_value("256") value_parser(clap::value_parser!(usize)) "Number of threads per block.")
         (@arg buffersize: -b --buffersize +takes_value default_value("4096") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
-        (@arg printnthinst: -d --printnthinst +takes_value default_value("0") value_parser(clap::value_parser!(usize)) "Print every n'th allocated instance.")
         (@arg printunstable: -u --printunstable "Print which step changed the stability stack.")
         (@arg output: -o --output +takes_value "Output file")
         (@arg file: +required "\"ADL\" file")
@@ -60,10 +55,9 @@ fn main() {
     let buffer_size: usize = *args.get_one("buffersize").unwrap();
     let instances_per_thread: usize = *args.get_one("instsperthread").unwrap();
     let threads_per_block: usize = *args.get_one("threads_per_block").unwrap();
-    let printnthinst: usize = *args.get_one("printnthinst").unwrap();
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output");
-    let compiler: &str = args.value_of("compiler").unwrap();
+    let schedule_strat: &str = args.value_of("schedule_strat").unwrap();
     let voting_strat: &str = args.value_of("voting").unwrap();
     let division_strat: &str = args.value_of("division_strat").unwrap();
     let memorder = MemOrder::from_str(args.value_of("memorder").unwrap());
@@ -105,81 +99,65 @@ fn main() {
                             .collect(),
                     );
                 } else {
-                    let result: String;
-
-                    match compiler {
-                        "basic" => {
-                            let struct_manager =
-                                BasicStructManager::new(&program, nrof_instances_per_struct);
-                            let schedule_manager = BasicScheduleManager::new(&program);
-                            result = compiler::compile(&schedule_manager, &struct_manager);
+                    let fp_strat: Box<dyn FPStrategy> = match (schedule_strat, voting_strat) {
+                        ("in-kernel", "naive") => {
+                            Box::new(NaiveFixpoint::new(program.schedule.fixpoint_depth()))
                         }
-                        "coalesced" => {
-                            let struct_manager = CoalescedStructManager::new(
-                                &program,
-                                nrof_instances_per_struct,
-                                memorder,
-                                scope,
-                            );
-                            let schedule_manager = CoalescedScheduleManager::new(
-                                &program,
-                                &struct_manager,
-                                printnthinst,
-                                print_unstable,
-                            );
-                            result = compiler::compile(&schedule_manager, &struct_manager);
-                        }
-                        "in-kernel" => {
-                            let fp_strat: Box<dyn FPStrategy> = match voting_strat {
-                                "naive" => {
-                                    Box::new(NaiveFixpoint::new(program.schedule.fixpoint_depth()))
-                                }
-                                "naive-alternating" => Box::new(NaiveAlternatingFixpoint::new(
-                                    program.schedule.fixpoint_depth(),
-                                )),
-                                _ => panic!("voting strategy not found."),
-                            };
+                        ("in-kernel", "naive-alternating") => Box::new(NaiveAlternatingFixpoint::new(
+                            program.schedule.fixpoint_depth(),
+                        )),
+                        _ => panic!("Voting strategy not found, or combined with wrong schedule strategy."),
+                    };
 
-                            let div_strat = match division_strat {
-                                "blocksize" => DivisionStrategy::BlockSizeIncrease,
-                                "gridsize" => DivisionStrategy::GridSizeIncrease,
-                                _ => panic!("division strategy not found."),
-                            };
+                    let div_strat = match division_strat {
+                        "blocksize" => DivisionStrategy::BlockSizeIncrease,
+                        "gridsize" => DivisionStrategy::GridSizeIncrease,
+                        _ => panic!("Division strategy not found."),
+                    };
 
-                            let step_transpiler =
-                                StepBodyCompiler::new(&type_info, true, print_unstable);
+                    let step_transpiler = StepBodyCompiler::new(&type_info, true, print_unstable);
 
-                            let work_divisor = WorkDivisor::new(
-                                &program,
-                                instances_per_thread,
-                                threads_per_block, // tpb
-                                nrof_instances_per_struct,
-                                div_strat,
-                                print_unstable,
-                            );
+                    let work_divisor = WorkDivisor::new(
+                        &program,
+                        instances_per_thread,
+                        threads_per_block, // tpb
+                        nrof_instances_per_struct,
+                        div_strat,
+                        print_unstable,
+                    );
 
-                            result = compiler::compile2(vec![
-                                &InitFileReader {},
-                                &PrintbufferSizeAdjuster::new(buffer_size),
-                                &work_divisor,
-                                &StructManagers::new(
-                                    &program,
-                                    nrof_instances_per_struct,
-                                    &memorder,
-                                    scope,
-                                    true,
-                                ),
-                                &SingleKernelSchedule::new(
-                                    &program,
-                                    &*fp_strat,
-                                    &step_transpiler,
-                                    &work_divisor,
-                                ),
-                                &Timer::new(time),
-                            ]);
-                        }
-                        _ => unreachable!(),
-                    }
+                    let struct_managers = StructManagers::new(
+                        &program,
+                        nrof_instances_per_struct,
+                        &memorder,
+                        scope,
+                        true,
+                    );
+
+                    let schedule: Box<dyn CompileComponent> = match schedule_strat {
+                        "in-kernel" => Box::new(SingleKernelSchedule::new(
+                            &program,
+                            &*fp_strat,
+                            &step_transpiler,
+                            &work_divisor,
+                        )),
+                        "on-host" => Box::new(OnHostSchedule::new(
+                            &program,
+                            &*fp_strat,
+                            &step_transpiler,
+                            &work_divisor
+                        )),
+                        _ => panic!("Schedule strategy not found.")
+                    };
+
+                    let result = compiler::compile2(vec![
+                        &InitFileReader {},
+                        &PrintbufferSizeAdjuster::new(buffer_size),
+                        &work_divisor,
+                        &struct_managers,
+                        &*schedule,
+                        &Timer::new(time),
+                    ]);
 
                     output_writer
                         .write(result.as_bytes())
