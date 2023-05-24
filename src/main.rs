@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::compiler::utils::{MemOrder, Scope};
 use crate::parser::validate_ast;
 use crate::compiler::components::*;
 use crate::coalesced_compiler::*;
@@ -7,10 +8,8 @@ use crate::compiler::fp_strategies::*;
 use crate::compiler::FPStrategy;
 use crate::parser::ProgramParser;
 use crate::basic_compiler::*;
-use crate::cuda_atomics::{MemOrder, Scope};
 use crate::compiler::SingleKernelSchedule;
 use crate::compiler::StepBodyCompiler;
-use crate::compiler::{DivisionStrategy, WorkDivisor};
 use crate::init_file_generator::generate_init_file;
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
@@ -26,10 +25,8 @@ use clap::clap_app;
 mod parser;
 mod basic_compiler;
 mod coalesced_compiler;
-mod cuda_atomics;
 mod compiler;
 mod init_file_generator;
-mod utils;
 
 fn main() {
     let args = clap_app!(ADL =>

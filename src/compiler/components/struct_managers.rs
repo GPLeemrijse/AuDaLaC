@@ -1,9 +1,7 @@
 use crate::compiler::CompileComponent;
 use crate::as_type_enum;
 use crate::parser::ast::*;
-use crate::cuda_atomics::MemoryOperation;
-use crate::utils::as_c_type;
-use crate::utils::format_signature;
+use crate::compiler::utils::*;
 use crate::MemOrder;
 use crate::Scope;
 use indoc::formatdoc;

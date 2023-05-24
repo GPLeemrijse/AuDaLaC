@@ -1,8 +1,7 @@
 use crate::parser::ast::*;
 use crate::compiler::StepBodyCompiler;
 use crate::compiler::compilation_traits::*;
-use crate::utils::as_printf;
-use crate::utils::format_signature;
+use crate::compiler::utils::*;
 use crate::WorkDivisor;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
