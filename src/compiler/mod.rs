@@ -3,6 +3,8 @@ mod step_body_compiler;
 mod work_divisor;
 mod compilation_traits;
 mod compile;
+pub mod fp_strategies;
+pub mod components;
 
 pub use single_kernel_schedule::SingleKernelSchedule;
 pub use step_body_compiler::StepBodyCompiler;

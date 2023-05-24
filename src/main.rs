@@ -1,14 +1,13 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::compiler::components::*;
+use crate::coalesced_compiler::*;
+use crate::compiler::fp_strategies::*;
 use crate::compiler::FPStrategy;
 use crate::adl::ProgramParser;
 use crate::ast_validator::validate_ast;
 use crate::basic_compiler::*;
-use crate::coalesced_compiler::*;
-use crate::compilation_components::*;
 use crate::cuda_atomics::{MemOrder, Scope};
-use crate::fp_strategies::NaiveAlternatingFixpoint;
-use crate::fp_strategies::NaiveFixpoint;
 use crate::compiler::SingleKernelSchedule;
 use crate::compiler::StepBodyCompiler;
 use crate::compiler::{DivisionStrategy, WorkDivisor};
@@ -28,12 +27,11 @@ mod ast;
 mod ast_validator;
 mod basic_compiler;
 mod coalesced_compiler;
-mod compilation_components;
 mod cuda_atomics;
-mod fp_strategies;
 mod compiler;
 mod init_file_generator;
 mod utils;
+
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
 
