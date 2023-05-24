@@ -1,5 +1,5 @@
+use crate::parser::ast::*;
 use crate::compiler::StructManager;
-use crate::ast::*;
 use crate::coalesced_compiler::*;
 use crate::cuda_atomics::MemoryOperation;
 use crate::cuda_atomics::{MemOrder, Scope};
@@ -415,7 +415,7 @@ impl CoalescedStructManager<'_> {
         let mut stmt_vec: Vec<String> = Vec::new();
 
         for stmt in statements {
-            use crate::ast::Stat::*;
+            use crate::parser::ast::Stat::*;
 
             let statement_as_string = match stmt {
                 IfThen(e, stmts_true, stmts_false, _) => {

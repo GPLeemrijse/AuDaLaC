@@ -2,7 +2,7 @@ use crate::utils::as_printf;
 use crate::utils::format_signature;
 use crate::in_kernel_compiler::StepBodyCompiler;
 use std::collections::HashMap;
-use crate::ast::*;
+use crate::parser::ast::*;
 use std::collections::BTreeSet;
 use crate::compiler::compilation_traits::*;
 use indoc::formatdoc;

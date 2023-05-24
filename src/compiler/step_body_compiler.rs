@@ -1,4 +1,4 @@
-use crate::ast::*;
+use crate::parser::ast::*;
 use crate::utils::as_c_literal;
 use crate::utils::as_c_type;
 use indoc::formatdoc;
@@ -35,7 +35,7 @@ impl StepBodyCompiler<'_> {
         let mut stmt_vec: Vec<String> = Vec::new();
 
         for stmt in statements {
-            use crate::ast::Stat::*;
+            use crate::parser::ast::Stat::*;
 
             let statement_as_string = match stmt {
                 IfThen(e, stmts_true, stmts_false, _) => {

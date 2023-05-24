@@ -1,5 +1,5 @@
 use crate::compiler::StructManager;
-use crate::ast::*;
+use crate::parser::ast::*;
 use crate::basic_compiler::*;
 use indoc::{formatdoc, indoc};
 use std::collections::BTreeSet;
@@ -271,7 +271,7 @@ impl BasicStructManager<'_> {
         let is_param = |p: &String| parameters.iter().any(|(s, _, _)| s == p);
 
         for stmt in statements {
-            use crate::ast::Stat::*;
+            use crate::parser::ast::Stat::*;
             res.push_str(&match stmt {
                 IfThen(e, stmts_true, stmts_false, _) => {
                     let cond = as_c_expression(e, self.program, &is_param, None);
@@ -339,12 +339,12 @@ impl BasicStructManager<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::Exp::*;
-    use crate::ast::Literal::*;
-    use crate::ast::Schedule::*;
-    use crate::ast::Stat::*;
-    use crate::ast::Type::*;
-    use crate::ast::*;
+    use crate::parser::ast::Exp::*;
+    use crate::parser::ast::Literal::*;
+    use crate::parser::ast::Schedule::*;
+    use crate::parser::ast::Stat::*;
+    use crate::parser::ast::Type::*;
+    use crate::parser::ast::*;
     use crate::BasicStructManager;
 
     #[test]

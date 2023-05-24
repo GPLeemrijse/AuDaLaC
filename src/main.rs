@@ -1,11 +1,11 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::parser::validate_ast;
 use crate::compiler::components::*;
 use crate::coalesced_compiler::*;
 use crate::compiler::fp_strategies::*;
 use crate::compiler::FPStrategy;
 use crate::adl::ProgramParser;
-use crate::ast_validator::validate_ast;
 use crate::basic_compiler::*;
 use crate::cuda_atomics::{MemOrder, Scope};
 use crate::compiler::SingleKernelSchedule;
@@ -23,8 +23,7 @@ use std::io::BufWriter;
 use std::io::Write;
 
 use clap::clap_app;
-mod ast;
-mod ast_validator;
+mod parser;
 mod basic_compiler;
 mod coalesced_compiler;
 mod cuda_atomics;

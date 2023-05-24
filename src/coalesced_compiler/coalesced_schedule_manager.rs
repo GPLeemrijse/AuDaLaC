@@ -1,5 +1,5 @@
 use crate::compiler::{StructManager, ScheduleManager};
-use crate::ast::*;
+use crate::parser::ast::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -212,7 +212,7 @@ impl CoalescedScheduleManager<'_> {
     }
 
     fn schedule_as_c(&self, sched: &Schedule, indent_lvl: usize) -> String {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
         let indent = "\t".repeat(indent_lvl);
 
         match sched {

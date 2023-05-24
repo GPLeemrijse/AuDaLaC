@@ -1,4 +1,4 @@
-use crate::ast::*;
+use crate::parser::ast::*;
 use crate::compiler::ScheduleManager;
 use indoc::{formatdoc, indoc};
 use std::collections::BTreeSet;
@@ -88,7 +88,7 @@ impl BasicScheduleManager<'_> {
     }
 
     fn print_schedule(&self, sched: &Schedule, indent_lvl: usize, res: &mut String) {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
         let indent = " ".repeat(indent_lvl * 4);
         let tpb = 512;
 
@@ -164,8 +164,8 @@ impl BasicScheduleManager<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::Schedule::*;
-    use crate::ast::*;
+    use crate::parser::ast::Schedule::*;
+    use crate::parser::ast::*;
     use crate::BasicScheduleManager;
     use std::collections::HashMap;
 
