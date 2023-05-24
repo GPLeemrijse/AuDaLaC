@@ -1,14 +1,19 @@
-use crate::transpilation_traits::*;
+use crate::compiler::CompileComponent;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 
-pub struct InitFileReader {}
+pub struct PrintbufferSizeAdjuster {
+    size: usize,
+}
 
-impl CompileComponent for InitFileReader {
-    fn add_includes(&self, set: &mut BTreeSet<&str>) {
-        set.insert("<stdio.h>");
-        set.insert("<vector>");
+impl PrintbufferSizeAdjuster {
+    pub fn new(size: usize) -> PrintbufferSizeAdjuster {
+        PrintbufferSizeAdjuster { size }
     }
+}
+
+impl CompileComponent for PrintbufferSizeAdjuster {
+    fn add_includes(&self, _set: &mut BTreeSet<&str>) {}
 
     fn defines(&self) -> Option<String> {
         None
@@ -28,13 +33,8 @@ impl CompileComponent for InitFileReader {
 
     fn pre_main(&self) -> Option<String> {
         Some(formatdoc! {"
-			\tif (argc != 2) {{
-			\t\tprintf(\"Supply a .init file.\\n\");
-			\t\texit(1);
-			\t}}
-			
-			\tstd::vector<InitFile::StructInfo> structs = InitFile::parse(argv[1]);
-		"})
+			\tcudaDeviceSetLimit(cudaLimitPrintfFifoSize, {});
+		", 1024 * self.size})
     }
 
     fn main(&self) -> Option<String> {

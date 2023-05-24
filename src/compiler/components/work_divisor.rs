@@ -1,5 +1,5 @@
-use crate::ast::Program;
-use crate::transpilation_traits::*;
+use crate::compiler::compilation_traits::*;
+use crate::parser::ast::Program;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 use std::collections::HashMap;

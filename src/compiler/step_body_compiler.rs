@@ -1,22 +1,21 @@
-use crate::ast::*;
-use crate::utils::as_c_literal;
-use crate::utils::as_c_type;
+use crate::compiler::utils::*;
+use crate::parser::ast::*;
 use indoc::formatdoc;
 use std::collections::HashMap;
 
-pub struct StepBodyTranspiler<'a> {
+pub struct StepBodyCompiler<'a> {
     var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>,
     use_step_parity: bool,
     print_unstable: bool,
 }
 
-impl StepBodyTranspiler<'_> {
+impl StepBodyCompiler<'_> {
     pub fn new<'a>(
         type_info: &'a HashMap<*const Exp, Vec<Type>>,
         use_step_parity: bool,
         print_unstable: bool,
-    ) -> StepBodyTranspiler<'a> {
-        StepBodyTranspiler {
+    ) -> StepBodyCompiler<'a> {
+        StepBodyCompiler {
             var_exp_type_info: type_info,
             use_step_parity,
             print_unstable,
@@ -35,7 +34,7 @@ impl StepBodyTranspiler<'_> {
         let mut stmt_vec: Vec<String> = Vec::new();
 
         for stmt in statements {
-            use crate::ast::Stat::*;
+            use crate::parser::ast::Stat::*;
 
             let statement_as_string = match stmt {
                 IfThen(e, stmts_true, stmts_false, _) => {

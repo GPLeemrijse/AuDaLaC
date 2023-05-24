@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use crate::ast::*;
+use crate::parser::ast::*;
 use lalrpop_util::ParseError;
 
 

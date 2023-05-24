@@ -1,4 +1,4 @@
-use crate::transpilation_traits::*;
+use crate::compiler::FPStrategy;
 use indoc::formatdoc;
 
 pub struct NaiveFixpoint {

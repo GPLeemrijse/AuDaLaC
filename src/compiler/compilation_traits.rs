@@ -1,4 +1,4 @@
-use crate::ast::{ADLStruct, Step};
+use crate::parser::ast::{ADLStruct, Step};
 use std::collections::BTreeSet;
 
 pub trait ScheduleManager {

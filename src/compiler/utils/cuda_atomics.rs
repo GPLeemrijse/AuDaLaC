@@ -41,6 +41,7 @@ impl MemOrder {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum Scope {
     System,
     Device,

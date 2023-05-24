@@ -1,8 +1,7 @@
-use crate::ast::*;
-use crate::in_kernel_compiler::StepBodyTranspiler;
-use crate::transpilation_traits::*;
-use crate::utils::as_printf;
-use crate::utils::format_signature;
+use crate::compiler::compilation_traits::*;
+use crate::compiler::utils::*;
+use crate::compiler::StepBodyCompiler;
+use crate::parser::ast::*;
 use crate::WorkDivisor;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
@@ -12,7 +11,7 @@ pub struct SingleKernelSchedule<'a> {
     program: &'a Program,
     fp: &'a dyn FPStrategy,
     step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
-    step_transpiler: &'a StepBodyTranspiler<'a>,
+    step_transpiler: &'a StepBodyCompiler<'a>,
     work_divisor: &'a WorkDivisor<'a>,
 }
 
@@ -22,7 +21,7 @@ impl SingleKernelSchedule<'_> {
     pub fn new<'a>(
         program: &'a Program,
         fp: &'a dyn FPStrategy,
-        step_transpiler: &'a StepBodyTranspiler<'_>,
+        step_transpiler: &'a StepBodyCompiler<'_>,
         work_divisor: &'a WorkDivisor,
     ) -> SingleKernelSchedule<'a> {
         SingleKernelSchedule {
@@ -68,7 +67,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn schedule_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
 
         match sched {
             StepCall(..) => self.step_call_as_c(sched, fp_level),
@@ -79,7 +78,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn fixpoint_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
         if let Fixpoint(s, _) = sched {
             let indent = "\t".repeat(fp_level + 1);
             let pre_iteration = self.fp.pre_iteration(fp_level);
@@ -110,7 +109,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn sequential_step_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
         if let Sequential(s1, s2, _) = sched {
             let indent = "\t".repeat(fp_level + 1);
             let sched1 = self.schedule_as_c(s1, fp_level);
@@ -133,7 +132,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn typed_step_call_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
 
         if let TypedStepCall(struct_name, step_name, _) = sched {
             let indent = "\t".repeat(fp_level + 1);
@@ -181,7 +180,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn step_call_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
         if let StepCall(step_name, _) = sched {
             let structs = self.step_to_structs.get(step_name).unwrap();
             if structs.len() > 1 {

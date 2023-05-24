@@ -73,7 +73,7 @@ pub enum Schedule {
 
 impl Schedule {
     pub fn fixpoint_depth(&self) -> usize {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
         match self {
             Sequential(s1, s2, _) => std::cmp::max(s1.fixpoint_depth(), s2.fixpoint_depth()),
             Fixpoint(s, _) => s.fixpoint_depth() + 1,
@@ -82,14 +82,14 @@ impl Schedule {
     }
 
     pub fn is_fixpoint(&self) -> bool {
-        return matches!(self, crate::ast::Schedule::Fixpoint(..));
+        return matches!(self, crate::parser::ast::Schedule::Fixpoint(..));
     }
 
     /*  Unfolds Sequential steps and returns the first non-Sequential (sub)schedule.
         Does return itself if non-Sequential.
     */
     pub fn earliest_subschedule(&self) -> &Schedule {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
         match self {
             Sequential(s, _, _) => s.earliest_subschedule(),
             StepCall(..) | TypedStepCall(..) | Fixpoint(..) => &self,
@@ -97,7 +97,7 @@ impl Schedule {
     }
 
     pub fn step_calls<'a>(&'a self, result: &mut Vec<(Option<&'a String>, &'a String)>) {
-        use crate::ast::Schedule::*;
+        use crate::parser::ast::Schedule::*;
 
         match self {
             StepCall(step, _) => result.push((None, step)),
@@ -230,7 +230,7 @@ impl Exp {
 
 impl Display for Exp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::ast::Exp::*;
+        use crate::parser::ast::Exp::*;
         match self {
             BinOp(l, o, r, _) => write!(f, "{l} {o} {r}"),
             UnOp(o, e, _) => write!(f, "{o}{e}"),
@@ -316,7 +316,7 @@ impl Type {
 
 impl Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::ast::Type::*;
+        use crate::parser::ast::Type::*;
         match self {
             Named(s) => write!(f, "{}", s),
             String => write!(f, "String"),
@@ -340,7 +340,7 @@ pub enum Literal {
 
 impl Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::ast::Literal::*;
+        use crate::parser::ast::Literal::*;
         match self {
             NatLit(v) => write!(f, "{v}"),
             IntLit(v) => write!(f, "{v}"),
@@ -371,7 +371,7 @@ pub enum BinOpcode {
 
 impl Display for BinOpcode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::ast::BinOpcode::*;
+        use crate::parser::ast::BinOpcode::*;
         match self {
             Equals => write!(f, "=="),
             NotEquals => write!(f, "!="),
@@ -397,7 +397,7 @@ pub enum UnOpcode {
 
 impl Display for UnOpcode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::ast::UnOpcode::*;
+        use crate::parser::ast::UnOpcode::*;
         match self {
             Negation => write!(f, "!"),
         }
@@ -406,12 +406,8 @@ impl Display for UnOpcode {
 
 #[cfg(test)]
 mod tests {
-    use crate::adl::ExpParser;
-    use crate::adl::ScheduleParser;
-    use crate::adl::StatParser;
-    use crate::adl::StepsParser;
-    use crate::adl::StructsParser;
-    use crate::ast::*;
+    use crate::parser::ast::*;
+    use crate::parser::*;
     use lalrpop_util::ParseError::User;
 
     #[test]
