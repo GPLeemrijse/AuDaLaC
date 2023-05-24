@@ -1,5 +1,5 @@
+use crate::compiler::{StructManager, ScheduleManager};
 use crate::ast::*;
-use crate::transpilation_traits::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 use std::collections::HashMap;

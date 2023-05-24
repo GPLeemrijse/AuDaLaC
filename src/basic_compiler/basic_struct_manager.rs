@@ -1,6 +1,6 @@
+use crate::compiler::StructManager;
 use crate::ast::*;
 use crate::basic_compiler::*;
-use crate::transpilation_traits::*;
 use indoc::{formatdoc, indoc};
 use std::collections::BTreeSet;
 

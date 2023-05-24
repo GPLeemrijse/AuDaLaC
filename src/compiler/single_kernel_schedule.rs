@@ -1,6 +1,6 @@
 use crate::ast::*;
-use crate::in_kernel_compiler::StepBodyTranspiler;
-use crate::transpilation_traits::*;
+use crate::compiler::StepBodyCompiler;
+use crate::compiler::compilation_traits::*;
 use crate::utils::as_printf;
 use crate::utils::format_signature;
 use crate::WorkDivisor;
@@ -12,7 +12,7 @@ pub struct SingleKernelSchedule<'a> {
     program: &'a Program,
     fp: &'a dyn FPStrategy,
     step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
-    step_transpiler: &'a StepBodyTranspiler<'a>,
+    step_transpiler: &'a StepBodyCompiler<'a>,
     work_divisor: &'a WorkDivisor<'a>,
 }
 
@@ -22,7 +22,7 @@ impl SingleKernelSchedule<'_> {
     pub fn new<'a>(
         program: &'a Program,
         fp: &'a dyn FPStrategy,
-        step_transpiler: &'a StepBodyTranspiler<'_>,
+        step_transpiler: &'a StepBodyCompiler<'_>,
         work_divisor: &'a WorkDivisor,
     ) -> SingleKernelSchedule<'a> {
         SingleKernelSchedule {

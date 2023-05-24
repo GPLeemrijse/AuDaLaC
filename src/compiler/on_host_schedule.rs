@@ -1,10 +1,10 @@
 use crate::utils::as_printf;
 use crate::utils::format_signature;
-use crate::in_kernel_compiler::StepBodyTranspiler;
+use crate::in_kernel_compiler::StepBodyCompiler;
 use std::collections::HashMap;
 use crate::ast::*;
 use std::collections::BTreeSet;
-use crate::transpilation_traits::*;
+use crate::compiler::compilation_traits::*;
 use indoc::formatdoc;
 
 pub struct OnHostSchedule<'a> {
@@ -14,7 +14,7 @@ pub struct OnHostSchedule<'a> {
 	instances_per_thread : usize,
 	threads_per_block : usize,
 	nrof_threads : usize,
-	step_transpiler : &'a StepBodyTranspiler<'a>
+	step_transpiler : &'a StepBodyCompiler<'a>
 }
 
 impl OnHostSchedule<'_> {
@@ -24,7 +24,7 @@ impl OnHostSchedule<'_> {
 				   instances_per_thread: usize,
 				   threads_per_block : usize,
 				   nrof_threads : usize,
-				   step_transpiler : &'a StepBodyTranspiler<'_>) -> OnHostSchedule<'a> {
+				   step_transpiler : &'a StepBodyCompiler<'_>) -> OnHostSchedule<'a> {
 		OnHostSchedule {
 			program,
 			fp,

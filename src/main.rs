@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::compiler::FPStrategy;
 use crate::adl::ProgramParser;
 use crate::ast_validator::validate_ast;
 use crate::basic_compiler::*;
@@ -8,13 +9,11 @@ use crate::compilation_components::*;
 use crate::cuda_atomics::{MemOrder, Scope};
 use crate::fp_strategies::NaiveAlternatingFixpoint;
 use crate::fp_strategies::NaiveFixpoint;
-use crate::in_kernel_compiler::SingleKernelSchedule;
-use crate::in_kernel_compiler::StepBodyTranspiler;
-use crate::in_kernel_compiler::{DivisionStrategy, WorkDivisor};
+use crate::compiler::SingleKernelSchedule;
+use crate::compiler::StepBodyCompiler;
+use crate::compiler::{DivisionStrategy, WorkDivisor};
 use crate::init_file_generator::generate_init_file;
-use crate::transpilation_traits::FPStrategy;
-use codespan_reporting::diagnostic::Diagnostic;
-use codespan_reporting::diagnostic::Label;
+use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use codespan_reporting::term::{self};
@@ -32,10 +31,8 @@ mod coalesced_compiler;
 mod compilation_components;
 mod cuda_atomics;
 mod fp_strategies;
-mod in_kernel_compiler;
+mod compiler;
 mod init_file_generator;
-mod transpilation_traits;
-mod transpile;
 mod utils;
 
 lalrpop_mod!(pub adl); // synthesized by LALRPOP
@@ -124,7 +121,7 @@ fn main() {
                             let struct_manager =
                                 BasicStructManager::new(&program, nrof_instances_per_struct);
                             let schedule_manager = BasicScheduleManager::new(&program);
-                            result = transpile::transpile(&schedule_manager, &struct_manager);
+                            result = compiler::compile(&schedule_manager, &struct_manager);
                         }
                         "coalesced" => {
                             let struct_manager = CoalescedStructManager::new(
@@ -139,7 +136,7 @@ fn main() {
                                 printnthinst,
                                 print_unstable,
                             );
-                            result = transpile::transpile(&schedule_manager, &struct_manager);
+                            result = compiler::compile(&schedule_manager, &struct_manager);
                         }
                         "in-kernel" => {
                             let fp_strat: Box<dyn FPStrategy> = match voting_strat {
@@ -159,7 +156,7 @@ fn main() {
                             };
 
                             let step_transpiler =
-                                StepBodyTranspiler::new(&type_info, true, print_unstable);
+                                StepBodyCompiler::new(&type_info, true, print_unstable);
 
                             let work_divisor = WorkDivisor::new(
                                 &program,
@@ -170,7 +167,7 @@ fn main() {
                                 print_unstable,
                             );
 
-                            result = transpile::transpile2(vec![
+                            result = compiler::compile2(vec![
                                 &InitFileReader {},
                                 &PrintbufferSizeAdjuster::new(buffer_size),
                                 &work_divisor,

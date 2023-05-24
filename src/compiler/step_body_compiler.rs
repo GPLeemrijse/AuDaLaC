@@ -4,19 +4,19 @@ use crate::utils::as_c_type;
 use indoc::formatdoc;
 use std::collections::HashMap;
 
-pub struct StepBodyTranspiler<'a> {
+pub struct StepBodyCompiler<'a> {
     var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>,
     use_step_parity: bool,
     print_unstable: bool,
 }
 
-impl StepBodyTranspiler<'_> {
+impl StepBodyCompiler<'_> {
     pub fn new<'a>(
         type_info: &'a HashMap<*const Exp, Vec<Type>>,
         use_step_parity: bool,
         print_unstable: bool,
-    ) -> StepBodyTranspiler<'a> {
-        StepBodyTranspiler {
+    ) -> StepBodyCompiler<'a> {
+        StepBodyCompiler {
             var_exp_type_info: type_info,
             use_step_parity,
             print_unstable,

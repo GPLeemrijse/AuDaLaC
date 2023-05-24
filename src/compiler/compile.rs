@@ -1,8 +1,8 @@
-use crate::transpilation_traits::*;
+use crate::compiler::compilation_traits::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 
-pub fn transpile(
+pub fn compile(
     schedule_manager: &dyn ScheduleManager,
     struct_manager: &dyn StructManager,
 ) -> String {
@@ -74,7 +74,7 @@ pub fn transpile(
 	"}
 }
 
-pub fn transpile2(components: Vec<&dyn CompileComponent>) -> String {
+pub fn compile2(components: Vec<&dyn CompileComponent>) -> String {
     // Program sections
     let (
         mut includes,

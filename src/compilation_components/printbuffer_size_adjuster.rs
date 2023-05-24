@@ -1,4 +1,4 @@
-use crate::transpilation_traits::*;
+use crate::compiler::CompileComponent;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 

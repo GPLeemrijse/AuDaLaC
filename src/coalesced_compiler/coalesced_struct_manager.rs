@@ -1,8 +1,8 @@
+use crate::compiler::StructManager;
 use crate::ast::*;
 use crate::coalesced_compiler::*;
 use crate::cuda_atomics::MemoryOperation;
 use crate::cuda_atomics::{MemOrder, Scope};
-use crate::transpilation_traits::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 
