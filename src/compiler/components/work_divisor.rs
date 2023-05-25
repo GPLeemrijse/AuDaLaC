@@ -38,23 +38,9 @@ impl<'a> WorkDivisor<'a> {
     }
 
     pub fn get_dims(&self, kernel_name: &str) -> String {
-        let executors = self.program.executors();
-        let executors_allocated_size = executors
-            .iter()
-            .map(|strct| {
-                self.allocated_per_instance
-                    .get(*strct)
-                    .expect("Wrong struct name supplied to -N.")
-            })
-            .max()
-            .unwrap();
-
-        let nrof_instances = executors_allocated_size;
-        let nrof_threads =
-            (nrof_instances + self.instances_per_thread - 1) / self.instances_per_thread;
         formatdoc!(
             "
-			ADL::get_launch_dims({nrof_threads}, (void*){kernel_name})"
+			ADL::get_launch_dims((max_nrof_executing_instances + I_PER_THREAD - 1) / I_PER_THREAD, (void*){kernel_name})"
         )
     }
 

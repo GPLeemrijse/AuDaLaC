@@ -231,24 +231,46 @@ impl CompileComponent for StructManagers<'_> {
         let mut struct_names: Vec<&String> = self.program.structs.iter().map(|s| &s.name).collect();
         struct_names.sort();
 
+        let mut max_executor_str = "0".to_string();
+        let executors = self.program.executors();
+
         for (idx, struct_name) in struct_names.iter().enumerate() {
             let s_name_lwr = struct_name.to_lowercase();
-            let allocated_space = self
+            let allocated_space : Option<&usize> = self
                 .allocated_per_instance
-                .get(*struct_name)
-                .expect("Wrong struct name supplied to -N.");
+                .get(*struct_name);
+
+            let n_insts;
+            if allocated_space.is_none() {
+                println!("Warning: did not find number of instances to allocate for {struct_name}.");
+                n_insts = format!("structs[{idx}].nrof_instances + 1");
+            } else {
+                n_insts = allocated_space.unwrap().to_string();
+            }
+
 
             registers.push_str(&format!{"\tCHECK(cudaHostRegister(&host_{struct_name}, sizeof({struct_name}), cudaHostRegisterDefault));\n"});
             inits.push_str(
-                &format! {"\thost_{struct_name}.initialise(&structs[{idx}], {allocated_space});\n"},
+                &format! {"\thost_{struct_name}.initialise(&structs[{idx}], {n_insts});\n"},
             );
             to_device.push_str(&format!{"\t{struct_name} * const loc_{s_name_lwr} = ({struct_name}*)host_{struct_name}.to_device();\n"});
             memcpy.push_str(&format!{"\tCHECK(cudaMemcpyToSymbol({s_name_lwr}, &loc_{s_name_lwr}, sizeof({struct_name} * const)));\n"});
+
+            if executors.get(struct_name).is_some() {
+                max_executor_str = if max_executor_str == "0".to_string() {
+                    n_insts
+                } else {
+                    format!("max({n_insts}, {max_executor_str})")
+                };
+            }
         }
+
+        let max_instances = format!("\tinst_size max_nrof_executing_instances = {max_executor_str};");
 
         res.push_str(&formatdoc! {"
 			{registers}
 			{inits}
+			{max_instances}
 				CHECK(cudaDeviceSynchronize());
 
 			{to_device}

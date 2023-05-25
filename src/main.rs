@@ -53,7 +53,7 @@ fn main() {
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg division_strat: -D --division_strat possible_value("blocksize") possible_value("gridsize") default_value("blocksize") "What division strategy to use. 'blocksize' lets blocks execute a continuous sequence of instances, while 'gridsize' evenly distributes over the blocks.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
-        (@arg nrofinstances: -N --nrofinstances +takes_value multiple(true) value_parser(parse_key_val::<String, usize>) "nrof struct instances memory is allocated for.")
+        (@arg nrofinstances: -N --nrofinstances +takes_value required(false) multiple(true) value_parser(parse_key_val::<String, usize>) "nrof struct instances memory is allocated for.")
         (@arg instsperthread: -M --instsperthread +takes_value default_value("8") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
         (@arg threads_per_block: -T --threadsperblock +takes_value default_value("256") value_parser(clap::value_parser!(usize)) "Number of threads per block.")
         (@arg buffersize: -b --buffersize +takes_value default_value("1024") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
@@ -119,12 +119,6 @@ fn main() {
                             .collect(),
                     );
                 } else {
-                    for strct in &program.structs {
-                        if !nrof_instances_per_struct.contains_key(&strct.name) {
-                            nrof_instances_per_struct.insert(strct.name.clone(), 1000);
-                        }
-                    }
-
                     let fp_strat: Box<dyn FPStrategy> = match (schedule_strat, voting_strat) {
                         ("in-kernel", "naive") => {
                             Box::new(NaiveFixpoint::new(program.schedule.fixpoint_depth()))
