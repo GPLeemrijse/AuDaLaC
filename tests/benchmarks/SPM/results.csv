@@ -1,0 +1,217 @@
+memorder, voting-strat, tpb, ipt, formula, problem size, runtime (ms)
+relaxed, naive-alternating, 128, 2, invariantly_inevitably_eat, 2, 0.94399995
+relaxed, naive-alternating, 128, 2, invariantly_inevitably_eat, 6, 134.679
+relaxed, naive-alternating, 128, 2, invariantly_inevitably_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 128, 2, invariantly_plato_starves, 2, 0.59599996
+relaxed, naive-alternating, 128, 2, invariantly_plato_starves, 6, 0.625
+relaxed, naive-alternating, 128, 2, invariantly_plato_starves, 8, non-zero exitcode
+relaxed, naive-alternating, 128, 2, invariantly_possibly_eat, 2, 0.30899996
+relaxed, naive-alternating, 128, 2, invariantly_possibly_eat, 6, 0.77
+relaxed, naive-alternating, 128, 2, invariantly_possibly_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 128, 2, plato_infinitely_often_can_eat, 2, 0.269
+relaxed, naive-alternating, 128, 2, plato_infinitely_often_can_eat, 6, 0.851
+relaxed, naive-alternating, 128, 2, plato_infinitely_often_can_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 128, 4, invariantly_inevitably_eat, 2, 0.95699996
+relaxed, naive-alternating, 128, 4, invariantly_inevitably_eat, 6, 187.72801
+relaxed, naive-alternating, 128, 4, invariantly_inevitably_eat, 8, 5060.6196
+relaxed, naive-alternating, 128, 4, invariantly_plato_starves, 2, 0.585
+relaxed, naive-alternating, 128, 4, invariantly_plato_starves, 6, 0.67100006
+relaxed, naive-alternating, 128, 4, invariantly_plato_starves, 8, non-zero exitcode
+relaxed, naive-alternating, 128, 4, invariantly_possibly_eat, 2, 0.30999997
+relaxed, naive-alternating, 128, 4, invariantly_possibly_eat, 6, 0.75299996
+relaxed, naive-alternating, 128, 4, invariantly_possibly_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 128, 4, plato_infinitely_often_can_eat, 2, 0.267
+relaxed, naive-alternating, 128, 4, plato_infinitely_often_can_eat, 6, 0.7839999
+relaxed, naive-alternating, 128, 4, plato_infinitely_often_can_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 128, 8, invariantly_inevitably_eat, 2, 0.938
+relaxed, naive-alternating, 128, 8, invariantly_inevitably_eat, 6, 314.00702
+relaxed, naive-alternating, 128, 8, invariantly_inevitably_eat, 8, 4612.466
+relaxed, naive-alternating, 128, 8, invariantly_plato_starves, 2, 0.579
+relaxed, naive-alternating, 128, 8, invariantly_plato_starves, 6, 1.0239999
+relaxed, naive-alternating, 128, 8, invariantly_plato_starves, 8, 2.5970001
+relaxed, naive-alternating, 128, 8, invariantly_possibly_eat, 2, 0.30799997
+relaxed, naive-alternating, 128, 8, invariantly_possibly_eat, 6, 1.019
+relaxed, naive-alternating, 128, 8, invariantly_possibly_eat, 8, 3.7260003
+relaxed, naive-alternating, 128, 8, plato_infinitely_often_can_eat, 2, 0.27
+relaxed, naive-alternating, 128, 8, plato_infinitely_often_can_eat, 6, 1.056
+relaxed, naive-alternating, 128, 8, plato_infinitely_often_can_eat, 8, 4.309
+relaxed, naive-alternating, 256, 2, invariantly_inevitably_eat, 2, 0.95299995
+relaxed, naive-alternating, 256, 2, invariantly_inevitably_eat, 6, 134.097
+relaxed, naive-alternating, 256, 2, invariantly_inevitably_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 256, 2, invariantly_plato_starves, 2, 0.585
+relaxed, naive-alternating, 256, 2, invariantly_plato_starves, 6, 0.59900004
+relaxed, naive-alternating, 256, 2, invariantly_plato_starves, 8, non-zero exitcode
+relaxed, naive-alternating, 256, 2, invariantly_possibly_eat, 2, 0.31499997
+relaxed, naive-alternating, 256, 2, invariantly_possibly_eat, 6, 0.768
+relaxed, naive-alternating, 256, 2, invariantly_possibly_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 256, 2, plato_infinitely_often_can_eat, 2, 0.27899998
+relaxed, naive-alternating, 256, 2, plato_infinitely_often_can_eat, 6, 0.85199994
+relaxed, naive-alternating, 256, 2, plato_infinitely_often_can_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 256, 4, invariantly_inevitably_eat, 2, 0.96099997
+relaxed, naive-alternating, 256, 4, invariantly_inevitably_eat, 6, 186.632
+relaxed, naive-alternating, 256, 4, invariantly_inevitably_eat, 8, 5414.8237
+relaxed, naive-alternating, 256, 4, invariantly_plato_starves, 2, 0.588
+relaxed, naive-alternating, 256, 4, invariantly_plato_starves, 6, 0.66499996
+relaxed, naive-alternating, 256, 4, invariantly_plato_starves, 8, non-zero exitcode
+relaxed, naive-alternating, 256, 4, invariantly_possibly_eat, 2, 0.31599998
+relaxed, naive-alternating, 256, 4, invariantly_possibly_eat, 6, 0.732
+relaxed, naive-alternating, 256, 4, invariantly_possibly_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 256, 4, plato_infinitely_often_can_eat, 2, 0.282
+relaxed, naive-alternating, 256, 4, plato_infinitely_often_can_eat, 6, 0.76899993
+relaxed, naive-alternating, 256, 4, plato_infinitely_often_can_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 256, 8, invariantly_inevitably_eat, 2, 0.96999997
+relaxed, naive-alternating, 256, 8, invariantly_inevitably_eat, 6, 321.18298
+relaxed, naive-alternating, 256, 8, invariantly_inevitably_eat, 8, 4648.257
+relaxed, naive-alternating, 256, 8, invariantly_plato_starves, 2, 0.58900005
+relaxed, naive-alternating, 256, 8, invariantly_plato_starves, 6, 1.0439999
+relaxed, naive-alternating, 256, 8, invariantly_plato_starves, 8, 2.5649998
+relaxed, naive-alternating, 256, 8, invariantly_possibly_eat, 2, 0.30999997
+relaxed, naive-alternating, 256, 8, invariantly_possibly_eat, 6, 1.0439999
+relaxed, naive-alternating, 256, 8, invariantly_possibly_eat, 8, 3.6140003
+relaxed, naive-alternating, 256, 8, plato_infinitely_often_can_eat, 2, 0.273
+relaxed, naive-alternating, 256, 8, plato_infinitely_often_can_eat, 6, 1.0480001
+relaxed, naive-alternating, 256, 8, plato_infinitely_often_can_eat, 8, 4.081
+relaxed, naive-alternating, 512, 2, invariantly_inevitably_eat, 2, 1.007
+relaxed, naive-alternating, 512, 2, invariantly_inevitably_eat, 6, 138.064
+relaxed, naive-alternating, 512, 2, invariantly_inevitably_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 512, 2, invariantly_plato_starves, 2, 0.61200005
+relaxed, naive-alternating, 512, 2, invariantly_plato_starves, 6, 0.61300004
+relaxed, naive-alternating, 512, 2, invariantly_plato_starves, 8, non-zero exitcode
+relaxed, naive-alternating, 512, 2, invariantly_possibly_eat, 2, 0.32299998
+relaxed, naive-alternating, 512, 2, invariantly_possibly_eat, 6, 0.78099984
+relaxed, naive-alternating, 512, 2, invariantly_possibly_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 512, 2, plato_infinitely_often_can_eat, 2, 0.28899997
+relaxed, naive-alternating, 512, 2, plato_infinitely_often_can_eat, 6, 0.84400004
+relaxed, naive-alternating, 512, 2, plato_infinitely_often_can_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 512, 4, invariantly_inevitably_eat, 2, 1.008
+relaxed, naive-alternating, 512, 4, invariantly_inevitably_eat, 6, 192.991
+relaxed, naive-alternating, 512, 4, invariantly_inevitably_eat, 8, 4846.896
+relaxed, naive-alternating, 512, 4, invariantly_plato_starves, 2, 0.616
+relaxed, naive-alternating, 512, 4, invariantly_plato_starves, 6, 0.694
+relaxed, naive-alternating, 512, 4, invariantly_plato_starves, 8, non-zero exitcode
+relaxed, naive-alternating, 512, 4, invariantly_possibly_eat, 2, 0.32299995
+relaxed, naive-alternating, 512, 4, invariantly_possibly_eat, 6, 0.75100005
+relaxed, naive-alternating, 512, 4, invariantly_possibly_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 512, 4, plato_infinitely_often_can_eat, 2, 0.28899997
+relaxed, naive-alternating, 512, 4, plato_infinitely_often_can_eat, 6, 0.787
+relaxed, naive-alternating, 512, 4, plato_infinitely_often_can_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 512, 8, invariantly_inevitably_eat, 2, 1.012
+relaxed, naive-alternating, 512, 8, invariantly_inevitably_eat, 6, 309.118
+relaxed, naive-alternating, 512, 8, invariantly_inevitably_eat, 8, 4617.876
+relaxed, naive-alternating, 512, 8, invariantly_plato_starves, 2, 0.6179999
+relaxed, naive-alternating, 512, 8, invariantly_plato_starves, 6, 1.029
+relaxed, naive-alternating, 512, 8, invariantly_plato_starves, 8, 2.5549996
+relaxed, naive-alternating, 512, 8, invariantly_possibly_eat, 2, 0.33199996
+relaxed, naive-alternating, 512, 8, invariantly_possibly_eat, 6, 1.019
+relaxed, naive-alternating, 512, 8, invariantly_possibly_eat, 8, non-zero exitcode
+relaxed, naive-alternating, 512, 8, plato_infinitely_often_can_eat, 2, 0.29099998
+relaxed, naive-alternating, 512, 8, plato_infinitely_often_can_eat, 6, 1.037
+relaxed, naive-alternating, 512, 8, plato_infinitely_often_can_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 128, 2, invariantly_inevitably_eat, 2, 2.287
+acqrel, naive-alternating, 128, 2, invariantly_inevitably_eat, 6, 322.22803
+acqrel, naive-alternating, 128, 2, invariantly_inevitably_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 128, 2, invariantly_plato_starves, 2, 1.319
+acqrel, naive-alternating, 128, 2, invariantly_plato_starves, 6, 1.15
+acqrel, naive-alternating, 128, 2, invariantly_plato_starves, 8, non-zero exitcode
+acqrel, naive-alternating, 128, 2, invariantly_possibly_eat, 2, 0.67200005
+acqrel, naive-alternating, 128, 2, invariantly_possibly_eat, 6, 1.2839998
+acqrel, naive-alternating, 128, 2, invariantly_possibly_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 128, 2, plato_infinitely_often_can_eat, 2, 0.58
+acqrel, naive-alternating, 128, 2, plato_infinitely_often_can_eat, 6, 1.3820001
+acqrel, naive-alternating, 128, 2, plato_infinitely_often_can_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 128, 4, invariantly_inevitably_eat, 2, 2.2730002
+acqrel, naive-alternating, 128, 4, invariantly_inevitably_eat, 6, 539.513
+acqrel, naive-alternating, 128, 4, invariantly_inevitably_eat, 8, 8998.033
+acqrel, naive-alternating, 128, 4, invariantly_plato_starves, 2, 1.326
+acqrel, naive-alternating, 128, 4, invariantly_plato_starves, 6, 1.7230002
+acqrel, naive-alternating, 128, 4, invariantly_plato_starves, 8, 5.511
+acqrel, naive-alternating, 128, 4, invariantly_possibly_eat, 2, 0.674
+acqrel, naive-alternating, 128, 4, invariantly_possibly_eat, 6, 1.7720001
+acqrel, naive-alternating, 128, 4, invariantly_possibly_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 128, 4, plato_infinitely_often_can_eat, 2, 0.59099996
+acqrel, naive-alternating, 128, 4, plato_infinitely_often_can_eat, 6, 1.8139998
+acqrel, naive-alternating, 128, 4, plato_infinitely_often_can_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 128, 8, invariantly_inevitably_eat, 2, 2.2610002
+acqrel, naive-alternating, 128, 8, invariantly_inevitably_eat, 6, 963.1681
+acqrel, naive-alternating, 128, 8, invariantly_inevitably_eat, 8, 12176.094
+acqrel, naive-alternating, 128, 8, invariantly_plato_starves, 2, 1.322
+acqrel, naive-alternating, 128, 8, invariantly_plato_starves, 6, 3.068
+acqrel, naive-alternating, 128, 8, invariantly_plato_starves, 8, 5.595
+acqrel, naive-alternating, 128, 8, invariantly_possibly_eat, 2, 0.67
+acqrel, naive-alternating, 128, 8, invariantly_possibly_eat, 6, 2.985
+acqrel, naive-alternating, 128, 8, invariantly_possibly_eat, 8, 7.3670006
+acqrel, naive-alternating, 128, 8, plato_infinitely_often_can_eat, 2, 0.587
+acqrel, naive-alternating, 128, 8, plato_infinitely_often_can_eat, 6, 3.03
+acqrel, naive-alternating, 128, 8, plato_infinitely_often_can_eat, 8, 8.157
+acqrel, naive-alternating, 256, 2, invariantly_inevitably_eat, 2, 2.315
+acqrel, naive-alternating, 256, 2, invariantly_inevitably_eat, 6, 318.296
+acqrel, naive-alternating, 256, 2, invariantly_inevitably_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 256, 2, invariantly_plato_starves, 2, 1.332
+acqrel, naive-alternating, 256, 2, invariantly_plato_starves, 6, 1.1570001
+acqrel, naive-alternating, 256, 2, invariantly_plato_starves, 8, non-zero exitcode
+acqrel, naive-alternating, 256, 2, invariantly_possibly_eat, 2, 0.67899996
+acqrel, naive-alternating, 256, 2, invariantly_possibly_eat, 6, 1.291
+acqrel, naive-alternating, 256, 2, invariantly_possibly_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 256, 2, plato_infinitely_often_can_eat, 2, 0.58900005
+acqrel, naive-alternating, 256, 2, plato_infinitely_often_can_eat, 6, 1.3830001
+acqrel, naive-alternating, 256, 2, plato_infinitely_often_can_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 256, 4, invariantly_inevitably_eat, 2, 2.2699997
+acqrel, naive-alternating, 256, 4, invariantly_inevitably_eat, 6, 525.967
+acqrel, naive-alternating, 256, 4, invariantly_inevitably_eat, 8, 9002.989
+acqrel, naive-alternating, 256, 4, invariantly_plato_starves, 2, 1.332
+acqrel, naive-alternating, 256, 4, invariantly_plato_starves, 6, 1.673
+acqrel, naive-alternating, 256, 4, invariantly_plato_starves, 8, 5.174
+acqrel, naive-alternating, 256, 4, invariantly_possibly_eat, 2, 0.673
+acqrel, naive-alternating, 256, 4, invariantly_possibly_eat, 6, 1.739
+acqrel, naive-alternating, 256, 4, invariantly_possibly_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 256, 4, plato_infinitely_often_can_eat, 2, 0.588
+acqrel, naive-alternating, 256, 4, plato_infinitely_often_can_eat, 6, 1.7959999
+acqrel, naive-alternating, 256, 4, plato_infinitely_often_can_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 256, 8, invariantly_inevitably_eat, 2, 2.3260002
+acqrel, naive-alternating, 256, 8, invariantly_inevitably_eat, 6, 1000.24695
+acqrel, naive-alternating, 256, 8, invariantly_inevitably_eat, 8, 12383.436
+acqrel, naive-alternating, 256, 8, invariantly_plato_starves, 2, 1.331
+acqrel, naive-alternating, 256, 8, invariantly_plato_starves, 6, 3.1610005
+acqrel, naive-alternating, 256, 8, invariantly_plato_starves, 8, 5.532
+acqrel, naive-alternating, 256, 8, invariantly_possibly_eat, 2, 0.67800003
+acqrel, naive-alternating, 256, 8, invariantly_possibly_eat, 6, 3.0639997
+acqrel, naive-alternating, 256, 8, invariantly_possibly_eat, 8, 6.927999
+acqrel, naive-alternating, 256, 8, plato_infinitely_often_can_eat, 2, 0.583
+acqrel, naive-alternating, 256, 8, plato_infinitely_often_can_eat, 6, 3.182
+acqrel, naive-alternating, 256, 8, plato_infinitely_often_can_eat, 8, 7.671
+acqrel, naive-alternating, 512, 2, invariantly_inevitably_eat, 2, 2.3089998
+acqrel, naive-alternating, 512, 2, invariantly_inevitably_eat, 6, 336.534
+acqrel, naive-alternating, 512, 2, invariantly_inevitably_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 512, 2, invariantly_plato_starves, 2, 1.357
+acqrel, naive-alternating, 512, 2, invariantly_plato_starves, 6, 1.1959999
+acqrel, naive-alternating, 512, 2, invariantly_plato_starves, 8, non-zero exitcode
+acqrel, naive-alternating, 512, 2, invariantly_possibly_eat, 2, 0.69
+acqrel, naive-alternating, 512, 2, invariantly_possibly_eat, 6, 1.3280001
+acqrel, naive-alternating, 512, 2, invariantly_possibly_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 512, 2, plato_infinitely_often_can_eat, 2, 0.59
+acqrel, naive-alternating, 512, 2, plato_infinitely_often_can_eat, 6, 1.412
+acqrel, naive-alternating, 512, 2, plato_infinitely_often_can_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 512, 4, invariantly_inevitably_eat, 2, 2.3229997
+acqrel, naive-alternating, 512, 4, invariantly_inevitably_eat, 6, 577.0189
+acqrel, naive-alternating, 512, 4, invariantly_inevitably_eat, 8, 9217.219
+acqrel, naive-alternating, 512, 4, invariantly_plato_starves, 2, 1.3500001
+acqrel, naive-alternating, 512, 4, invariantly_plato_starves, 6, 1.8370001
+acqrel, naive-alternating, 512, 4, invariantly_plato_starves, 8, non-zero exitcode
+acqrel, naive-alternating, 512, 4, invariantly_possibly_eat, 2, 0.67999995
+acqrel, naive-alternating, 512, 4, invariantly_possibly_eat, 6, 1.8619999
+acqrel, naive-alternating, 512, 4, invariantly_possibly_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 512, 4, plato_infinitely_often_can_eat, 2, 0.59
+acqrel, naive-alternating, 512, 4, plato_infinitely_often_can_eat, 6, 1.891
+acqrel, naive-alternating, 512, 4, plato_infinitely_often_can_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 512, 8, invariantly_inevitably_eat, 2, 2.81
+acqrel, naive-alternating, 512, 8, invariantly_inevitably_eat, 6, 1081.181
+acqrel, naive-alternating, 512, 8, invariantly_inevitably_eat, 8, 12777.063
+acqrel, naive-alternating, 512, 8, invariantly_plato_starves, 2, 1.3420001
+acqrel, naive-alternating, 512, 8, invariantly_plato_starves, 6, 3.1939998
+acqrel, naive-alternating, 512, 8, invariantly_plato_starves, 8, 5.45
+acqrel, naive-alternating, 512, 8, invariantly_possibly_eat, 2, 0.67399997
+acqrel, naive-alternating, 512, 8, invariantly_possibly_eat, 6, 3.0729997
+acqrel, naive-alternating, 512, 8, invariantly_possibly_eat, 8, non-zero exitcode
+acqrel, naive-alternating, 512, 8, plato_infinitely_often_can_eat, 2, 0.584
+acqrel, naive-alternating, 512, 8, plato_infinitely_often_can_eat, 6, 3.106
+acqrel, naive-alternating, 512, 8, plato_infinitely_often_can_eat, 8, non-zero exitcode
