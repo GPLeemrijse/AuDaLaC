@@ -17,6 +17,7 @@ pub struct SingleKernelSchedule<'a> {
 
 impl SingleKernelSchedule<'_> {
     const KERNEL_NAME: &str = "schedule_kernel";
+    const BITMASK_PROP: (&str, usize) = ("uint16_t", 16);
 
     pub fn new<'a>(
         program: &'a Program,
@@ -53,12 +54,15 @@ impl SingleKernelSchedule<'_> {
 
         let schedule = self.schedule_as_c(&self.program.schedule, 0);
 
+        assert!(self.program.structs.len() <= SingleKernelSchedule::BITMASK_PROP.1);
+        let bitmask_type = SingleKernelSchedule::BITMASK_PROP.0;
+
         formatdoc! {"
 			{ind}const grid_group grid = this_grid();
 			{ind}const thread_block block = this_thread_block();
 			{ind}const bool is_thread0 = grid.thread_rank() == 0;
 			{ind}inst_size nrof_instances;
-			{ind}uint64_t struct_step_parity = 0; // bitmask
+			{ind}{bitmask_type} struct_step_parity = 0; // bitmask
 			{ind}bool stable = true; // Only used to compile steps outside fixpoints
 			{stab_stack}
 
@@ -263,12 +267,14 @@ impl CompileComponent for SingleKernelSchedule<'_> {
     }
 
     fn defines(&self) -> Option<String> {
+        let bitmask_type = SingleKernelSchedule::BITMASK_PROP.0;
+
         let masks = self
             .program
             .structs
             .iter()
             .enumerate()
-            .map(|(idx, s)| format!("#define {}_MASK (1ULL << {idx})", s.name))
+            .map(|(idx, s)| format!("#define {}_MASK ((({bitmask_type})1) << {idx})", s.name))
             .collect::<Vec<String>>()
             .join("\n");
 
