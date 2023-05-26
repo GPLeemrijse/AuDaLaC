@@ -15,29 +15,29 @@ const REPS : usize = 10;
 
 const CONFIGS: [(&str, &str, &str, &str); 19] = [
 	("memorder", "voting-strat", "tpb", "ipt"),
-	("relaxed", "naive-alternating", "128", "2"),
-	("relaxed", "naive-alternating", "128", "4"),
-	("relaxed", "naive-alternating", "128", "8"),
+	("relaxed", "naive-alternating", "128", "1"),
+	("relaxed", "naive-alternating", "128", "16"),
+	("relaxed", "naive-alternating", "128", "32"),
 
-	("relaxed", "naive-alternating", "256", "2"),
-	("relaxed", "naive-alternating", "256", "4"),
-	("relaxed", "naive-alternating", "256", "8"),
+	("relaxed", "naive-alternating", "256", "1"),
+	("relaxed", "naive-alternating", "256", "16"),
+	("relaxed", "naive-alternating", "256", "32"),
 
-	("relaxed", "naive-alternating", "512", "2"),
-	("relaxed", "naive-alternating", "512", "4"),
-	("relaxed", "naive-alternating", "512", "8"),
+	("relaxed", "naive-alternating", "512", "1"),
+	("relaxed", "naive-alternating", "512", "16"),
+	("relaxed", "naive-alternating", "512", "32"),
 
-	("acqrel", "naive-alternating", "128", "2"),
-	("acqrel", "naive-alternating", "128", "4"),
-	("acqrel", "naive-alternating", "128", "8"),
+	("seqcons", "naive-alternating", "128", "2"),
+	("seqcons", "naive-alternating", "128", "4"),
+	("seqcons", "naive-alternating", "128", "8"),
 
-	("acqrel", "naive-alternating", "256", "2"),
-	("acqrel", "naive-alternating", "256", "4"),
-	("acqrel", "naive-alternating", "256", "8"),
+	("seqcons", "naive-alternating", "256", "2"),
+	("seqcons", "naive-alternating", "256", "4"),
+	("seqcons", "naive-alternating", "256", "8"),
 
-	("acqrel", "naive-alternating", "512", "2"),
-	("acqrel", "naive-alternating", "512", "4"),
-	("acqrel", "naive-alternating", "512", "8"),
+	("seqcons", "naive-alternating", "512", "2"),
+	("seqcons", "naive-alternating", "512", "4"),
+	("seqcons", "naive-alternating", "512", "8"),
 ];
 
 const TESTCASES: [(&str, [&str; 3]); 4] = [
