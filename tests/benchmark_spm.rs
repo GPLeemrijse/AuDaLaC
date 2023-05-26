@@ -186,7 +186,7 @@ fn bench_file(c : &(&str, &str, &str, &str), f_name : &str, f : &str, result_fil
 		result_str = Some((total_ms / (REPS as f32)).to_string());
 	}
 
-	result_file.write_all(format!("{}, {}, {}, {}, {}, {}, {}\n",
+	result_file.write_all(format!("{},{},{},{},{},{},{}\n",
 		c.0,
 		c.1,
 		c.2,
@@ -207,7 +207,7 @@ fn test_benchmark_spm() {
 	let mut result_file = File::create("tests/benchmarks/SPM/results.csv").expect("Could not create SPM benchmark csv file.");
 	let header = &CONFIGS[0];
 
-	result_file.write_all(format!("{}, {}, {}, {}, {}, {}, {}\n",
+	result_file.write_all(format!("{},{},{},{},{},{},{}\n",
 		header.0,
 		header.1,
 		header.2,
