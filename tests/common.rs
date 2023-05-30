@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::fmt;
 use std::process::Command;
@@ -17,6 +18,10 @@ pub fn is_nvcc_installed() -> bool {
         .map_or(false, |s| s.success())
 }
 
+#[derive(Eq)]
+#[derive(PartialEq)]
+#[derive(Hash)]
+#[derive(Clone)]
 pub struct Config<'a> {
     pub memorder: &'a str,
     pub voting: &'a str,
@@ -71,6 +76,19 @@ impl<'a> Config<'_> {
         }
 
         result
+    }
+
+    pub fn intersection(configs: &'a Vec<Vec<Config<'a>>>) -> HashSet<&'a Config<'a>>{
+        let flat : Vec<&Config<'a>> = configs.iter()
+                                             .map(|v|
+                                                v.iter()
+                                             )
+                                             .flatten()
+                                             .collect();
+        
+        HashSet::from_iter(
+            flat
+        )
     }
 }
 

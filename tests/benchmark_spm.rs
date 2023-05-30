@@ -13,18 +13,21 @@ mod benchmarks;
 const REPS : usize = 10;
 
 #[test]
-fn test_impact_of_memorder() {
-	benchmark_spm_set(&memorder_impact_configs(), &invar_inev_eat_set(), "memorder_impact");
-}
+fn test_benchmark_spm() {
+	let vec_of_vec_of_configs = vec![
+		memorder_impact_configs(),
+		voting_impact_configs(),
+		block_size_impact_configs(),
+	];
 
-#[test]
-fn test_impact_of_voting() {
-	benchmark_spm_set(&voting_impact_configs(), &invar_inev_eat_set(), "voting_impact");
-}
+	let configs = Config::intersection(&vec_of_vec_of_configs);
 
-#[test]
-fn test_impact_of_block_size() {
-	benchmark_spm_set(&block_size_impact_configs(), &invar_inev_eat_set(), "blocksize_impact");
+	let mut vec_configs : Vec<Config> = Vec::new();
+	for c in configs {
+		vec_configs.push(c.clone());
+	}
+
+	benchmark_spm_set(&vec_configs, &invar_inev_eat_set(), "spm");
 }
 
 
