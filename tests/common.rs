@@ -14,8 +14,8 @@ pub fn is_benchmarking() -> bool {
 pub fn is_nvcc_installed() -> bool {
     Command::new("nvcc")
         .arg("--version")
-        .status()
-        .map_or(false, |s| s.success())
+        .output()
+        .map_or(false, |s| s.status.success())
 }
 
 #[derive(Eq)]
