@@ -1,28 +1,82 @@
-use std::process::ExitStatus;
+use std::fmt::Display;
+use std::fmt;
 use std::process::Command;
 use std::env;
 
-pub fn run_benchmarks() -> bool {
+pub fn is_benchmarking() -> bool {
     if let Ok(v) = env::var("BENCHMARK") {
         return v == "true";
     }
     return false;
 }
 
-pub fn run_compiler<'a, I>(extra_args : I) -> Result<ExitStatus, std::io::Error>
-where
-    I: IntoIterator<Item = &'a str>
-{
-    Command::new("cargo")
-        .args(["run", "--"])
-        .args(extra_args)
-        .output()
-        .map(|o| o.status)
+pub fn is_nvcc_installed() -> bool {
+    Command::new("nvcc")
+        .arg("--version")
+        .status()
+        .map_or(false, |s| s.success())
 }
 
-pub fn run_make(dir : &str)-> Result<ExitStatus, std::io::Error> {
-    Command::new("make")
-        .current_dir(dir)
-        .output()
-        .map(|o| o.status)
+pub struct Config<'a> {
+    pub memorder: &'a str,
+    pub voting: &'a str,
+    pub tpb: &'a str,
+    pub ipt: &'a str,
+    pub name: Option<&'a str>
+}
+
+impl<'a> Config<'_> {
+    pub const HEADER : &str = "config,memorder,voting-strat,tpb,ipt";
+
+    pub fn new(m : &'a str, v : &'a str, t : &'a str, i : &'a str, n : Option<&'a str>) -> Config<'a> {
+        Config {
+            memorder: m,
+            voting: v,
+            tpb: t,
+            ipt: i,
+            name: n
+        }
+    }
+
+    pub fn to_args(&self) -> Vec<&str> {
+        vec![
+            "-m", self.memorder,
+            "-v", self.voting,
+            "-T", self.tpb,
+            "-M", self.ipt
+        ]
+    }
+
+    pub fn as_csv_row(&self) -> String {
+        format!("{},{},{},{},{}",
+            self,
+            self.memorder,
+            self.voting,
+            self.tpb,
+            self.ipt,
+        )
+    }
+
+    pub fn cartesian(orders: &[&'static str], voting_strat: &[&'static str], tpb: &[&'static str], ipt: &[&'static str]) -> Vec<Config<'static>> {
+        let mut result : Vec<Config> = Vec::new();
+
+        for o in orders {
+            for v in voting_strat {
+                for t in tpb {
+                    for i in ipt {
+                        result.push(Config::new(o, v, t, i, None));
+                    }
+                }
+            }
+        }
+
+        result
+    }
+}
+
+impl Display for Config<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let tuple = format!("{}-{}-{}-{}",self.memorder, self.voting, self.tpb, self.ipt);
+        write!(f, "{}", self.name.unwrap_or(&tuple))
+    }
 }
