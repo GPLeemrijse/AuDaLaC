@@ -1,0 +1,161 @@
+config,memorder,voting-strat,tpb,ipt,formula,problemsize,runtime
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,invariantly_inevitably_eat,2,0.96800005
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,invariantly_inevitably_eat,4,14.787
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,invariantly_inevitably_eat,6,1000.004
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,invariantly_inevitably_eat,8,12585.703
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,invariantly_inevitably_eat,2,1.1960001
+relaxed-naive-512-4,relaxed,naive,512,4,invariantly_inevitably_eat,4,14.123001
+relaxed-naive-512-4,relaxed,naive,512,4,invariantly_inevitably_eat,6,208.646
+relaxed-naive-512-4,relaxed,naive,512,4,invariantly_inevitably_eat,8,5079.6553
+relaxed-naive-512-4,relaxed,naive,512,4,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-512-32,relaxed,naive,512,32,invariantly_inevitably_eat,2,1.198
+relaxed-naive-512-32,relaxed,naive,512,32,invariantly_inevitably_eat,4,14.074
+relaxed-naive-512-32,relaxed,naive,512,32,invariantly_inevitably_eat,6,585.90497
+relaxed-naive-512-32,relaxed,naive,512,32,invariantly_inevitably_eat,8,12565.054
+relaxed-naive-512-32,relaxed,naive,512,32,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,invariantly_inevitably_eat,2,1.1340001
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,invariantly_inevitably_eat,4,10.373
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,invariantly_inevitably_eat,6,345.15
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,invariantly_inevitably_eat,8,12639.28
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,invariantly_inevitably_eat,2,0.94400007
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,invariantly_inevitably_eat,4,8.662
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,invariantly_inevitably_eat,6,139.289
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,invariantly_inevitably_eat,8,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,invariantly_inevitably_eat,2,1.007
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,invariantly_inevitably_eat,4,9.091001
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,invariantly_inevitably_eat,6,141.419
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,invariantly_inevitably_eat,8,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,invariantly_inevitably_eat,2,0.9419999
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,invariantly_inevitably_eat,4,32.563004
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,invariantly_inevitably_eat,6,587.20996
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,invariantly_inevitably_eat,8,6825.53
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,invariantly_inevitably_eat,10,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,invariantly_inevitably_eat,2,2.9149997
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,invariantly_inevitably_eat,4,38.872997
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,invariantly_inevitably_eat,6,791.372
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,invariantly_inevitably_eat,8,11764.076
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,invariantly_inevitably_eat,2,1.1309999
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,invariantly_inevitably_eat,4,10.343
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,invariantly_inevitably_eat,6,147.877
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,invariantly_inevitably_eat,8,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-128-32,relaxed,naive,128,32,invariantly_inevitably_eat,2,1.141
+relaxed-naive-128-32,relaxed,naive,128,32,invariantly_inevitably_eat,4,23.269001
+relaxed-naive-128-32,relaxed,naive,128,32,invariantly_inevitably_eat,6,1073.013
+relaxed-naive-128-32,relaxed,naive,128,32,invariantly_inevitably_eat,8,12886.362
+relaxed-naive-128-32,relaxed,naive,128,32,invariantly_inevitably_eat,10,298678.78
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,invariantly_inevitably_eat,2,1.016
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,invariantly_inevitably_eat,4,12.230998
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,invariantly_inevitably_eat,6,533.27893
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,invariantly_inevitably_eat,8,6782.643
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,invariantly_inevitably_eat,2,1.138
+relaxed-naive-128-4,relaxed,naive,128,4,invariantly_inevitably_eat,4,18.737001
+relaxed-naive-128-4,relaxed,naive,128,4,invariantly_inevitably_eat,6,207.29099
+relaxed-naive-128-4,relaxed,naive,128,4,invariantly_inevitably_eat,8,5187.3066
+relaxed-naive-128-4,relaxed,naive,128,4,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,invariantly_inevitably_eat,2,0.9639999
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,invariantly_inevitably_eat,4,14.688001
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,invariantly_inevitably_eat,6,557.48395
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,invariantly_inevitably_eat,8,6792.0923
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,invariantly_inevitably_eat,2,1.0200001
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,invariantly_inevitably_eat,4,12.223999
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,invariantly_inevitably_eat,6,567.12494
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,invariantly_inevitably_eat,8,12453.111
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,invariantly_inevitably_eat,10,non-zero exitcode.
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,invariantly_inevitably_eat,2,2.8710003
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,invariantly_inevitably_eat,4,75.71
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,invariantly_inevitably_eat,6,4461.32
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,invariantly_inevitably_eat,8,58630.563
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,invariantly_inevitably_eat,10,1027453.7
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,invariantly_inevitably_eat,2,0.967
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,invariantly_inevitably_eat,4,14.689001
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,invariantly_inevitably_eat,6,186.991
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,invariantly_inevitably_eat,8,4835.14
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,invariantly_inevitably_eat,2,0.94799995
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,invariantly_inevitably_eat,4,21.428
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,invariantly_inevitably_eat,6,598.806
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,invariantly_inevitably_eat,8,6846.6655
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,invariantly_inevitably_eat,2,0.94200003
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,invariantly_inevitably_eat,4,32.167
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,invariantly_inevitably_eat,6,1138.17
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,invariantly_inevitably_eat,8,12682.85
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,invariantly_inevitably_eat,2,1.1340001
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,invariantly_inevitably_eat,4,10.378999
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,invariantly_inevitably_eat,6,199.405
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,invariantly_inevitably_eat,8,4851.7197
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,invariantly_inevitably_eat,10,non-zero exitcode.
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,invariantly_inevitably_eat,2,2.931
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,invariantly_inevitably_eat,4,38.846
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,invariantly_inevitably_eat,6,2686.565
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,invariantly_inevitably_eat,8,62823.82
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,invariantly_inevitably_eat,2,1.135
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,invariantly_inevitably_eat,4,10.372001
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,invariantly_inevitably_eat,6,350.26996
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,invariantly_inevitably_eat,8,7179.724
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,invariantly_inevitably_eat,10,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,invariantly_inevitably_eat,2,2.2810004
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,invariantly_inevitably_eat,4,30.726002
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,invariantly_inevitably_eat,6,565.73303
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,invariantly_inevitably_eat,8,9086.433
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,invariantly_inevitably_eat,2,0.934
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,invariantly_inevitably_eat,4,8.092999
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,invariantly_inevitably_eat,6,142.11801
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,invariantly_inevitably_eat,8,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,invariantly_inevitably_eat,2,0.956
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,invariantly_inevitably_eat,4,16.984
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,invariantly_inevitably_eat,6,188.074
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,invariantly_inevitably_eat,8,4859.5313
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,invariantly_inevitably_eat,2,0.959
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,invariantly_inevitably_eat,4,8.604
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,invariantly_inevitably_eat,6,141.40201
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,invariantly_inevitably_eat,8,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,invariantly_inevitably_eat,2,0.93899995
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,invariantly_inevitably_eat,4,17.687
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,invariantly_inevitably_eat,6,182.779
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,invariantly_inevitably_eat,8,5036.196
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,invariantly_inevitably_eat,10,non-zero exitcode.
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,invariantly_inevitably_eat,2,2.288
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,invariantly_inevitably_eat,4,30.198002
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,invariantly_inevitably_eat,6,1878.1871
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,invariantly_inevitably_eat,8,43983.8
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,invariantly_inevitably_eat,10,non-zero exitcode.
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,invariantly_inevitably_eat,2,2.2339997
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,invariantly_inevitably_eat,4,57.626995
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,invariantly_inevitably_eat,6,3323.0164
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,invariantly_inevitably_eat,8,42287.992
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,invariantly_inevitably_eat,10,757231.1
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,invariantly_inevitably_eat,2,1.0150001
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,invariantly_inevitably_eat,4,12.226999
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,invariantly_inevitably_eat,6,190.741
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,invariantly_inevitably_eat,8,4809.706
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,invariantly_inevitably_eat,10,non-zero exitcode.
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,invariantly_inevitably_eat,2,0.95299995
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,invariantly_inevitably_eat,4,21.421999
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,invariantly_inevitably_eat,6,1046.3121
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,invariantly_inevitably_eat,8,12655.826
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,invariantly_inevitably_eat,10,293016.66
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,invariantly_inevitably_eat,2,2.864
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,invariantly_inevitably_eat,4,59.146004
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,invariantly_inevitably_eat,6,697.68896
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,invariantly_inevitably_eat,8,11676.974
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,invariantly_inevitably_eat,10,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,invariantly_inevitably_eat,2,2.2399998
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,invariantly_inevitably_eat,4,45.222
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,invariantly_inevitably_eat,6,534.77094
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,invariantly_inevitably_eat,8,9065.795
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,invariantly_inevitably_eat,10,non-zero exitcode.
