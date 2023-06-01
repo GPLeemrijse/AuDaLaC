@@ -20,7 +20,7 @@ fn test_benchmark_spm() {
 		block_size_impact_configs(),
 	];
 
-	let configs = Config::intersection(&vec_of_vec_of_configs);
+	let configs = Config::union(&vec_of_vec_of_configs);
 
 	let mut vec_configs : Vec<Config> = Vec::new();
 	for c in configs {
@@ -30,42 +30,14 @@ fn test_benchmark_spm() {
 	benchmark_spm_set(&vec_configs, &invar_inev_eat_set(), "spm");
 }
 
-
-fn memorder_impact_configs() -> Vec<Config<'static>> {
-	let orders = ["relaxed", "seqcons", "acqrel"];
-	let voting_strat = ["naive-alternating"];
-	let tpb = ["128", "512"];
-	let ipt = ["4", "32"];
-
-	Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
-}
-
-fn voting_impact_configs() -> Vec<Config<'static>> {
-	let orders = ["relaxed"];
-	let voting_strat = ["naive", "naive-alternating"];
-	let tpb = ["128", "512"];
-	let ipt = ["4", "32"];
-
-	Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
-}
-
-fn block_size_impact_configs() -> Vec<Config<'static>> {
-	let orders = ["relaxed"];
-	let voting_strat = ["naive-alternating"];
-	let tpb = ["64", "128", "256", "512", "1024"];
-	let ipt = ["1", "4", "16", "32"];
-
-	Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
-}
-
 fn invar_inev_eat_set() -> Vec<(&'static str, Vec<&'static str>)> {
 	vec![
 		("invariantly_inevitably_eat", vec![
-				"dining/dining_2.invariantly_inevitably_eat.init",
-				"dining/dining_4.invariantly_inevitably_eat.init",
-				"dining/dining_6.invariantly_inevitably_eat.init",
-				"dining/dining_8.invariantly_inevitably_eat.init",
-				"dining/dining_10.invariantly_inevitably_eat.init",
+				"tests/benchmarks/SPM/testcases/dining/dining_2.invariantly_inevitably_eat.init",
+				"tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_inevitably_eat.init",
+				"tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_inevitably_eat.init",
+				"tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_inevitably_eat.init",
+				"tests/benchmarks/SPM/testcases/dining/dining_10.invariantly_inevitably_eat.init",
 			]
 		),
 	]
@@ -92,7 +64,7 @@ fn run_spm(file : &str) -> Result<String, String> {
 }
 
 fn fname2problemsize(in_file : &str) -> String {
-	Regex::new(r"^dining/dining_([0-9]+)\.\w+\.init$")
+	Regex::new(r"^tests/benchmarks/SPM/testcases/dining/dining_([0-9]+)\.\w+\.init$")
 		.unwrap()
 		.captures(in_file)
 		.unwrap()
@@ -122,6 +94,7 @@ fn benchmark_spm_set(configs: &Vec<Config>, testcases: &Vec<(&str, Vec<&str>)>, 
 		let compile_err = compile_config(
 			"SPM",
 			"tests/benchmarks/SPM",
+			None,
 			c
 		).err();
 		
@@ -130,7 +103,7 @@ fn benchmark_spm_set(configs: &Vec<Config>, testcases: &Vec<(&str, Vec<&str>)>, 
 			continue;
 		}
 		let csv_prefix = c.as_csv_row();
-		bench_testcases(testcases, &csv_prefix, run_spm, fname2problemsize, REPS, &mut result_file);
+		bench_testcases(testcases, "tests/benchmarks/SPM/SPM.out", &csv_prefix, fname2problemsize, REPS, &mut result_file);
 	}
 }
 

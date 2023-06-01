@@ -1,0 +1,1153 @@
+config,memorder,voting-strat,tpb,ipt,algorithm,graph_type,nrof_edges,runtime
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,51,0
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,1314,0
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,5076,0
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,30877,0.34899995
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,124845,0.65199995
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,500574,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,101,0
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,2525,0
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,9813,0.277
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,62582,0.38999996
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,250467,1.017
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,999898,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,978,0.193
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,24814,0.295
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,100095,0.49700004
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,624033,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,2500146,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,51,0
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,1314,0
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,5076,0
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,30877,0.30999997
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,124845,0.34999996
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,500574,0.70399994
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,101,0
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,2525,0
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,9813,0.295
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,62582,0.285
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,250467,0.444
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,978,0.21000001
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,24814,0.23099999
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,100095,0.31699997
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,624033,0.77199996
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,51,0
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,1314,0
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,5076,0
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,30877,0.491
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,124845,0.481
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,500574,0.66099995
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,101,0
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,2525,0
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,9813,0.23099999
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,62582,0.44699997
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,250467,0.51100004
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,999898,0.84000003
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,978,0.113
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,24814,0.32299998
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,100095,0.40500003
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,624033,0.61999995
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,51,0
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,1314,0
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,5076,0
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,30877,0.421
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,124845,0.43
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,500574,0.617
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,101,0
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,2525,0
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,9813,0.29999998
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,62582,0.38599998
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,250467,0.46100003
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,999898,0.886
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,978,0.122
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,24814,0.34899998
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,100095,0.37800002
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,624033,0.60099995
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,51,0
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,1314,0
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,5076,0
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,30877,0.21900001
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,124845,0.48299998
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,101,0
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,2525,0
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,9813,0.16099998
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,62582,0.29299998
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,978,0.11400001
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,24814,0.18300001
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,100095,0.40800005
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,10001053,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,51,0
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,1314,0
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,5076,0
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,30877,0.35699996
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,124845,0.62
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,500574,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,101,0
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,2525,0
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,9813,0.27
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,62582,0.419
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,250467,1.0139999
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,999898,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,978,0.18000002
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,24814,0.262
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,100095,0.50100005
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,624033,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,2500146,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,51,0
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,1314,0
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,5076,0
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,30877,0.47800002
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,101,0
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,2525,0
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,9813,0.21700001
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,62582,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,978,0.091000006
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,24814,0.36100006
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,51,0
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,1314,0
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,5076,0
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,30877,0.479
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,101,0
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,2525,0
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,9813,0.21800001
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,62582,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,978,0.10000001
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,24814,0.363
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,10001053,non-zero exitcode.
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,51,0
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,1314,0
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,5076,0
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,30877,1.2370001
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,124845,1.1850001
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,500574,1.506
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,101,0
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,2525,0
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,9813,0.7699999
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,62582,1.076
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,250467,1.203
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,999898,1.7709999
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,978,0.178
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,24814,0.995
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,100095,1.023
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,624033,1.278
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,2500146,non-zero exitcode.
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,51,0
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,1314,0
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,5076,0
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,30877,0.47999996
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,101,0
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,2525,0
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,9813,0.20700002
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,62582,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,978,0.096
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,24814,0.36100006
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,51,0
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,1314,0
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,5076,0
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,30877,0.41200003
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,124845,0.49700004
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,500574,0.653
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,101,0
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,2525,0
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,9813,0.40800005
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,62582,0.42500004
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,250467,0.541
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,999898,0.921
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,978,0.14799999
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,24814,0.33199996
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,100095,0.37399998
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,624033,0.6769999
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,51,0
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,1314,0
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,5076,0
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,30877,0.42800003
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,124845,0.45
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,500574,0.6510001
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,101,0
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,2525,0
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,9813,0.343
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,62582,0.37999997
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,250467,0.47999996
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,999898,0.923
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,978,0.111
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,24814,0.32299998
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,100095,0.35500002
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,624033,0.63100004
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,51,0
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,1314,0
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,5076,0
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,30877,0.41300002
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,124845,0.42000002
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,500574,0.60099995
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,101,0
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,2525,0
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,9813,0.27899998
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,62582,0.366
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,250467,0.445
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,999898,0.87399995
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,978,0.113
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,24814,0.33599997
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,100095,0.36400002
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,624033,0.58199996
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,51,0
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,1314,0
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,5076,0
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,30877,0.21200001
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,124845,0.52
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,101,0
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,2525,0
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,9813,0.15599999
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,62582,0.29399997
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,978,0.11800001
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,24814,0.18300001
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,100095,0.464
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,10001053,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,51,0
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,1314,0
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,5076,0
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,30877,0.39199996
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,124845,0.70299995
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,500574,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,101,0
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,2525,0
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,9813,0.35399997
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,62582,0.48400003
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,250467,1.2160001
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,999898,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,978,0.257
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,24814,0.37199998
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,100095,0.606
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,624033,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,2500146,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,51,0
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,1314,0
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,5076,0
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,30877,0.295
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,124845,0.343
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,500574,0.68799996
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,101,0
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,2525,0
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,9813,0.258
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,62582,0.29299998
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,250467,0.442
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,978,0.141
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,24814,0.21900001
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,100095,0.29
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,624033,0.79300004
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,10001053,non-zero exitcode.
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,51,0
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,1314,0
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,5076,0
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,30877,1.677
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,124845,1.6050001
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,500574,2.0029998
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,101,0
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,2525,0
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,9813,1.052
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,62582,1.4380001
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,250467,1.614
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,999898,2.314
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,978,0.215
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,24814,1.3330001
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,100095,1.397
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,624033,1.6800001
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,2500146,non-zero exitcode.
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,51,0
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,1314,0
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,5076,0
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,30877,0.254
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,124845,0.33799997
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,500574,0.676
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,101,0
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,2525,0
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,9813,0.248
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,62582,0.269
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,250467,0.444
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,978,0.113
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,24814,0.21300001
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,100095,0.264
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,624033,0.762
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,10001053,non-zero exitcode.
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,51,0
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,1314,0
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,5076,0
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,30877,1.5569999
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,124845,1.8939998
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,500574,2.246
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,101,0
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,2525,0
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,9813,1.5329999
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,62582,1.576
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,250467,1.996
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,999898,2.5549998
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,978,0.379
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,24814,1.2099999
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,100095,1.3469999
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,624033,2.025
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,2500146,non-zero exitcode.
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,51,0
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,1314,0
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,5076,0
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,30877,0.516
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,124845,0.49300003
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,500574,0.65200007
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,101,0
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,2525,0
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,9813,0.432
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,62582,0.47199997
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,250467,0.541
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,999898,0.954
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,978,0.225
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,24814,0.35199994
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,100095,0.41300002
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,624033,0.653
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,51,0
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,1314,0
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,5076,0
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,30877,0.222
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,124845,0.5169999
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,101,0
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,2525,0
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,9813,0.14999999
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,62582,0.292
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,250467,0.8959999
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,978,0.122
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,24814,0.18100002
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,100095,0.42200002
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,51,0
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,1314,0
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,5076,0
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,30877,0.21100001
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,124845,0.50499994
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,101,0
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,2525,0
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,9813,0.14999999
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,62582,0.29
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,978,0.112
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,24814,0.18800001
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,100095,0.417
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,10001053,non-zero exitcode.
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,51,0
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,1314,0
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,5076,0
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,30877,1.2
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,124845,1.4519999
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,500574,1.658
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,101,0
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,2525,0
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,9813,1.197
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,62582,1.224
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,250467,1.5110002
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,999898,1.99
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,978,0.30299997
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,24814,0.94099987
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,100095,1.032
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,624033,1.542
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,2500146,non-zero exitcode.
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,51,0
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,1314,0
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,5076,0
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,30877,0.2
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,124845,0.516
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,101,0
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,2525,0
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,9813,0.141
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,62582,0.28
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,978,0.111
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,24814,0.16699998
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,100095,0.409
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,51,0
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,1314,0
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,5076,0
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,30877,0.225
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,124845,0.51199996
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,101,0
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,2525,0
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,9813,0.16299999
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,62582,0.30099997
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,250467,0.94299996
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,978,0.12799999
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,24814,0.19900002
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,100095,0.42900005
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,51,0
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,1314,0
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,5076,0
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,30877,0.537
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,101,0
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,2525,0
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,9813,0.21800001
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,62582,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,978,0.091000006
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,24814,0.373
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,51,0
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,1314,0
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,5076,0
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,30877,0.42800003
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,124845,0.508
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,500574,0.66400003
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,101,0
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,2525,0
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,9813,0.42200002
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,62582,0.43800002
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,250467,0.55300003
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,999898,0.93899995
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,978,0.16199997
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,24814,0.34599996
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,100095,0.38799995
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,624033,0.69
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,51,0
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,1314,0
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,5076,0
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,30877,0.26700002
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,124845,0.31199998
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,500574,0.667
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,101,0
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,2525,0
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,9813,0.25
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,62582,0.252
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,250467,0.411
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,978,0.111
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,24814,0.21300001
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,100095,0.26
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,624033,0.7379999
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,51,0
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,1314,0
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,5076,0
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,30877,0.31999996
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,124845,0.34099996
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,500574,0.658
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,101,0
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,2525,0
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,9813,0.21700001
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,62582,0.272
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,250467,0.42000002
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,978,0.11799999
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,24814,0.25
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,100095,0.29099998
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,624033,0.73100007
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,51,0
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,1314,0
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,5076,0
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,30877,0.48900002
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,101,0
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,2525,0
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,9813,0.215
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,62582,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,978,0.112
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,24814,0.36899996
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,51,0
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,1314,0
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,5076,0
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,30877,0.20500001
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,124845,0.49399996
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,101,0
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,2525,0
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,9813,0.14699998
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,62582,0.29
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,978,0.112
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,24814,0.16999999
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,100095,0.41600004
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,10001053,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,51,0
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,1314,0
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,5076,0
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,30877,0.43700004
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,124845,0.696
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,500574,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,101,0
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,2525,0
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,9813,0.34199995
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,62582,0.491
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,250467,1.1000001
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,999898,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,978,0.21800001
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,24814,0.31499997
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,100095,0.565
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,624033,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,2500146,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,10001053,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.005,51,0.463
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.005,1314,1.038
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.005,5076,0.605
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.005,30877,0.475
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.005,124845,0.83199996
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.005,500574,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.01,101,1.6719999
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.01,2525,0.48499998
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.01,9813,0.43100005
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.01,62582,0.55499995
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.01,250467,1.217
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.01,999898,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.1,978,0.23099999
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.1,24814,0.33299997
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.1,100095,0.48099995
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.1,624033,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.1,2500146,non-zero exitcode.
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.005,51,0.265
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.005,1314,0.90500003
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.005,5076,0.64399993
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.005,30877,0.44099998
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.005,124845,0.501
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.005,500574,0.774
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.01,101,0.93899995
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.01,2525,0.502
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.01,9813,0.444
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.01,62582,0.38200003
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.01,250467,0.475
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.1,978,0.25599998
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.1,24814,0.25599998
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.1,100095,0.27099997
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.1,624033,0.607
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.005,51,0.31199998
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.005,1314,0.37100005
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.005,5076,0.29899997
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.005,30877,0.974
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.005,124845,0.94799995
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.005,500574,0.938
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.01,101,1.017
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.01,2525,0.21100001
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.01,9813,0.34699997
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.01,62582,0.846
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.01,250467,0.8360001
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.01,999898,1.1660001
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.1,978,0.091000006
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.1,24814,0.40600005
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.1,100095,0.594
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.1,624033,0.758
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.005,51,0.31899995
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.005,1314,0.42800003
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.005,5076,0.42200002
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.005,30877,0.89
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.005,124845,0.81700003
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.005,500574,0.853
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.01,101,1.122
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.01,2525,0.26
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.01,9813,0.505
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.01,62582,0.70299995
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.01,250467,0.724
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.01,999898,1.207
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.1,978,0.10300001
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.1,24814,0.49
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.1,100095,0.547
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.1,624033,0.68999994
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-512-32,relaxed,naive,512,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.005,51,0.30599996
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.005,1314,0.37399998
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.005,5076,0.26799998
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.005,30877,0.278
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.005,124845,0.58199996
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.01,101,1.015
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.01,2525,0.20300002
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.01,9813,0.21000001
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.01,62582,0.338
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.1,978,0.09200001
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.1,24814,0.173
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.1,100095,0.406
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,MP,random_0.1,10001053,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.005,51,0.48299998
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.005,1314,0.8679999
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.005,5076,0.57799995
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.005,30877,0.538
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.005,124845,0.8
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.005,500574,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.01,101,1.7300001
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.01,2525,0.516
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.01,9813,0.444
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.01,62582,0.552
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.01,250467,1.313
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.01,999898,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.1,978,0.17599998
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.1,24814,0.325
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.1,100095,0.53199995
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.1,624033,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.1,2500146,non-zero exitcode.
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.005,51,0.24100001
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.005,1314,0.23799999
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.005,5076,0.187
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.005,30877,0.479
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.01,101,0.763
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.01,2525,0.13799998
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.01,9813,0.18800001
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.01,62582,0.809
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.1,978,0.07699999
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.1,24814,0.28399998
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.005,51,0.271
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.005,1314,0.26
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.005,5076,0.187
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.005,30877,0.464
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.01,101,0.873
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.01,2525,0.144
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.01,9813,0.187
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.01,62582,0.796
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.1,978,0.08499999
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.1,24814,0.28399998
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,MP,random_0.1,10001053,non-zero exitcode.
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.005,51,0.477
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.005,1314,0.86
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.005,5076,1.1819999
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.005,30877,3.0149999
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.005,124845,2.619
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.005,500574,2.54
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.01,101,1.7170002
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.01,2525,0.58900005
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.01,9813,1.609
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.01,62582,2.2759998
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.01,250467,2.282
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.01,999898,2.6439998
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.1,978,0.176
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.1,24814,1.5749999
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.1,100095,1.7229999
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.1,624033,1.772
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.1,2500146,non-zero exitcode.
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.005,51,0.255
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.005,1314,0.248
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.005,5076,0.19100001
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.005,30877,0.453
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.01,101,0.81900007
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.01,2525,0.139
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.01,9813,0.183
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.01,62582,0.821
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.1,978,0.091
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.1,24814,0.282
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.005,51,0.24100001
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.005,1314,0.634
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.005,5076,1.0000001
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.005,30877,0.895
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.005,124845,0.81499994
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.005,500574,0.83900005
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.01,101,0.7799999
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.01,2525,0.54
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.01,9813,0.72599995
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.01,62582,0.653
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.01,250467,0.70199996
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.01,999898,1.088
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.1,978,0.15999998
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.1,24814,0.448
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.1,100095,0.44900003
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.1,624033,0.583
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.005,51,0.249
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.005,1314,0.48499998
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.005,5076,0.658
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.005,30877,0.829
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.005,124845,0.779
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.005,500574,0.88100004
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.01,101,0.831
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.01,2525,0.32399997
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.01,9813,0.78599995
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.01,62582,0.663
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.01,250467,0.696
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.01,999898,1.1380001
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.1,978,0.106000006
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.1,24814,0.46299997
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.1,100095,0.48999995
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.1,624033,0.60199994
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.005,51,0.265
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.005,1314,0.373
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.005,5076,0.39299998
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.005,30877,0.90599996
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.005,124845,0.8299999
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.005,500574,0.854
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.01,101,0.88699996
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.01,2525,0.223
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.01,9813,0.486
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.01,62582,0.679
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.01,250467,0.687
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.01,999898,1.175
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.1,978,0.09000001
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.1,24814,0.468
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.1,100095,0.50699997
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.1,624033,0.65800005
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.005,51,0.259
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.005,1314,0.40000004
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.005,5076,0.25599998
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.005,30877,0.258
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.005,124845,0.55499995
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.01,101,0.9379999
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.01,2525,0.19800003
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.01,9813,0.15899998
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.01,62582,0.31699997
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.1,978,0.114
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.1,24814,0.16099998
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.1,100095,0.31199998
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,MP,random_0.1,10001053,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.005,51,0.55600005
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.005,1314,1.306
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.005,5076,0.7330001
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.005,30877,0.606
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.005,124845,0.925
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.005,500574,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.01,101,2.083
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.01,2525,0.633
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.01,9813,0.551
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.01,62582,0.68
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.01,250467,1.3929999
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.01,999898,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.1,978,0.29299998
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.1,24814,0.43400002
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.1,100095,0.598
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.1,624033,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.1,2500146,non-zero exitcode.
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.005,51,0.243
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.005,1314,0.63500005
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.005,5076,0.53400004
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.005,30877,0.452
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.005,124845,0.516
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.005,500574,0.814
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.01,101,0.7789999
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.01,2525,0.45999998
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.01,9813,0.39699998
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.01,62582,0.397
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.01,250467,0.533
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.1,978,0.15999998
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.1,24814,0.264
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.1,100095,0.29299998
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.1,624033,0.582
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,MP,random_0.1,10001053,non-zero exitcode.
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.005,51,0.5519999
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.005,1314,1.05
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.005,5076,1.5389999
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.005,30877,3.9449997
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.005,124845,3.6810002
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.005,500574,3.5190003
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.01,101,2.188
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.01,2525,0.78000003
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.01,9813,2.2189996
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.01,62582,3.2310002
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.01,250467,3.2310002
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.01,999898,3.478
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.1,978,0.22999999
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.1,24814,2.3089998
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.1,100095,2.3569999
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.1,624033,2.3990002
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.1,2500146,non-zero exitcode.
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.005,51,0.25
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.005,1314,0.48000002
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.005,5076,0.549
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.005,30877,0.47399998
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.005,124845,0.49399996
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.005,500574,0.8230001
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.01,101,0.8210001
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.01,2525,0.32099995
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.01,9813,0.394
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.01,62582,0.387
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.01,250467,0.492
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.1,978,0.10100001
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.1,24814,0.28399998
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.1,100095,0.28699997
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.1,624033,0.631
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,MP,random_0.1,10001053,non-zero exitcode.
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.005,51,0.55300003
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.005,1314,2.5009997
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.005,5076,4.494
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.005,30877,3.8120003
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.005,124845,3.896
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.005,500574,3.7010002
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.01,101,1.9209999
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.01,2525,2.0539997
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.01,9813,2.838
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.01,62582,2.7059999
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.01,250467,2.9869998
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.01,999898,3.4530003
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.1,978,0.48000002
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.1,24814,1.71
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.1,100095,1.658
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.1,624033,1.7550001
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.1,2500146,non-zero exitcode.
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.005,51,0.264
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.005,1314,1.1129999
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.005,5076,0.87600005
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.005,30877,0.774
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.005,124845,0.726
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.005,500574,0.76199996
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.01,101,0.9379999
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.01,2525,0.833
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.01,9813,0.699
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.01,62582,0.689
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.01,250467,0.60199994
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.01,999898,0.879
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.1,978,0.223
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.1,24814,0.419
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.1,100095,0.4
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.1,624033,0.576
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.005,51,0.29799998
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.005,1314,0.399
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.005,5076,0.232
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.005,30877,0.26
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.005,124845,0.548
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.01,101,1.04
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.01,2525,0.22
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.01,9813,0.18400005
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.01,62582,0.32499996
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.01,250467,0.886
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.1,978,0.09900001
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.1,24814,0.167
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.1,100095,0.37199998
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-512-4,relaxed,naive,512,4,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.005,51,0.24100001
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.005,1314,0.40400004
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.005,5076,0.23400001
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.005,30877,0.245
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.005,124845,0.537
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.01,101,0.7819999
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.01,2525,0.20100002
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.01,9813,0.16399999
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.01,62582,0.31399995
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.01,250467,0.9240001
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.1,978,0.10200001
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.1,24814,0.174
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.1,100095,0.36000004
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,MP,random_0.1,10001053,non-zero exitcode.
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.005,51,0.463
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.005,1314,1.7450001
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.005,5076,3.207
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.005,30877,2.7009997
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.005,124845,2.799
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.005,500574,2.578
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.01,101,1.5589998
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.01,2525,1.5539999
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.01,9813,2.184
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.01,62582,1.8399998
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.01,250467,2.1799998
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.01,999898,2.4529998
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.1,978,0.43100005
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.1,24814,1.4829999
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.1,100095,1.385
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.1,624033,1.435
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.1,2500146,non-zero exitcode.
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.005,51,0.26599997
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.005,1314,0.38000003
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.005,5076,0.222
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.005,30877,0.23900001
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.005,124845,0.526
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.01,101,0.8230001
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.01,2525,0.19600001
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.01,9813,0.171
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.01,62582,0.295
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.01,250467,0.853
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.1,978,0.08299999
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.1,24814,0.14899999
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.1,100095,0.39099997
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.005,51,0.29099998
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.005,1314,0.45299998
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.005,5076,0.257
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.005,30877,0.267
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.005,124845,0.56499994
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.01,101,1.0020001
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.01,2525,0.221
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.01,9813,0.23000002
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.01,62582,0.34899998
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.01,250467,0.983
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.1,978,0.111
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.1,24814,0.178
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.1,100095,0.37800002
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-128-4,relaxed,naive,128,4,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.005,51,0.23099999
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.005,1314,0.234
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.005,5076,0.19700003
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.005,30877,0.45700002
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.01,101,0.74399996
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.01,2525,0.14
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.01,9813,0.18600002
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.01,62582,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.1,978,0.06999999
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.1,24814,0.311
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.005,51,0.277
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.005,1314,0.638
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.005,5076,0.958
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.005,30877,0.83900005
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.005,124845,0.759
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.005,500574,0.81499994
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.01,101,0.99599993
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.01,2525,0.562
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.01,9813,0.74600005
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.01,62582,0.685
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.01,250467,0.726
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.01,999898,1.084
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.1,978,0.15599999
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.1,24814,0.48000002
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.1,100095,0.463
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.1,624033,0.554
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-128-32,relaxed,naive,128,32,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.005,51,0.26200002
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.005,1314,0.35199997
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.005,5076,0.373
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.005,30877,0.458
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.005,124845,0.45299998
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.005,500574,0.825
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.01,101,0.822
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.01,2525,0.216
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.01,9813,0.41599998
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.01,62582,0.374
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.01,250467,0.50600004
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.1,978,0.088
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.1,24814,0.266
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.1,100095,0.29299998
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.1,624033,0.72499996
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.005,51,0.30699998
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.005,1314,0.37600002
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.005,5076,0.29799998
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.005,30877,0.60200006
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.005,124845,0.579
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.005,500574,0.8360001
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.01,101,1.0120001
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.01,2525,0.25700003
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.01,9813,0.34699997
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.01,62582,0.486
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.01,250467,0.564
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.1,978,0.09200001
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.1,24814,0.315
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.1,100095,0.354
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.1,624033,0.731
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.005,51,0.30799997
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.005,1314,0.30999997
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.005,5076,0.20000002
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.005,30877,0.455
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.005,124845,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.01,101,1.011
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.01,2525,0.16099998
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.01,9813,0.17800002
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.01,62582,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.01,250467,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.1,978,0.08900001
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.1,24814,0.28399998
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.1,100095,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,MP,random_0.1,10001053,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.005,51,0.274
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.005,1314,0.383
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.005,5076,0.23699999
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.005,30877,0.24700001
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.005,124845,0.556
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.005,500574,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.01,101,0.81900007
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.01,2525,0.187
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.01,9813,0.17300001
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.01,62582,0.315
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.01,250467,0.896
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.01,999898,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.1,978,0.109000005
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.1,24814,0.16399999
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.1,100095,0.39199996
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.1,624033,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.1,2500146,non-zero exitcode.
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,MP,random_0.1,10001053,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.005,51,0.592
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.005,1314,1.1430001
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.005,5076,0.768
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.005,30877,0.68099993
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.005,124845,1.006
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.005,500574,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.01,101,2.159
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.01,2525,0.692
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.01,9813,0.597
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.01,62582,0.68100005
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.01,250467,1.356
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.01,999898,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.1,978,0.22999999
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.1,24814,0.42300004
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.1,100095,0.65099996
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.1,624033,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.1,2500146,non-zero exitcode.
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,MP,random_0.1,10001053,non-zero exitcode.

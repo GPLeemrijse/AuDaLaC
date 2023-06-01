@@ -17,25 +17,52 @@ where
         .map(|o| o.status)
 }
 
-fn run_make(dir : &str)-> Result<bool, std::io::Error> {
+fn run_make(dir : &str, variant: Option<&str>)-> Result<bool, std::io::Error> {
     if is_nvcc_installed() {
-        Command::new("make")
-            .current_dir(dir)
-            .output()
-            .map(|o| o.status.success())
+    	if variant.is_some() {
+    		Command::new("make")
+    			.current_dir(dir)
+    			.arg(variant.unwrap())
+    			.output()
+    			.map(|o| o.status.success())
+    	} else {
+    		Command::new("make")
+    			.current_dir(dir)
+    			.output()
+    			.map(|o| o.status.success())
+    	}
     } else {
         eprintln!("Skipping make!");
         Ok(true)
     }
 }
 
+fn run_bin(bin: &str, input_file : &str) -> Result<String, String> {
+	if is_nvcc_installed() {
+		let r = Command::new(bin)
+	        .arg(input_file)
+	        .output();
+	    if r.is_err() {
+			return Err("Binary would not run.".to_string());
+		}
 
-pub fn bench_testcases(testcases: &Vec<(&str, Vec<&str>)>, csv_prefix: &str, run_fn : fn(&str) -> Result<String, String>, formatter: fn(&str) -> String, reps : usize, result_file : &mut dyn Write)
+		let out = r.unwrap();
+		if !out.status.success() {
+			return Err("non-zero exitcode.".to_string());
+		}
+		Ok(String::from_utf8_lossy(&out.stdout).to_string())
+    } else {
+        Err("skipped".to_string())
+    }
+}
+
+
+pub fn bench_testcases(testcases: &Vec<(&str, Vec<&str>)>, bin: &str, csv_prefix: &str, formatter: fn(&str) -> String, reps : usize, result_file : &mut dyn Write)
 {
 	for (prob_category, files) in testcases {
 		eprintln!("\t\t\tTesting {prob_category}...");
 		for f in files {
-			let res = bench_file(f, run_fn, reps);
+			let res = bench_file(bin, f, reps);
 			result_file.write_all(
 				format!("{csv_prefix},{prob_category},{},{res}\n", formatter(f)).as_bytes()
 			).expect("Could not write result of testcase.");
@@ -43,11 +70,11 @@ pub fn bench_testcases(testcases: &Vec<(&str, Vec<&str>)>, csv_prefix: &str, run
 	}
 }
 
-pub fn compile_config(pname: &str, dir: &str, config : &Config) -> Result<(), String> {
+pub fn compile_config(pname: &str, dir: &str, make_variant: Option<&str>, config : &Config) -> Result<(), String> {
 	eprintln!("\tTesting config {}", config);
 
 	adl_compile(pname, dir, config)?;
-	cuda_compile(dir)?;
+	cuda_compile(dir, make_variant)?;
 	
 	Ok(())
 }
@@ -86,9 +113,9 @@ fn adl_compile(pname: &str, dir : &str, config : &Config) -> Result<(), String> 
 	}
 }
 
-fn cuda_compile(dir : &str) -> Result<(), String> {
+fn cuda_compile(dir : &str, make_variant: Option<&str>) -> Result<(), String> {
 	eprintln!("\t\tCompiling CUDA code...");
-	let r = run_make(dir);
+	let r = run_make(dir, make_variant);
 
 	if r.is_err() {
 		Err("\t\t\tFailed to start Make.".to_string())
@@ -100,13 +127,13 @@ fn cuda_compile(dir : &str) -> Result<(), String> {
 }
 
 
-fn bench_file<'a>(f : &str, run_fn : fn(&str) -> Result<String, String>, reps: usize) -> String {
+fn bench_file<'a>(bin: &str, f : &str, reps: usize) -> String {
 	let mut total_ms = 0.0;
 
 	for i in 0..reps {
 		eprint!("\r\t\t\t\tStarting input {f} ({}/{reps})", i + 1);
 		stderr().flush().unwrap();
-		let r = run_fn(f);
+		let r = run_bin(bin, f);
 
 		if r.is_err() {
 			let e = r.unwrap_err();

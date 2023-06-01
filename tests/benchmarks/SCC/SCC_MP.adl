@@ -77,5 +77,6 @@ Fix(
 	determine_valid_frontier <
 	remove_valid_sccs <
 	reset_fwd_bwd
-) < count_if_scc
-  < print_components
+)
+/* < count_if_scc
+  < print_components*/

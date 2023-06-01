@@ -18,6 +18,34 @@ pub fn is_nvcc_installed() -> bool {
         .map_or(false, |s| s.status.success())
 }
 
+pub fn memorder_impact_configs() -> Vec<Config<'static>> {
+    let orders = ["relaxed", "seqcons", "acqrel"];
+    let voting_strat = ["naive-alternating"];
+    let tpb = ["128", "512"];
+    let ipt = ["4", "32"];
+
+    Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
+}
+
+pub fn voting_impact_configs() -> Vec<Config<'static>> {
+    let orders = ["relaxed"];
+    let voting_strat = ["naive", "naive-alternating"];
+    let tpb = ["128", "512"];
+    let ipt = ["4", "32"];
+
+    Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
+}
+
+pub fn block_size_impact_configs() -> Vec<Config<'static>> {
+    let orders = ["relaxed"];
+    let voting_strat = ["naive-alternating"];
+    let tpb = ["64", "128", "256", "512", "1024"];
+    let ipt = ["1", "4", "16", "32"];
+
+    Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
+}
+
+
 #[derive(Eq)]
 #[derive(PartialEq)]
 #[derive(Hash)]
@@ -78,7 +106,7 @@ impl<'a> Config<'_> {
         result
     }
 
-    pub fn intersection(configs: &'a Vec<Vec<Config<'a>>>) -> HashSet<&'a Config<'a>>{
+    pub fn union(configs: &'a Vec<Vec<Config<'a>>>) -> HashSet<&'a Config<'a>>{
         let flat : Vec<&Config<'a>> = configs.iter()
                                              .map(|v|
                                                 v.iter()
