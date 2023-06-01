@@ -1,3 +1,5 @@
+$$__device__ uint nrof_components = 0;
+
 struct Edge(s : Node, t : Node){
 
 	propagate {
@@ -29,14 +31,6 @@ struct Edge(s : Node, t : Node){
 
 struct Node(in_scc : Bool, fwd : Node, bwd : Node, fwd_valid : Bool, bwd_valid : Bool){
 
-	init {
-		in_scc := false;
-		fwd := this;
-		bwd := this;
-		fwd_valid := true;
-		bwd_valid := true;
-	}
-
 	remove_valid_sccs {
 		in_scc := (
 			fwd == bwd
@@ -64,12 +58,24 @@ struct Node(in_scc : Bool, fwd : Node, bwd : Node, fwd_valid : Bool, bwd_valid :
 			}
 		}
 	}
+
+	count_if_scc {
+		if this != null && in_scc && fwd == this then {
+			$$atomicInc(&nrof_components, 0xffffffff);
+		}
+	}
+
+	print_components {
+		if this == null then {
+			$$printf("Nrof components: %u\n", nrof_components);
+		}
+	}
 }
 
-init <
 Fix(
 	Fix(propagate) <
 	determine_valid_frontier <
 	remove_valid_sccs <
 	reset_fwd_bwd
-) < Node.print
+) < count_if_scc
+  < print_components

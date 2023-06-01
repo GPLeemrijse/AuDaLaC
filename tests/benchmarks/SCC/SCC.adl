@@ -51,6 +51,12 @@ struct NodeSet(pivot_f_b : Node,
 			pivot_nf_nb := null;
 		}
 	}
+
+	print_nrof_sets {
+		if this == null then {
+			$$printf("Number of components: %u\n", max(nodeset->nrof_instances2(true), nodeset->nrof_instances2(false)) - 1);
+		}
+	}
 }
 
 struct Node(set : NodeSet,
@@ -116,10 +122,9 @@ struct Edge(s : Node, t : Node){
 	}
 }
 
-
 Fix(pivots_nominate <
 	allocate_sets <
 	divide_into_sets_reset_fwd_bwd <
 	initialise_pivot_fwd_bwd <
 	Fix(compute_fwd_bwd)
-)
+) < print_nrof_sets
