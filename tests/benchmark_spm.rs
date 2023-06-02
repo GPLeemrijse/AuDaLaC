@@ -43,26 +43,6 @@ fn invar_inev_eat_set() -> Vec<(&'static str, Vec<&'static str>)> {
 	]
 }
 
-
-fn run_spm(file : &str) -> Result<String, String> {
-	if is_nvcc_installed() {
-		let r = Command::new("tests/benchmarks/SPM/SPM.out")
-	        .arg(Path::new("tests/benchmarks/SPM/testcases/").join(file))
-	        .output();
-	    if r.is_err() {
-			return Err("Binary would not run.".to_string());
-		}
-
-		let out = r.unwrap();
-		if !out.status.success() {
-			return Err("non-zero exitcode.".to_string());
-		}
-		Ok(String::from_utf8_lossy(&out.stdout).to_string())
-    } else {
-        Err("skipped".to_string())
-    }
-}
-
 fn fname2problemsize(in_file : &str) -> String {
 	Regex::new(r"^tests/benchmarks/SPM/testcases/dining/dining_([0-9]+)\.\w+\.init$")
 		.unwrap()

@@ -48,7 +48,10 @@ fn run_bin(bin: &str, input_file : &str) -> Result<String, String> {
 
 		let out = r.unwrap();
 		if !out.status.success() {
-			return Err("non-zero exitcode.".to_string());
+			eprintln!("STDOUT: {}", String::from_utf8_lossy(&out.stdout));
+			eprintln!("STDERR: {}", String::from_utf8_lossy(&out.stderr));
+
+			return Err(format!("non-zero exitcode ({}).", out.status.code().map_or("none".to_string(), |i| i.to_string())));
 		}
 		Ok(String::from_utf8_lossy(&out.stdout).to_string())
     } else {
