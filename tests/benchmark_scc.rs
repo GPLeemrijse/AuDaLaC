@@ -112,7 +112,8 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
 
 	eprintln!("Benchmarking SCC ({set_name})...");
 
-	for c in configs {
+	for (idx, c) in configs.iter().enumerate() {
+		eprintln!("\tTesting SCC config {}/{}: {c}", idx+1, configs.len());
 		let compile_err = compile_config(
 			"SCC",
 			"tests/benchmarks/SCC",
@@ -128,7 +129,8 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
 		bench_testcases(&random_scc_set(), "tests/benchmarks/SCC/SCC.out", &csv_prefix, fname2nrof_edges, REPS, &mut result_file);
 	}
 
-	for c in configs {
+	for (idx, c) in configs.iter().enumerate() {
+		eprintln!("\tTesting SCC_MP config {}/{}: {c}", idx+1, configs.len());
 		let compile_err = compile_config(
 			"SCC_MP",
 			"tests/benchmarks/SCC",

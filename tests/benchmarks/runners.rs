@@ -48,9 +48,6 @@ fn run_bin(bin: &str, input_file : &str) -> Result<String, String> {
 
 		let out = r.unwrap();
 		if !out.status.success() {
-			eprintln!("STDOUT: {}", String::from_utf8_lossy(&out.stdout));
-			eprintln!("STDERR: {}", String::from_utf8_lossy(&out.stderr));
-
 			return Err(format!("non-zero exitcode ({}).", out.status.code().map_or("none".to_string(), |i| i.to_string())));
 		}
 		Ok(String::from_utf8_lossy(&out.stdout).to_string())
@@ -74,7 +71,6 @@ pub fn bench_testcases(testcases: &Vec<(&str, Vec<&str>)>, bin: &str, csv_prefix
 }
 
 pub fn compile_config(pname: &str, dir: &str, make_variant: Option<&str>, config : &Config) -> Result<(), String> {
-	eprintln!("\tTesting config {}", config);
 
 	adl_compile(pname, dir, config)?;
 	cuda_compile(dir, make_variant)?;
