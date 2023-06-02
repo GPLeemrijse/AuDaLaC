@@ -84,7 +84,7 @@ fn benchmark_spm_set(configs: &Vec<Config>, testcases: &Vec<(&str, Vec<&str>)>, 
 
 	let mut result_file = File::create(format!("tests/benchmarks/SPM/{set_name}_results.csv")).expect("Could not create SPM benchmark csv file.");
 	result_file.write_all(
-		format!("{},formula,problemsize,runtime\n", Config::HEADER)
+		format!("{},algorithm,problem_type,problem_size,runtime\n", Config::HEADER)
 			.as_bytes()
 	).expect("Could not write header.");
 
@@ -102,7 +102,7 @@ fn benchmark_spm_set(configs: &Vec<Config>, testcases: &Vec<(&str, Vec<&str>)>, 
 			eprintln!("{}", e);
 			continue;
 		}
-		let csv_prefix = c.as_csv_row();
+		let csv_prefix = format!("{},SPM", c.as_csv_row());
 		bench_testcases(testcases, "tests/benchmarks/SPM/SPM.out", &csv_prefix, fname2problemsize, REPS, &mut result_file);
 	}
 }
