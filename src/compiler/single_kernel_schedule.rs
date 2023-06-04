@@ -214,7 +214,7 @@ impl SingleKernelSchedule<'_> {
 
         let step_body =
             self.step_transpiler
-                .statements_as_c(&step.statements, strct, step, 1, fp_level);
+                .step_body_as_c(self.program, strct, step);
 
         formatdoc! {"
 			{kernel_signature}

@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::compiler::utils::*;
 use crate::parser::ast::*;
 use indoc::formatdoc;
@@ -22,13 +23,28 @@ impl StepBodyCompiler<'_> {
         }
     }
 
-    pub fn statements_as_c(
+    pub fn step_body_as_c(
+        &self,
+        program: &Program,
+        strct: &ADLStruct,
+        step: &Step
+    ) -> String {
+        self.statements_as_c(
+            &step.statements,
+            strct,
+            step,
+            1,
+            &program.read_only_params(strct, step, self.var_exp_type_info)
+        )
+    }
+
+    fn statements_as_c(
         &self,
         statements: &Vec<Stat>,
         strct: &ADLStruct,
         step: &Step,
         indent_lvl: usize,
-        fp_level: usize,
+        ro_params: &HashSet<(&String, &String)>,
     ) -> String {
         let indent = String::from("\t").repeat(indent_lvl);
         let mut stmt_vec: Vec<String> = Vec::new();
@@ -38,11 +54,11 @@ impl StepBodyCompiler<'_> {
 
             let statement_as_string = match stmt {
                 IfThen(e, stmts_true, stmts_false, _) => {
-                    let cond = self.expression_as_c(e, strct, step);
+                    let cond = self.expression_as_c(e, strct, step, ro_params);
                     let body_true =
-                        self.statements_as_c(stmts_true, strct, step, indent_lvl + 1, fp_level);
+                        self.statements_as_c(stmts_true, strct, step, indent_lvl + 1, ro_params);
                     let body_false =
-                        self.statements_as_c(stmts_false, strct, step, indent_lvl + 1, fp_level);
+                        self.statements_as_c(stmts_false, strct, step, indent_lvl + 1, ro_params);
 
                     let else_block = if body_false == "" {
                         "".to_string()
@@ -54,12 +70,12 @@ impl StepBodyCompiler<'_> {
                 }
                 Declaration(t, n, e, _) => {
                     let t_as_c = as_c_type(t);
-                    let e_as_c = self.expression_as_c(e, strct, step);
+                    let e_as_c = self.expression_as_c(e, strct, step, ro_params);
                     format!("{indent}{t_as_c} {n} = {e_as_c};")
                 }
                 Assignment(lhs_exp, rhs_exp, _) => {
-                    let (lhs_as_c, owner, is_parameter) = self.var_exp_as_c(lhs_exp, strct);
-                    let rhs_as_c = self.expression_as_c(rhs_exp, strct, step);
+                    let (lhs_as_c, owner, is_parameter) = self.var_exp_as_c(lhs_exp, strct, ro_params);
+                    let rhs_as_c = self.expression_as_c(rhs_exp, strct, step, ro_params);
 
                     if is_parameter {
                         let (owner_exp, owner_type) =
@@ -101,24 +117,24 @@ impl StepBodyCompiler<'_> {
             .fold("".to_string(), |acc: String, nxt| acc + "\n" + nxt);
     }
 
-    fn expression_as_c(&self, e: &Exp, strct: &ADLStruct, step: &Step) -> String {
+    fn expression_as_c<'a>(&self, e: &Exp, strct: &ADLStruct, step: &'a Step, ro_params: &HashSet<(&'a String, &'a String)>) -> String {
         use Exp::*;
 
         match e {
             BinOp(e1, c, e2, _) => {
-                let e1_comp = self.expression_as_c(e1, strct, step);
-                let e2_comp = self.expression_as_c(e2, strct, step);
+                let e1_comp = self.expression_as_c(e1, strct, step, ro_params);
+                let e2_comp = self.expression_as_c(e2, strct, step, ro_params);
 
                 format!("({e1_comp} {c} {e2_comp})")
             }
             UnOp(c, e, _) => {
-                let e_comp = self.expression_as_c(e, strct, step);
+                let e_comp = self.expression_as_c(e, strct, step, ro_params);
                 format!("({c}{e_comp})")
             }
             Constructor(n, args, _) => {
                 let mut arg_expressions = args
                     .iter()
-                    .map(|e| self.expression_as_c(e, strct, step))
+                    .map(|e| self.expression_as_c(e, strct, step, ro_params))
                     .collect::<Vec<String>>();
 
                 if self.use_step_parity {
@@ -130,13 +146,13 @@ impl StepBodyCompiler<'_> {
                 format!("{}->create_instance({args})", n.to_lowercase())
             }
             Var(..) => {
-                self.var_exp_as_c(e, strct).0 // Not interested in the owner or is_parameter
+                self.var_exp_as_c(e, strct, ro_params).0 // Not interested in the owner or is_parameter
             }
             Lit(l, _) => as_c_literal(l),
         }
     }
 
-    fn var_exp_as_c(&self, exp: &Exp, strct: &ADLStruct) -> (String, Option<(String, Type)>, bool) {
+    fn var_exp_as_c(&self, exp: &Exp, strct: &ADLStruct, ro_params: &HashSet<(&String, &String)>) -> (String, Option<(String, Type)>, bool) {
         use std::iter::zip;
         if let Exp::Var(parts, _) = exp {
             let types = self
@@ -152,9 +168,9 @@ impl StepBodyCompiler<'_> {
                 (exp_as_c, owner) = self.stitch_parts_and_types(zip(
                     ["self".to_string()].iter().chain(parts.iter()),
                     [Type::Named(strct.name.clone())].iter().chain(types.iter()),
-                ));
+                ), ro_params);
             } else {
-                (exp_as_c, owner) = self.stitch_parts_and_types(zip(parts.iter(), types.iter()));
+                (exp_as_c, owner) = self.stitch_parts_and_types(zip(parts.iter(), types.iter()), ro_params);
             }
             return (exp_as_c, owner, is_parameter);
         }
@@ -164,7 +180,7 @@ impl StepBodyCompiler<'_> {
     /* Returns the full expression for evaluating the field-type pairs in parts,
        and, if applicable, returns the penultimate partial result (the parameter owner).
     */
-    fn stitch_parts_and_types<'a, I>(&self, mut parts: I) -> (String, Option<(String, Type)>)
+    fn stitch_parts_and_types<'a, I>(&self, mut parts: I, ro_params: &HashSet<(&String, &String)>) -> (String, Option<(String, Type)>)
     where
         I: Iterator<Item = (&'a String, &'a Type)>,
     {
@@ -187,9 +203,16 @@ impl StepBodyCompiler<'_> {
                 owner = Some((previous_c_expr.clone(), previous_c_type.clone()));
             }
 
+            let prev_struct_name : &String = previous_c_type.name().unwrap();
+            let load_op = if ro_params.contains(&(prev_struct_name, id)) {
+                "WLOAD"
+            } else {
+                "LOAD"
+            };
+
             previous_c_expr = format!(
-                "LOAD({}->{id}[{previous_c_expr}])",
-                previous_c_type.name().unwrap().to_lowercase()
+                "{load_op}({}->{id}[{previous_c_expr}])",
+                prev_struct_name.to_lowercase()
             );
             previous_c_type = id_type;
         }

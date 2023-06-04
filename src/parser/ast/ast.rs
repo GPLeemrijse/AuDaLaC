@@ -61,6 +61,35 @@ impl Program {
         }
         result
     }
+
+    pub fn read_only_params<'a>(&'a self, step_owner: &'a ADLStruct, step: &'a Step, var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>) -> HashSet<(&String, &String)> {
+        
+        let mut result : HashSet<(&String, &String)> = HashSet::from_iter(
+            self.structs
+                .iter()
+                .map(|strct|
+                    strct.parameters
+                         .iter()
+                         .map(|(p_name, _, _)|
+                            (&strct.name, p_name)
+                            )
+                )
+                .flatten()
+        );
+
+        for p in step.written_parameters(step_owner, var_exp_type_info) {
+             result.remove(&p);
+        }
+
+        for c in step.constructors() {
+            let constructed_strct = self.struct_by_name(c).unwrap();
+            for (p_name, _, _) in &constructed_strct.parameters {
+                result.remove(&(&constructed_strct.name, &p_name));
+            }
+        }
+
+        result
+    }
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -127,15 +156,17 @@ impl Step {
     /* Performs 'f_expr' on all expressions and 'f_stmt' on all statements.
        Collects all unique results.
     */
-    pub fn visit<'a, T: 'a + Ord>(
+    pub fn visit<'a, T: 'a + Ord, I1: Copy, I2: Copy>(
         &'a self,
-        f_stmt: fn(&'a Stat) -> Vec<T>,
-        f_exp: fn(&'a Exp) -> Vec<T>,
+        f_stmt: fn(&'a Stat, Option<I1>) -> Vec<T>,
+        i_stmt: Option<I1>,
+        f_exp: fn(&'a Exp, Option<I2>) -> Vec<T>,
+        i_exp: Option<I2>,
     ) -> Vec<T> {
         let mut results = self
             .statements
             .iter()
-            .map(|s| s.visit(f_stmt, f_exp))
+            .map(|s| s.visit(f_stmt, i_stmt, f_exp, i_exp))
             .flatten()
             .collect::<Vec<T>>();
 
@@ -146,29 +177,67 @@ impl Step {
     // Returns a unique vector of possibly constructed struct types
     pub fn constructors(&self) -> Vec<&String> {
         use Exp::*;
-        self.visit::<&String>(
-            |_| Vec::new(),
-            |e| {
+        self.visit::<&String, (), ()>(
+            |_, _| Vec::new(),
+            None,
+            |e, _| {
                 if let Constructor(s, _, _) = e {
                     vec![&s]
                 } else {
                     Vec::new()
                 }
             },
+            None
         )
     }
 
     pub fn declarations(&self) -> Vec<(&String, &Type)> {
         use Stat::*;
-        self.visit::<(&String, &Type)>(
-            |stat| {
+        self.visit::<(&String, &Type), (), ()>(
+            |stat, _| {
                 if let Declaration(t, s, _, _) = stat {
                     vec![(&s, &t)]
                 } else {
                     Vec::new()
                 }
             },
-            |_| Vec::new(),
+            None,
+            |_, _| Vec::new(),
+            None
+        )
+    }
+
+    pub fn written_parameters<'a>(&'a self, owner_strct : &'a ADLStruct, var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>) -> Vec<(&'a String, &'a String)> {
+        use Stat::*;
+        use Exp::*;
+
+        self.visit::<(&String, &String), (&'a ADLStruct, &'a HashMap<*const Exp, Vec<Type>>), ()>(
+            |stat, args| {
+                let (strct, info) = args.unwrap();
+                if let Assignment(lhs, _, _) = stat {
+                    if let Var(parts, _) = &**lhs {
+                        let types = info.get(
+                                    &(&**lhs as *const Exp)
+                                )
+                                .expect("Could not find var expression in type info.");
+
+                        if types.len() == 1 {
+                            vec![(&strct.name, parts.last().unwrap())]
+                        } else if types.len() > 1 {
+                            vec![(types[types.len()-2].name().unwrap(), parts.last().unwrap())]
+                        } else {
+                            panic!("Zero-length var expressions not allowed.");
+                        }
+                    } else {
+                        panic!("Assignment lhs should be Exp::Var.");
+                    }
+                } else {
+                    Vec::new()
+                }
+            },
+            Some((owner_strct, var_exp_type_info)),
+            |_, _| Vec::new(),
+            None
         )
     }
 }
@@ -201,19 +270,23 @@ pub enum Exp {
 }
 
 impl Exp {
-    pub fn visit<'a, T: 'a + Ord>(&'a self, f_exp: fn(&'a Exp) -> Vec<T>) -> Vec<T> {
+    pub fn visit<'a, T: 'a + Ord, I: Copy>(
+            &'a self,
+            f_exp: fn(&'a Exp, Option<I>) -> Vec<T>,
+            i_exp: Option<I>,
+        ) -> Vec<T> {
         use Exp::*;
-        let mut result = f_exp(self);
+        let mut result = f_exp(self, i_exp);
         match self {
             BinOp(e1, _, e2, _) => {
-                result.append(&mut e1.visit(f_exp));
-                result.append(&mut e2.visit(f_exp));
+                result.append(&mut e1.visit(f_exp, i_exp));
+                result.append(&mut e2.visit(f_exp, i_exp));
             }
             UnOp(_, e, _) => {
-                result.append(&mut e.visit(f_exp));
+                result.append(&mut e.visit(f_exp, i_exp));
             }
             Constructor(_, exps, _) => {
-                result.append(&mut exps.iter().map(|e| e.visit(f_exp)).flatten().collect());
+                result.append(&mut exps.iter().map(|e| e.visit(f_exp, i_exp)).flatten().collect());
             }
             _ => (),
         }
@@ -257,13 +330,15 @@ pub enum Stat {
 }
 
 impl Stat {
-    pub fn visit<'a, T: 'a + Ord>(
+    pub fn visit<'a, T: 'a + Ord, I1: Copy, I2: Copy>(
         &'a self,
-        f_stmt: fn(&'a Stat) -> Vec<T>,
-        f_exp: fn(&'a Exp) -> Vec<T>,
+        f_stmt: fn(&'a Stat, Option<I1>) -> Vec<T>,
+        i_stmt: Option<I1>,
+        f_exp: fn(&'a Exp, Option<I2>) -> Vec<T>,
+        i_exp: Option<I2>
     ) -> Vec<T> {
         use Stat::*;
-        let mut result = f_stmt(self);
+        let mut result = f_stmt(self, i_stmt);
 
         match self {
             IfThen(cond, stmts1, strmts2, _) => {
@@ -271,14 +346,14 @@ impl Stat {
                     &mut stmts1
                         .iter()
                         .chain(strmts2.iter())
-                        .map(|s| s.visit(f_stmt, f_exp))
+                        .map(|s| s.visit(f_stmt, i_stmt, f_exp, i_exp))
                         .flatten()
-                        .chain(cond.visit(f_exp))
+                        .chain(cond.visit(f_exp, i_exp))
                         .collect::<Vec<T>>(),
                 );
             }
             Declaration(_, _, e, _) | Assignment(_, e, _) => {
-                result.append(&mut e.visit(f_exp));
+                result.append(&mut e.visit(f_exp, i_exp));
             }
             _ => (),
         }
@@ -409,6 +484,91 @@ mod tests {
     use crate::parser::ast::*;
     use crate::parser::*;
     use lalrpop_util::ParseError::User;
+
+    #[test]
+    fn test_written_parameters(){
+        let program = ProgramParser::new().parse(
+            "struct S1(p1 : Nat, p2: S1, p3 : S2) {
+                step1 {
+                    p1 := 123;
+                }
+
+                step3 {
+                    p2 := this;
+                }
+            }
+            struct S2 (p1 : S1) {
+                step2 {
+                    p1.p2.p3 := this;
+                    p1.p1 := 456;
+                }
+            }
+
+            step1 < step2",
+        ).unwrap();
+
+        let (_, type_info) = validate_ast(&program);
+        let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
+        let s2 = program.struct_by_name(&"S2".to_string()).unwrap();
+        let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
+        let step2 = s2.step_by_name(&"step2".to_string()).unwrap();
+        let step3 = s1.step_by_name(&"step3".to_string()).unwrap();
+        
+        assert_eq!(step1.written_parameters(&s1, &type_info), vec![
+            (&"S1".to_string(), &"p1".to_string())
+        ]);
+        
+        assert_eq!(step2.written_parameters(&s2, &type_info), vec![
+            (&"S1".to_string(), &"p1".to_string()),
+            (&"S1".to_string(), &"p3".to_string())
+        ]);
+
+        assert_eq!(step3.written_parameters(&s1, &type_info), vec![
+            (&"S1".to_string(), &"p2".to_string())
+        ]);
+    }
+
+
+    #[test]
+    fn test_read_only_parameters(){
+        let program = ProgramParser::new().parse(
+            "struct S1(p1 : Nat, p2: S1, p3 : S2) {
+                step1 {
+                    S1 new_s1 := S1(0, null, null);
+                }
+            }
+
+            struct S2 (p1 : S1) {
+                step2 {
+                    p1.p3.p1 := p1;
+                }
+            }
+
+            step1 < step2",
+        ).unwrap();
+
+        let (_, type_info) = validate_ast(&program);
+        let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
+        let s2 = program.struct_by_name(&"S2".to_string()).unwrap();
+        let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
+        let step2 = s2.step_by_name(&"step2".to_string()).unwrap();
+        
+        let ro_params = program.read_only_params(&s1, &step1, &type_info);
+        assert!(ro_params.contains(&(&"S2".to_string(), &"p1".to_string())));
+        
+        assert!(!ro_params.contains(&(&"S1".to_string(), &"p1".to_string())));
+        assert!(!ro_params.contains(&(&"S1".to_string(), &"p2".to_string())));
+        assert!(!ro_params.contains(&(&"S1".to_string(), &"p3".to_string())));
+        
+        let ro_params = program.read_only_params(&s2, &step2, &type_info);
+
+        assert!(!ro_params.contains(&(&"S2".to_string(), &"p1".to_string())));
+        
+        assert!(ro_params.contains(&(&"S1".to_string(), &"p1".to_string())));
+        assert!(ro_params.contains(&(&"S1".to_string(), &"p2".to_string())));
+        assert!(ro_params.contains(&(&"S1".to_string(), &"p3".to_string())));
+
+    }
 
     #[test]
     fn test_precedence_of_sequential() {
