@@ -205,13 +205,13 @@ impl StepBodyCompiler<'_> {
 
             let prev_struct_name : &String = previous_c_type.name().unwrap();
             let load_op = if ro_params.contains(&(prev_struct_name, id)) {
-                "WLOAD"
+                format!("WLOAD({}, ", as_c_type(id_type))
             } else {
-                "LOAD"
+                "LOAD(".to_string()
             };
 
             previous_c_expr = format!(
-                "{load_op}({}->{id}[{previous_c_expr}])",
+                "{load_op}{}->{id}[{previous_c_expr}])",
                 prev_struct_name.to_lowercase()
             );
             previous_c_type = id_type;

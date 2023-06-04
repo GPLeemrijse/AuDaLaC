@@ -107,6 +107,7 @@ impl CompileComponent for StructManagers<'_> {
 			#define ATOMIC(T) cuda::atomic<T, {scope}>
 			#define STORE(A, B) {store_macro}
 			#define LOAD(A) {load_macro}
+			#define WLOAD(T, A) ((T)A)
 		"})
     }
 

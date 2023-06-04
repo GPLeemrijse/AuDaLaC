@@ -1,11 +1,12 @@
-#define I_PER_THREAD 10
+#define I_PER_THREAD 16
 #define THREADS_PER_BLOCK 256
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
 #define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
 #define LOAD(A) A.load(cuda::memory_order_relaxed)
-#define NodeSet_MASK (1ULL << 0)
-#define Node_MASK (1ULL << 1)
-#define Edge_MASK (1ULL << 2)
+#define WLOAD(T, A) ((T)A)
+#define NodeSet_MASK (((uint16_t)1) << 0)
+#define Node_MASK (((uint16_t)1) << 1)
+#define Edge_MASK (((uint16_t)1) << 2)
 #define STEP_PARITY(STRUCT) ((bool)(struct_step_parity & STRUCT ## _MASK))
 #define TOGGLE_STEP_PARITY(STRUCT) {struct_step_parity ^= STRUCT ## _MASK;}
 
@@ -276,7 +277,7 @@ __device__ void NodeSet_allocate_sets(const RefType self,
 __device__ void NodeSet_initialise_pivot_fwd_bwd(const RefType self,
 												 bool* stable){
 	
-	if ((!LOAD(nodeset->scc[self]))) {
+	if ((!WLOAD(BoolType, nodeset->scc[self]))) {
 		// pivot_f_b.fwd := true;
 		SetParam<BoolType>(LOAD(nodeset->pivot_f_b[self]), node->fwd, true, stable);
 		// pivot_f_b.bwd := true;
@@ -314,24 +315,24 @@ __device__ void Node_print(const RefType self,
 __device__ void Node_pivots_nominate(const RefType self,
 									 bool* stable){
 	
-	if ((!LOAD(nodeset->scc[LOAD(node->set[self])]))) {
-		BoolType f = LOAD(node->fwd[self]);
-		BoolType b = LOAD(node->bwd[self]);
+	if ((!WLOAD(BoolType, nodeset->scc[WLOAD(RefType, node->set[self])]))) {
+		BoolType f = WLOAD(BoolType, node->fwd[self]);
+		BoolType b = WLOAD(BoolType, node->bwd[self]);
 		if ((f && b)) {
 			// set.pivot_f_b := this;
-			SetParam<RefType>(LOAD(node->set[self]), nodeset->pivot_f_b, self, stable);
+			SetParam<RefType>(WLOAD(RefType, node->set[self]), nodeset->pivot_f_b, self, stable);
 		}
 		if ((f && (!b))) {
 			// set.pivot_f_nb := this;
-			SetParam<RefType>(LOAD(node->set[self]), nodeset->pivot_f_nb, self, stable);
+			SetParam<RefType>(WLOAD(RefType, node->set[self]), nodeset->pivot_f_nb, self, stable);
 		}
 		if (((!f) && b)) {
 			// set.pivot_nf_b := this;
-			SetParam<RefType>(LOAD(node->set[self]), nodeset->pivot_nf_b, self, stable);
+			SetParam<RefType>(WLOAD(RefType, node->set[self]), nodeset->pivot_nf_b, self, stable);
 		}
 		if (((!f) && (!b))) {
 			// set.pivot_nf_nb := this;
-			SetParam<RefType>(LOAD(node->set[self]), nodeset->pivot_nf_nb, self, stable);
+			SetParam<RefType>(WLOAD(RefType, node->set[self]), nodeset->pivot_nf_nb, self, stable);
 		}
 	}
 }
@@ -343,15 +344,15 @@ __device__ void Node_divide_into_sets_reset_fwd_bwd(const RefType self,
 	BoolType b = LOAD(node->bwd[self]);
 	if ((f && b)) {
 		// set := set.f_and_b;
-		SetParam<RefType>(self, node->set, LOAD(nodeset->f_and_b[LOAD(node->set[self])]), stable);
+		SetParam<RefType>(self, node->set, WLOAD(RefType, nodeset->f_and_b[LOAD(node->set[self])]), stable);
 	}
 	if (((!f) && b)) {
 		// set := set.not_f_and_b;
-		SetParam<RefType>(self, node->set, LOAD(nodeset->not_f_and_b[LOAD(node->set[self])]), stable);
+		SetParam<RefType>(self, node->set, WLOAD(RefType, nodeset->not_f_and_b[LOAD(node->set[self])]), stable);
 	}
 	if ((f && (!b))) {
 		// set := set.f_and_not_b;
-		SetParam<RefType>(self, node->set, LOAD(nodeset->f_and_not_b[LOAD(node->set[self])]), stable);
+		SetParam<RefType>(self, node->set, WLOAD(RefType, nodeset->f_and_not_b[LOAD(node->set[self])]), stable);
 	}
 	// fwd := false;
 	SetParam<BoolType>(self, node->fwd, false, stable);
@@ -369,14 +370,14 @@ __device__ void Edge_print(const RefType self,
 __device__ void Edge_compute_fwd_bwd(const RefType self,
 									 bool* stable){
 	
-	if ((LOAD(node->set[LOAD(edge->t[self])]) == LOAD(node->set[LOAD(edge->s[self])]))) {
-		if (LOAD(node->fwd[LOAD(edge->s[self])])) {
+	if ((WLOAD(RefType, node->set[WLOAD(RefType, edge->t[self])]) == WLOAD(RefType, node->set[WLOAD(RefType, edge->s[self])]))) {
+		if (LOAD(node->fwd[WLOAD(RefType, edge->s[self])])) {
 			// t.fwd := true;
-			SetParam<BoolType>(LOAD(edge->t[self]), node->fwd, true, stable);
+			SetParam<BoolType>(WLOAD(RefType, edge->t[self]), node->fwd, true, stable);
 		}
-		if (LOAD(node->bwd[LOAD(edge->t[self])])) {
+		if (LOAD(node->bwd[WLOAD(RefType, edge->t[self])])) {
 			// s.bwd := true;
-			SetParam<BoolType>(LOAD(edge->s[self]), node->bwd, true, stable);
+			SetParam<BoolType>(WLOAD(RefType, edge->s[self]), node->bwd, true, stable);
 		}
 	}
 }
@@ -387,7 +388,7 @@ __global__ void schedule_kernel(){
 	const thread_block block = this_thread_block();
 	const bool is_thread0 = grid.thread_rank() == 0;
 	inst_size nrof_instances;
-	uint64_t struct_step_parity = 0; // bitmask
+	uint16_t struct_step_parity = 0; // bitmask
 	bool stable = true; // Only used to compile steps outside fixpoints
 	uint8_t iter_idx[FP_DEPTH] = {0}; // Denotes which fp_stack index ([0, 2]) is currently being set.
 
@@ -465,15 +466,16 @@ int main(int argc, char **argv) {
 	}
 
 	std::vector<InitFile::StructInfo> structs = InitFile::parse(argv[1]);
-	cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 4194304);
+	cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 1048576);
 	CHECK(cudaHostRegister(&host_Edge, sizeof(Edge), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_NodeSet, sizeof(NodeSet), cudaHostRegisterDefault));
 
-	host_Edge.initialise(&structs[0], 500000);
-	host_Node.initialise(&structs[1], 500000);
-	host_NodeSet.initialise(&structs[2], 500000);
+	host_Edge.initialise(&structs[0], structs[0].nrof_instances + 1);
+	host_Node.initialise(&structs[1], structs[1].nrof_instances + 1);
+	host_NodeSet.initialise(&structs[2], structs[2].nrof_instances + 1);
 
+	inst_size max_nrof_executing_instances = max(structs[2].nrof_instances + 1, max(structs[1].nrof_instances + 1, structs[0].nrof_instances + 1));
 	CHECK(cudaDeviceSynchronize());
 
 	Edge * const loc_edge = (Edge*)host_Edge.to_device();
@@ -488,11 +490,7 @@ int main(int argc, char **argv) {
 	CHECK(cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack));
 	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
 	void* schedule_kernel_args[] = {};
-	auto dims = ADL::get_launch_dims(50000, (void*)schedule_kernel);
-	cudaEvent_t start, stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start);
+	auto dims = ADL::get_launch_dims((max_nrof_executing_instances + I_PER_THREAD - 1) / I_PER_THREAD, (void*)schedule_kernel);
 
 
 	CHECK(
@@ -505,10 +503,5 @@ int main(int argc, char **argv) {
 	);
 
 
-	cudaEventRecord(stop);
-	cudaEventSynchronize(stop);
-	float ms = 0;
-	cudaEventElapsedTime(&ms, start, stop);
-	fprintf(stderr, "Total walltime GPU: %0.2f ms\n", ms);
 
 }
