@@ -71,12 +71,12 @@ impl<'a> Config<'_> {
         }
     }
 
-    pub fn to_args(&self) -> Vec<&str> {
+    pub fn to_args(&self) -> Vec<String> {
         vec![
-            "-m", self.memorder,
-            "-v", self.voting,
-            "-T", self.tpb,
-            "-M", self.ipt
+            "-m".to_string(), self.memorder.to_string(),
+            "-v".to_string(), self.voting.to_string(),
+            "-T".to_string(), self.tpb.to_string(),
+            "-M".to_string(), self.ipt.to_string()
         ]
     }
 

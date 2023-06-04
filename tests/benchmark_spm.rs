@@ -75,7 +75,8 @@ fn benchmark_spm_set(configs: &Vec<Config>, testcases: &Vec<(&str, Vec<&str>)>, 
 			"SPM",
 			"tests/benchmarks/SPM",
 			None,
-			c
+			c,
+			Vec::new()
 		).err();
 		
 		if let Some(e) = compile_err {

@@ -8,7 +8,7 @@ use crate::Config;
 
 fn run_compiler<'a, I>(extra_args : I) -> Result<ExitStatus, std::io::Error>
 where
-    I: IntoIterator<Item = &'a str>
+    I: IntoIterator<Item = String>
 {
     Command::new("cargo")
         .args(["run", "--"])
@@ -48,7 +48,16 @@ fn run_bin(bin: &str, input_file : &str) -> Result<String, String> {
 
 		let out = r.unwrap();
 		if !out.status.success() {
-			return Err(format!("non-zero exitcode ({}).", out.status.code().map_or("none".to_string(), |i| i.to_string())));
+			let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+
+			let reason = if stderr.contains("Adjust instances per thread") {
+				"gridsize"
+			} else if stderr.contains("slot < capacity") {
+				"capacity"
+			} else {
+				"other"
+			};
+			return Err(format!("non-zero exitcode ({reason})."));
 		}
 		Ok(String::from_utf8_lossy(&out.stdout).to_string())
     } else {
@@ -70,9 +79,9 @@ pub fn bench_testcases(testcases: &Vec<(&str, Vec<&str>)>, bin: &str, csv_prefix
 	}
 }
 
-pub fn compile_config(pname: &str, dir: &str, make_variant: Option<&str>, config : &Config) -> Result<(), String> {
+pub fn compile_config(pname: &str, dir: &str, make_variant: Option<&str>, config : &Config, extra_args: Vec<String>) -> Result<(), String> {
 
-	adl_compile(pname, dir, config)?;
+	adl_compile(pname, dir, config, extra_args)?;
 	cuda_compile(dir, make_variant)?;
 	
 	Ok(())
@@ -94,13 +103,14 @@ fn get_runtime_ms_from_stdout(output : &str) -> Option<f32> {
 	return None;
 }
 
-fn adl_compile(pname: &str, dir : &str, config : &Config) -> Result<(), String> {
+fn adl_compile(pname: &str, dir : &str, config : &Config, mut extra_args: Vec<String>) -> Result<(), String> {
 	eprintln!("\t\tCompiling ADL code...");
-	let in_file = &format!("{dir}/{pname}.adl");
-	let out_file = &format!("{dir}/{pname}.cu");
+	let in_file = format!("{dir}/{pname}.adl");
+	let out_file = format!("{dir}/{pname}.cu");
 
-	let mut args : Vec<&str> = vec![in_file, "-o", out_file, "-t"];
-	args.append(&mut config.to_args());
+	let mut args : Vec<String> = vec![in_file, "-o".to_string(), out_file, "-t".to_string()];
+	args.append(&mut config.to_args()); 
+	args.append(&mut extra_args);
 	let r = run_compiler(args);
 
 	if r.is_err() {

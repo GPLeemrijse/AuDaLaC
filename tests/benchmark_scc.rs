@@ -118,7 +118,8 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
 			"SCC",
 			"tests/benchmarks/SCC",
 			Some("SCC"),
-			c
+			c,
+			vec!["-N".to_string(), "NodeSet=10001".to_string()]
 		).err();
 		
 		if let Some(e) = compile_err {
@@ -135,7 +136,8 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
 			"SCC_MP",
 			"tests/benchmarks/SCC",
 			Some("MP"),
-			c
+			c,
+			Vec::new()
 		).err();
 		
 		if let Some(e) = compile_err {
