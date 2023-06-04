@@ -8,6 +8,7 @@ pub struct StepBodyCompiler<'a> {
     var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>,
     use_step_parity: bool,
     print_unstable: bool,
+    weak_read_only: bool,
 }
 
 impl StepBodyCompiler<'_> {
@@ -15,11 +16,13 @@ impl StepBodyCompiler<'_> {
         type_info: &'a HashMap<*const Exp, Vec<Type>>,
         use_step_parity: bool,
         print_unstable: bool,
+        weak_read_only: bool,
     ) -> StepBodyCompiler<'a> {
         StepBodyCompiler {
             var_exp_type_info: type_info,
             use_step_parity,
             print_unstable,
+            weak_read_only
         }
     }
 
@@ -204,7 +207,7 @@ impl StepBodyCompiler<'_> {
             }
 
             let prev_struct_name : &String = previous_c_type.name().unwrap();
-            let load_op = if ro_params.contains(&(prev_struct_name, id)) {
+            let load_op = if ro_params.contains(&(prev_struct_name, id)) && self.weak_read_only {
                 format!("WLOAD({}, ", as_c_type(id_type))
             } else {
                 "LOAD(".to_string()

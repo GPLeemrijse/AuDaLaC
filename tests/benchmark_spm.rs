@@ -3,9 +3,8 @@ use std::fs::File;
 use crate::benchmarks::compile_config;
 use crate::benchmarks::bench_testcases;
 use crate::common::*;
-use std::path::Path;
 use regex::Regex;
-use std::process::Command;
+
 
 mod common;
 mod benchmarks;
@@ -18,6 +17,8 @@ fn test_benchmark_spm() {
 		memorder_impact_configs(),
 		voting_impact_configs(),
 		block_size_impact_configs(),
+		weak_ro_impact_configs(),
+		div_strat_impact_configs(),
 	];
 
 	let configs = Config::union(&vec_of_vec_of_configs);

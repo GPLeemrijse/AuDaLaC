@@ -23,8 +23,10 @@ pub fn memorder_impact_configs() -> Vec<Config<'static>> {
     let voting_strat = ["naive-alternating"];
     let tpb = ["128", "512"];
     let ipt = ["4", "32"];
+    let w = ["0"];
+    let d = ["blocksize"];
 
-    Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
+    Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
 }
 
 pub fn voting_impact_configs() -> Vec<Config<'static>> {
@@ -32,8 +34,32 @@ pub fn voting_impact_configs() -> Vec<Config<'static>> {
     let voting_strat = ["naive", "naive-alternating"];
     let tpb = ["128", "512"];
     let ipt = ["4", "32"];
+    let w = ["0"];
+    let d = ["blocksize"];
 
-    Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
+    Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
+}
+
+pub fn weak_ro_impact_configs() -> Vec<Config<'static>> {
+    let orders = ["relaxed"];
+    let voting_strat = ["naive-alternating"];
+    let tpb = ["128", "512"];
+    let ipt = ["4", "32"];
+    let w = ["0", "1"];
+    let d = ["blocksize"];
+
+    Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
+}
+
+pub fn div_strat_impact_configs() -> Vec<Config<'static>> {
+    let orders = ["relaxed"];
+    let voting_strat = ["naive-alternating"];
+    let tpb = ["128", "512"];
+    let ipt = ["4", "32"];
+    let w = ["1"];
+    let d = ["blocksize", "gridsize"];
+
+    Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
 }
 
 pub fn block_size_impact_configs() -> Vec<Config<'static>> {
@@ -41,8 +67,10 @@ pub fn block_size_impact_configs() -> Vec<Config<'static>> {
     let voting_strat = ["naive-alternating"];
     let tpb = ["64", "128", "256", "512", "1024"];
     let ipt = ["1", "4", "16", "32"];
+    let w = ["1"];
+    let d = ["blocksize"];
 
-    Config::cartesian(&orders, &voting_strat, &tpb, &ipt)
+    Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
 }
 
 
@@ -55,18 +83,30 @@ pub struct Config<'a> {
     pub voting: &'a str,
     pub tpb: &'a str,
     pub ipt: &'a str,
+    pub weak_ro: &'a str,
+    pub d_strat: &'a str,
     pub name: Option<&'a str>
 }
 
 impl<'a> Config<'_> {
-    pub const HEADER : &str = "config,memorder,voting-strat,tpb,ipt";
+    pub const HEADER : &str = "config,memorder,voting-strat,tpb,ipt,weak_read_only";
 
-    pub fn new(m : &'a str, v : &'a str, t : &'a str, i : &'a str, n : Option<&'a str>) -> Config<'a> {
+    pub fn new(
+        m : &'a str,
+        v : &'a str,
+        t : &'a str,
+        i : &'a str,
+        w: &'a str,
+        d: &'a str,
+        n : Option<&'a str>
+    ) -> Config<'a> {
         Config {
             memorder: m,
             voting: v,
             tpb: t,
             ipt: i,
+            weak_ro: w,
+            d_strat: d,
             name: n
         }
     }
@@ -76,32 +116,42 @@ impl<'a> Config<'_> {
             "-m", self.memorder,
             "-v", self.voting,
             "-T", self.tpb,
-            "-M", self.ipt
+            "-M", self.ipt,
+            "-w", self.weak_ro,
+            "-d", self.d_strat,
         ]
     }
 
     pub fn as_csv_row(&self) -> String {
-        format!("{},{},{},{},{}",
+        format!("{},{},{},{},{},{},{}",
             self,
             self.memorder,
             self.voting,
             self.tpb,
             self.ipt,
+            self.weak_ro,
+            self.d_strat
         )
     }
 
-    pub fn cartesian(orders: &[&'static str], voting_strat: &[&'static str], tpb: &[&'static str], ipt: &[&'static str]) -> Vec<Config<'static>> {
+    pub fn cartesian(
+        orders: &[&'static str],
+        voting_strat: &[&'static str],
+        tpb: &[&'static str],
+        ipt: &[&'static str],
+        weak_ro: &[&'static str],
+        d_strat: &[&'static str],
+    ) -> Vec<Config<'static>> {
         let mut result : Vec<Config> = Vec::new();
 
         for o in orders {
-            for v in voting_strat {
-                for t in tpb {
-                    for i in ipt {
-                        result.push(Config::new(o, v, t, i, None));
-                    }
-                }
-            }
-        }
+        for v in voting_strat {
+        for t in tpb {
+        for i in ipt {
+        for w in weak_ro {
+        for d in d_strat {
+            result.push(Config::new(o, v, t, i, w, d, None));
+        }}}}}}
 
         result
     }

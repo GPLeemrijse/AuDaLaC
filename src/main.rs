@@ -51,7 +51,8 @@ fn main() {
         (@arg schedule_strat: -S --schedule_strat possible_value("in-kernel") possible_value("on-host") default_value("in-kernel") "Which schedule strategy to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("seqcons") "Which memory order to use.")
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
-        (@arg division_strat: -D --division_strat possible_value("blocksize") possible_value("gridsize") default_value("blocksize") "What division strategy to use. 'blocksize' lets blocks execute a continuous sequence of instances, while 'gridsize' evenly distributes over the blocks.")
+        (@arg division_strat: -d --division_strat possible_value("blocksize") possible_value("gridsize") default_value("blocksize") "What division strategy to use. 'blocksize' lets blocks execute a continuous sequence of instances, while 'gridsize' evenly distributes over the blocks.")
+        (@arg weak_ro: -w --weak_ro possible_value("1") possible_value("0") default_value("1") "Use weak loads for read-only parameters.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofinstances: -N --nrofinstances +takes_value required(false) multiple(true) value_parser(parse_key_val::<String, usize>) "nrof struct instances memory is allocated for.")
         (@arg instsperthread: -M --instsperthread +takes_value default_value("8") value_parser(clap::value_parser!(usize)) "Instances executed per thread.")
@@ -64,10 +65,11 @@ fn main() {
     .get_matches();
 
     let print_ast = args.is_present("print_ast");
+    let weak_ro = args.value_of("weak_ro").unwrap() == "1";
     let time = args.is_present("time");
     let init_file = args.is_present("init_file");
     let print_unstable = args.is_present("printunstable");
-    let mut nrof_instances_per_struct: HashMap<String, usize> = args
+    let nrof_instances_per_struct: HashMap<String, usize> = args
         .get_many::<(String, usize)>("nrofinstances")
         .unwrap_or_default()
         .map(|(s, n)| (s.clone(), *n))
@@ -137,7 +139,7 @@ fn main() {
                         _ => panic!("Division strategy not found."),
                     };
 
-                    let step_transpiler = StepBodyCompiler::new(&type_info, true, print_unstable);
+                    let step_transpiler = StepBodyCompiler::new(&type_info, true, print_unstable, weak_ro);
                     let work_divisor = WorkDivisor::new(
                         &program,
                         instances_per_thread,
