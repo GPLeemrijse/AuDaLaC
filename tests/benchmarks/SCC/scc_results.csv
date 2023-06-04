@@ -1,0 +1,769 @@
+config,memorder,voting-strat,tpb,ipt,algorithm,problem_type,problem_size,runtime
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,5076,0.5422752
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,30877,0.49956483
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,124845,0.475856
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.005,500574,0.61664635
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,9813,0.22455359
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,62582,0.4421216
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,250467,0.5046176
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.01,999898,0.8351393
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,100095,0.40427518
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,624033,0.61621124
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,5076,0.54282236
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,30877,0.3189536
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,124845,0.33208317
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.005,500574,0.6526816
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,9813,0.2255712
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,62582,0.2846688
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,250467,0.4191168
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,100095,0.289776
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,624033,0.71923196
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,5076,1.1434656
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,30877,0.41215038
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,124845,0.4889248
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.005,500574,0.64724165
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,9813,0.405696
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,62582,0.42317757
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,250467,0.5356512
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.01,999898,0.9237216
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,100095,0.37785602
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,624033,0.6762144
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,5076,1.0145792
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,30877,0.35130242
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,124845,0.645328
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,9813,0.30635202
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,62582,0.41578245
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,250467,1.0829728
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,100095,0.53388476
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,5076,3.3029504
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,30877,1.2378815
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,124845,1.4607041
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.005,500574,1.6645889
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,9813,1.2035264
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,62582,1.2140448
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,250467,1.5136126
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.01,999898,1.9641216
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,100095,1.0508287
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,624033,1.5363904
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,5076,0.58312637
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,30877,0.40250558
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,124845,0.41120964
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.005,500574,0.59447366
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,9813,0.2832832
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,62582,0.37484157
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,250467,0.43866238
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.01,999898,0.8677217
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,100095,0.36212796
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,624033,0.5910592
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,5076,0.51330554
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,30877,0.22608002
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,124845,0.5106112
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,9813,0.15437439
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,62582,0.30576637
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,250467,0.9372161
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,100095,0.43240958
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,5076,0.49989438
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,30877,0.22024961
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,124845,0.5149856
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,9813,0.154
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,62582,0.29298562
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,250467,0.8905792
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,100095,0.4294048
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,5076,0.5303136
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,30877,0.2175904
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,124845,0.48998404
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,9813,0.15939519
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,62582,0.28893763
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,100095,0.417136
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,5076,0.8123072
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,30877,0.4279328
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,124845,0.4436992
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.005,500574,0.65648645
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,9813,0.33578557
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,62582,0.3844096
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,250467,0.47861117
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.01,999898,0.9256832
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,100095,0.3621664
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,624033,0.6346048
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,5076,1.4145441
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,30877,1.2617792
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,124845,1.2004255
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.005,500574,1.5260129
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,9813,0.79757756
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,62582,1.0938497
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,250467,1.2158304
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.01,999898,1.8027103
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,100095,1.0276544
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,624033,1.2827617
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,5076,0.6345184
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,30877,0.4206112
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,124845,0.4342528
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.005,500574,0.61101115
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,9813,0.29887682
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,62582,0.38540483
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,250467,0.4545536
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.01,999898,0.88905275
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,100095,0.3741376
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,624033,0.6059552
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-512-32,relaxed,naive,512,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,5076,1.8458273
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,30877,1.7437408
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,124845,1.6076927
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.005,500574,2.0253758
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,9813,1.046576
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,62582,1.4785631
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,250467,1.6388096
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.01,999898,2.323376
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,100095,1.3976289
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,624033,1.6811712
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,5076,0.77179205
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,30877,0.2870752
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,124845,0.34336
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.005,500574,0.68855363
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,9813,0.26090562
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,62582,0.29305923
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,250467,0.44204798
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,100095,0.29016322
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,624033,0.797792
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,5076,0.7104768
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,30877,0.489968
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,9813,0.22331841
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,62582,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,5076,1.168128
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,30877,0.43396157
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,124845,0.71256006
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,9813,0.3431456
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,62582,0.4966496
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,250467,1.0994145
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,100095,0.57328
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,5076,1.2650881
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,30877,0.51566076
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,124845,0.4997248
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.005,500574,0.6545377
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,9813,0.43694082
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,62582,0.47828802
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,250467,0.537984
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.01,999898,0.96262723
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,100095,0.4151872
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,624033,0.65317124
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,5076,0.9266752
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,30877,0.3534336
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,124845,0.64130557
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,9813,0.2690944
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,62582,0.4198144
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,250467,1.0040224
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,100095,0.5086208
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,5076,4.203725
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,30877,1.5534785
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,124845,1.8995295
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.005,500574,2.2725246
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,9813,1.5398015
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,62582,1.576163
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,250467,1.9916544
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.01,999898,2.5642915
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,100095,1.3503361
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,624033,2.014829
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,5076,1.1902815
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,30877,0.42671362
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,124845,0.5040928
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.005,500574,0.66640955
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,9813,0.42309126
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,62582,0.4363008
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,250467,0.55161595
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.01,999898,0.9460704
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,100095,0.3917632
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,624033,0.69264
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-128-32,relaxed,naive,128,32,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,5076,0.68769604
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,30877,0.48047367
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,9813,0.2189184
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,62582,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,5076,0.7204768
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,30877,0.25332803
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,124845,0.3355392
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.005,500574,0.6696384
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,9813,0.24769597
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,62582,0.26641917
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,250467,0.44154558
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,100095,0.26940477
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,624033,0.7622304
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,5076,1.2244768
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,30877,0.4200096
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,124845,0.73332477
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,9813,0.3524416
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,62582,0.48455676
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,250467,1.2102529
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,100095,0.604688
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,5076,0.456672
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,30877,0.21276478
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,124845,0.5201024
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,9813,0.1482016
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,62582,0.29583365
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,100095,0.43384957
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,5076,0.7012064
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,30877,0.47996798
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,9813,0.220576
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,62582,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,5076,0.4640544
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,30877,0.21222079
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,124845,0.5010592
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,9813,0.1445824
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,62582,0.29432958
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,100095,0.41929603
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,5076,0.451792
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,30877,0.2040288
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,124845,0.5010432
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,9813,0.14036798
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,62582,0.28184637
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,100095,0.41532165
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,5076,0.7059424
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,30877,0.49304324
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,9813,0.2208064
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,62582,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,5076,0.89228165
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,30877,0.30312318
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,124845,0.34302077
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.005,500574,0.70807683
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,9813,0.30176002
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,62582,0.29961598
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,250467,0.44469124
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,100095,0.3230432
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,624033,0.7507745
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,5076,0.7047809
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,30877,0.4844288
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,9813,0.2189312
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,62582,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,5076,0.47358721
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,30877,0.20552
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,124845,0.50933754
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,9813,0.14202881
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,62582,0.28998083
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,100095,0.42286402
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,5076,0.5826432
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,30877,0.2720832
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,124845,0.309712
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.005,500574,0.6766177
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,9813,0.25208002
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,62582,0.25155523
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,250467,0.4033504
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,100095,0.25843522
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,624033,0.73685443
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.005,5076,0.357248
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.005,30877,1.0120704
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.005,124845,0.92584
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.005,500574,0.95830715
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.01,9813,0.35745922
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.01,62582,0.848384
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.01,250467,0.8685888
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.01,999898,1.1153024
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.1,100095,0.60404795
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.1,624033,0.7344864
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.005,5076,0.31412798
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.005,30877,0.592656
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.005,124845,0.59285116
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.005,500574,0.8229728
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.01,9813,0.3365792
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.01,62582,0.5159584
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.01,250467,0.55967677
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.1,100095,0.3485248
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.1,624033,0.7336032
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.005,5076,1.029616
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.005,30877,0.88929594
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.005,124845,0.81355524
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.005,500574,0.85751045
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.01,9813,0.63712966
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.01,62582,0.68090886
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.01,250467,0.7019648
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.01,999898,1.0649152
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.1,100095,0.46434563
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.1,624033,0.559584
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.005,5076,0.6282079
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.005,30877,0.49594244
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.005,124845,0.79367995
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.01,9813,0.4278304
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.01,62582,0.58185923
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.01,250467,1.2170143
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.1,100095,0.4929152
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.005,5076,3.564912
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.005,30877,2.792189
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.005,124845,2.4803169
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.005,500574,2.411949
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.01,9813,2.2555585
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.01,62582,2.0866723
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.01,250467,2.1620576
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.01,999898,2.4795327
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.1,100095,1.3432705
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.1,624033,1.4588832
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.005,5076,0.418864
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.005,30877,0.863232
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.005,124845,0.80385286
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.005,500574,0.8465376
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.01,9813,0.48864317
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.01,62582,0.6890752
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.01,250467,0.69294405
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.01,999898,1.1779296
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.1,100095,0.5329728
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.1,624033,0.65421444
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.005,5076,0.28712642
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.005,30877,0.26664957
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.005,124845,0.55711365
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.01,9813,0.1846944
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.01,62582,0.372704
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.01,250467,1.0088449
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.1,100095,0.40416962
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-128-4,relaxed,naive,128,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.005,5076,0.2474112
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.005,30877,0.26520643
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.005,124845,0.6013024
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.01,9813,0.19952962
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.01,62582,0.3381184
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.01,250467,0.9298912
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.1,100095,0.43076482
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-512-4,relaxed,naive,512,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.005,5076,0.2912032
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.005,30877,0.2801504
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.005,124845,0.5708224
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.01,9813,0.2121408
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.01,62582,0.320288
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.1,100095,0.38786563
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.005,5076,0.66917115
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.005,30877,0.8501217
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.005,124845,0.7593792
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.005,500574,0.8874208
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.01,9813,0.80445445
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.01,62582,0.67563844
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.01,250467,0.70232326
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.01,999898,1.1480063
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.1,100095,0.4950784
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.1,624033,0.60604477
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.005,5076,1.2147872
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.005,30877,2.9793792
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.005,124845,2.6556575
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.005,500574,2.5443137
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.01,9813,1.6328351
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.01,62582,2.3215938
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.01,250467,2.2128544
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.01,999898,2.7058208
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.1,100095,1.7982527
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.1,624033,1.8077568
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.005,5076,0.42515522
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.005,30877,0.89958084
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.005,124845,0.7960384
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.005,500574,0.8742816
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.01,9813,0.5456736
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.01,62582,0.69333756
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.01,250467,0.6871552
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.01,999898,1.1737792
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.1,100095,0.52030087
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.1,624033,0.6721312
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-512-32,relaxed,naive,512,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.005,5076,1.7012703
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.005,30877,4.057453
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.005,124845,3.573309
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.005,500574,3.8387616
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.01,9813,2.0247936
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.01,62582,2.9902463
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.01,250467,3.1038208
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.01,999898,3.5928097
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.1,100095,2.5085697
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.1,624033,2.4815617
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.005,5076,0.5437184
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.005,30877,0.4871168
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.005,124845,0.47768322
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.005,500574,0.80228484
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.01,9813,0.40559357
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.01,62582,0.465792
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.01,250467,0.5144384
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.1,100095,0.3056416
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.1,624033,0.585808
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.005,5076,0.2020832
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.005,30877,0.4810144
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.01,9813,0.18234558
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.01,62582,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.005,5076,0.75737923
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.005,30877,0.6797407
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.005,124845,0.9713505
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.01,9813,0.5871968
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.01,62582,0.71301115
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.01,250467,1.4006208
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.1,100095,0.63219196
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.005,5076,0.93130887
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.005,30877,0.8148607
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.005,124845,0.75192964
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.005,500574,0.7677184
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.01,9813,0.7223616
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.01,62582,0.69096327
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.01,250467,0.62591684
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.01,999898,0.88912314
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.1,100095,0.3902208
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.1,624033,0.574752
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.005,5076,0.59720963
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.005,30877,0.5612288
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.005,124845,0.855616
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.01,9813,0.4414336
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.01,62582,0.5762559
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.01,250467,1.2376993
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.1,100095,0.5386239
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.005,5076,4.7086496
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.005,30877,3.7507968
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.005,124845,3.225165
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.005,500574,3.312048
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.01,9813,3.0107298
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.01,62582,2.764253
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.01,250467,2.9567616
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.01,999898,3.2125733
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.1,100095,1.7923136
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.1,624033,1.9183807
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.005,5076,1.0623424
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.005,30877,0.905728
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.005,124845,0.81664324
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.005,500574,0.84978235
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.01,9813,0.6697952
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.01,62582,0.6639264
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.01,250467,0.70352954
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.01,999898,1.0770209
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.1,100095,0.47881922
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.1,624033,0.5736992
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-128-32,relaxed,naive,128,32,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.005,5076,0.2180256
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.005,30877,0.49025917
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.01,9813,0.19031681
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.01,62582,0.7839488
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.005,5076,0.56656635
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.005,30877,0.4786304
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.005,124845,0.5024673
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.005,500574,0.8232032
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.01,9813,0.4370752
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.01,62582,0.3991232
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.01,250467,0.5349024
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.1,100095,0.3262432
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.1,624033,0.665424
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.005,5076,0.73172796
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.005,30877,0.6292416
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.005,124845,0.9116192
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.01,9813,0.54794234
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.01,62582,0.640736
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.01,250467,1.3797184
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.1,100095,0.5713471
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.005,5076,0.25960642
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.005,30877,0.2387872
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.005,124845,0.5627488
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.01,9813,0.1628032
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.01,62582,0.3118208
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.1,100095,0.3187872
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.005,5076,0.1891264
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.005,30877,0.46188802
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.01,9813,0.1865248
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.01,62582,0.81102085
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.005,5076,0.22938243
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.005,30877,0.24942403
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.005,124845,0.549888
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.01,9813,0.1708192
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.01,62582,0.36417282
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.01,250467,0.91280955
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.1,100095,0.38140485
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.005,5076,0.23170562
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.005,30877,0.2536224
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.005,124845,0.5656096
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.01,9813,0.17908803
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.01,62582,0.3142944
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.01,250467,0.9036511
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.1,100095,0.39920002
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.005,5076,0.20418558
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.005,30877,0.46324795
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.01,9813,0.1865376
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.01,62582,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.005,5076,0.6678752
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.005,30877,0.48864642
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.005,124845,0.4669984
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.005,500574,0.7611135
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.01,9813,0.4342304
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.01,62582,0.40591678
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.01,250467,0.49917442
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.1,100095,0.292016
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.1,624033,0.59083205
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.005,5076,0.2419328
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.005,30877,0.49969286
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.005,124845,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.01,9813,0.18738881
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.01,62582,0.82064325
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.01,250467,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.1,100095,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.005,5076,0.23944962
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.005,30877,0.25180483
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.005,124845,0.5618752
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.005,500574,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.01,9813,0.17859522
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.01,62582,0.3105568
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.01,250467,0.90868473
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.1,100095,0.40527996
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.1,624033,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.005,5076,0.39855358
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.005,30877,0.49080643
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.005,124845,0.49689922
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.005,500574,0.83157444
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.01,9813,0.46472645
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.01,62582,0.409232
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.01,250467,0.52283514
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.01,999898,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.1,100095,0.30215997
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.1,624033,0.71009916
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.1,2500146,non-zero exitcode (gridsize).
+relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,SCC_MP,random_0.1,10001053,non-zero exitcode (gridsize).

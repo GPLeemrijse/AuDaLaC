@@ -7,6 +7,7 @@
 #include <stack>
 #include <chrono>
 
+#define PRINT false
 
 using namespace std;
 using namespace std::chrono;
@@ -39,8 +40,10 @@ void dfs(uint n){
 void dfs_print(uint n){
     if(vis[n] == true) return;  //if node is already visited
     
-    cout<< n <<" ";
-    
+    #if PRINT
+        cout<< n <<" ";
+    #endif
+
     uint len= transpose_graph[n].size();
     vis[n]= true;
     
@@ -68,7 +71,9 @@ int kosarajuSCC(uint n){
         if(vis[node_order[i]] == false){
             dfs_print(node_order[i]);
             scc_count++;
+            #if PRINT
             cout<<endl;
+            #endif
         }
         
     }

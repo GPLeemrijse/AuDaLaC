@@ -67,7 +67,7 @@ impl<'a> WorkDivisor<'a> {
                     formatdoc!(
                         "
 						\tconst RefType self = block.size() * grid.block_rank() + block.thread_rank();
-						\tif (self >= nrof_instances) break;"
+						\tif (self >= nrof_instances) return;"
                     )
                 }
             }
@@ -83,7 +83,7 @@ impl<'a> WorkDivisor<'a> {
                     formatdoc!(
                         "
 						\tconst RefType self = grid.thread_rank();
-						\tif (self >= nrof_instances) break;"
+						\tif (self >= nrof_instances) return;"
                     )
                 }
             }

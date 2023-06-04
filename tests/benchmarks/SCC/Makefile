@@ -4,10 +4,10 @@ debug: SCC.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
 	nvcc -arch=sm_60 -g -G SCC.o ../../../compile_resources/*.o -o SCC.out
 
 
-all: SCC.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
-	nvcc -arch=sm_60 -dc ../../../compile_resources/*.cu -odir ../../../compile_resources/
-	nvcc -arch=sm_60 -dc SCC.cu -I../../../compile_resources/ --ptxas-options=-v
-	nvcc -arch=sm_60 SCC.o ../../../compile_resources/*.o -o SCC.out
+SCC: SCC.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
+	nvcc -arch=sm_60 -dc ../../../compile_resources/*.cu -odir ../../../compile_resources/ -O3
+	nvcc -arch=sm_60 -dc SCC.cu -I../../../compile_resources/ --ptxas-options=-v -O3
+	nvcc -arch=sm_60 SCC.o ../../../compile_resources/*.o -o SCC.out -O3
 	#(cd fixtures/ && python3 compare_random_graph.py 1000 1000)
 
 disasm: SCC.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
@@ -29,9 +29,9 @@ golden: SCC_golden.cu ../../../compile_resources/*.cu ../../../compile_resources
 
 
 MP: SCC_MP.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
-	nvcc -arch=sm_60 -dc ../../../compile_resources/*.cu -odir ../../../compile_resources/
-	nvcc -arch=sm_60 -dc SCC_MP.cu -I../../../compile_resources/
-	nvcc -arch=sm_60 SCC_MP.o ../../../compile_resources/*.o -o SCC_MP.out
+	nvcc -arch=sm_60 -dc ../../../compile_resources/*.cu -odir ../../../compile_resources/ -O3
+	nvcc -arch=sm_60 -dc SCC_MP.cu -I../../../compile_resources/ -O3
+	nvcc -arch=sm_60 SCC_MP.o ../../../compile_resources/*.o -o SCC_MP.out -O3
 
 
 run_golden: ./SCC_golden.out $(init)
