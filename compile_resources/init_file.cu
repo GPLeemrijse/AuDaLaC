@@ -49,6 +49,8 @@ namespace InitFile {
     std::vector<StructInfo> parse(const char* init_file) {
         std::ifstream infile(init_file);
 
+        uint line_nr = 0;
+
         std::string line;
         std::getline(infile, line);
         
@@ -68,6 +70,7 @@ namespace InitFile {
         /* Parse the structure parameter declarations */
         for (int s = 0; s < nrof_structs; s++){
             std::getline(infile, line);
+            line_nr++;
             std::stringstream iss(line);
 
             iss >> struct_info[s].name; // Read in name
@@ -82,22 +85,25 @@ namespace InitFile {
         for (int strct = 0; strct < nrof_structs; strct++){
             StructInfo* s_info = &struct_info[strct];
             std::getline(infile, line);
+            line_nr++;
             
             std::string name;
             std::string middle_part;
-            uint nrof_instances;
+            uint defined_instances;
+            uint allocated_nrof_instances;
             std::istringstream iss(line);
-            iss >> name >> middle_part >> nrof_instances;
+            iss >> name >> middle_part >> defined_instances >> allocated_nrof_instances;
 
             bool starts_with_name = name.compare(s_info->name) == 0;
             bool middle_part_instances = middle_part.compare("instances") == 0;
             
             // Error if wrong input received
-            if (!starts_with_name || !middle_part_instances || nrof_instances < 1) {
+            if (!starts_with_name || !middle_part_instances) {
+                fprintf(stderr, "Line nr: %u\n", line_nr);
                 throw std::invalid_argument("Wrong structure instances header.");
             }
 
-            s_info->nrof_instances = nrof_instances;
+            s_info->nrof_instances = allocated_nrof_instances;
 
             /* Allocate space for instances per parameter */
             uint nrof_params = s_info->parameter_types.size();
@@ -106,7 +112,7 @@ namespace InitFile {
             std::vector<size_t> param_sizes(nrof_params);
             for (int p = 0; p < nrof_params; p++){
                 size_t param_size = ADL::size_of_type(s_info->parameter_types[p]);
-                void* data_ptr = malloc(nrof_instances * param_size);
+                void* data_ptr = calloc(allocated_nrof_instances, param_size);
 
                 if (data_ptr == NULL){
                     throw std::bad_alloc();
@@ -116,8 +122,9 @@ namespace InitFile {
                 param_sizes.push_back(param_size);
             }
 
-            for (int inst = 0; inst < nrof_instances; inst++){
+            for (int inst = 0; inst < defined_instances; inst++){
                 std::getline(infile, line);
+                line_nr++;
                 std::istringstream iss(line);
                 int64_t par_value;
                 for (int p = 0; p < nrof_params; p++){

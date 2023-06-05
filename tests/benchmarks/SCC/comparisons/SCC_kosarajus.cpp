@@ -5,8 +5,13 @@
 #include <cstdio>
 #include <vector>
 #include <stack>
+#include <chrono>
+
+#define PRINT false
 
 using namespace std;
+using namespace std::chrono;
+
 
 vector<vector<uint>> graph;              //store graph's adjacency list
 vector<vector<uint>> transpose_graph;    //store transpose graph's adjacency list
@@ -35,8 +40,10 @@ void dfs(uint n){
 void dfs_print(uint n){
     if(vis[n] == true) return;  //if node is already visited
     
-    cout<< n <<" ";
-    
+    #if PRINT
+        cout<< n <<" ";
+    #endif
+
     uint len= transpose_graph[n].size();
     vis[n]= true;
     
@@ -64,7 +71,9 @@ int kosarajuSCC(uint n){
         if(vis[node_order[i]] == false){
             dfs_print(node_order[i]);
             scc_count++;
+            #if PRINT
             cout<<endl;
+            #endif
         }
         
     }
@@ -104,9 +113,17 @@ int main(void){
         graph[u].push_back(v);
         transpose_graph[v].push_back(u);
     }
-    
+
+    auto t1 = high_resolution_clock::now();
     int components= kosarajuSCC(n);
+    auto t2 = high_resolution_clock::now();
     cout<< "Components: "<< components <<endl;
+
+    duration<double, std::milli> ms = t2 - t1;
+
+    std::cerr << "Total walltime CPU: "
+              << ms.count()
+              << " ms\n";
     
     
     return 0;
