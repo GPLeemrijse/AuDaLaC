@@ -1,0 +1,168 @@
+$$__device__ uint nrof_odd_wins = 0;
+
+
+struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Measure) {
+
+	max_candidate {
+		if candidate != null && !rho.top then {
+			Bool copy := candidate.top ||
+						 (candidate.p1 > rho.p1) ||
+						 (candidate.p1 <= rho.p1 && candidate.p3 > rho.p3);
+
+			if copy then {
+				rho.top := candidate.top;
+				rho.p1 := candidate.p1;
+				rho.p3 := candidate.p3;
+			}
+		}
+	}
+
+	count_odd {
+		if this != null && rho.top then {
+			$$atomicInc(&nrof_odd_wins, 0xffffffff);
+		}
+	}
+
+	print_odd {
+		if this == null then {
+			$$printf("Number of odd won vertices = %u\n", nrof_odd_wins);
+		}
+	}
+}
+
+struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
+
+	prog {
+		Bool top_old := m.top;
+		Nat p1_old := m.p1;
+		Nat p3_old := m.p3;
+
+		// Even
+		if v.p % 2 == 0 then {
+			// m is (least) equivalent up to v.p to w.rho
+			m.top := w.rho.top;
+
+			if !m.top then {
+				if v.p >= 1 then {
+					m.p1 := w.rho.p1;
+				}
+				if v.p < 1 then {
+					m.p1 := 0;
+				}
+
+				if v.p >= 3 then {
+					m.p3 := w.rho.p3;
+				}
+				if v.p < 3 then {
+					m.p3 := 0;
+				}
+			}
+		}
+
+		// Odd
+		if v.p % 2 == 1 then {
+			// Result is strictly greater up to v.p than w.rho, or Top 
+			if w.rho.top then {
+				m.top := true;
+			}
+			if !m.top then {
+				Bool incr := false;
+				
+				// Attempt to increase least significant measure
+				if v.p >= 3 && w.rho.p3 < max.p3 then {
+					m.p3 := w.rho.p3 + 1;
+					incr := true;
+				}
+				// If not increased, check next priority.
+				if !incr then {
+					m.p3 := 0;
+					// incrementing p1 possible
+					if v.p >= 1 && w.rho.p1 < max.p1 then {
+						m.p1 := w.rho.p1 + 1;
+						incr := true;
+					}
+					// If p1 couldn't be incremented, Top is the only option.
+					if !incr then {
+						m.top := true;
+					}
+				}
+			}
+		}
+		Bool is_stable := top_old == m.top && p1_old == m.p1 && p3_old == m.p3;
+
+		/* If m is v's candidate, and m changed, reset v's candidate. */
+		if !is_stable && v.candidate == m then {
+			v.candidate := null;
+		}
+	}
+	
+	top {
+		/*	Nominate yourself as minimum (because owner is even) candidate
+			if you are not top but the current candidate is, or the current 
+			candidate is null.
+		*/
+		if !v.owner && (v.candidate == null || (!m.top && v.candidate.top)) then {
+			v.candidate := m;
+		}
+
+		/*	Nominate yourself as maximum (because owner is odd) candidate
+			if you are top but the current candidate is not, or the current
+			candidate is null.
+		*/
+		if v.owner && (v.candidate == null || (m.top && !v.candidate.top)) then {
+			v.candidate := m;
+		}
+	}
+
+	priority_1 {
+		/*	First make sure you share the higher significance measures
+			with the candidate (which is now guaranteed not to be null).
+		*/
+		if v.candidate.top == m.top then {
+			/*	If the owner is even and you have a lower p1 measure,
+				or the owner is odd and you have a higher p1 measure,
+				then nominate yourself as candidate.
+			*/
+			if (!v.owner && m.p1 < v.candidate.p1) ||
+			   (v.owner  && m.p1 > v.candidate.p1) then {
+				v.candidate := m;
+			}
+		}	
+	}
+
+	priority_3 {
+		/*	First make sure you share the higher significance measures
+			with the candidate (which is now guaranteed not to be null).
+		*/
+		if v.candidate.top == m.top && v.candidate.p1 == m.p1 then {
+			/*	If the owner is even and you have a lower p3 measure,
+				or the owner is odd and you have a higher p3 measure,
+				then nominate yourself as candidate.
+			*/
+			if (!v.owner && m.p3 < v.candidate.p3) ||
+			   (v.owner  && m.p3 > v.candidate.p3) then {
+				v.candidate := m;
+			}
+		}
+	}
+
+	self_loops_to_top {
+		if v == w && v.owner && v.p % 2 == 1 then {
+			v.rho.top := true;
+		}
+	}
+}
+
+struct Measure(top : Bool, p1 : Nat, p3 : Nat) {
+}
+
+self_loops_to_top <
+Fix (
+	prog <
+	Fix(top) <
+	Fix(priority_1) <
+	Fix(priority_3) <
+	max_candidate
+) <
+count_odd <
+print_odd

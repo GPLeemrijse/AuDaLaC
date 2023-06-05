@@ -1,10 +1,18 @@
-#define FP_DEPTH 2
-#define THREADS_PER_BLOCK 512
+#define I_PER_THREAD 16
+#define THREADS_PER_BLOCK 256
+#define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
+#define STORE(A, B) A.store(B, cuda::memory_order_relaxed)
+#define LOAD(A) A.load(cuda::memory_order_relaxed)
+#define WLOAD(T, A) ((T)A)
+#define NodeSet_MASK (((uint16_t)1) << 0)
+#define Node_MASK (((uint16_t)1) << 1)
+#define Edge_MASK (((uint16_t)1) << 2)
+#define STEP_PARITY(STRUCT) ((bool)(struct_step_parity & STRUCT ## _MASK))
+#define TOGGLE_STEP_PARITY(STRUCT) {struct_step_parity ^= STRUCT ## _MASK;}
 
 
 #include "ADL.h"
 #include "Struct.h"
-#include "fp_manager.h"
 #include "init_file.h"
 #include <cooperative_groups.h>
 #include <cuda/atomic>
@@ -12,24 +20,18 @@
 #include <vector>
 
 
-using namespace cooperative_groups;
 class NodeSet : public Struct {
 public:
 	NodeSet (void) : Struct() {}
 	
-	union {
-		void* parameters[8];
-		struct {
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* pivot_f_b;
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* pivot_f_nb;
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* pivot_nf_b;
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* pivot_nf_nb;
-			cuda::atomic<ADL::BoolType, cuda::thread_scope_device>* scc;
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* f_and_b;
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* not_f_and_b;
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* f_and_not_b;
-		};
-	};
+	ATOMIC(RefType)* pivot_f_b;
+	ATOMIC(RefType)* pivot_f_nb;
+	ATOMIC(RefType)* pivot_nf_b;
+	ATOMIC(RefType)* pivot_nf_nb;
+	ATOMIC(BoolType)* scc;
+	ATOMIC(RefType)* f_and_b;
+	ATOMIC(RefType)* not_f_and_b;
+	ATOMIC(RefType)* f_and_not_b;
 
 	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "NodeSet");
@@ -45,7 +47,7 @@ public:
 	};
 
 	void** get_parameters(void) {
-		return parameters;
+		return (void**)&pivot_f_b;
 	}
 
 	size_t child_size(void) {
@@ -53,29 +55,38 @@ public:
 	}
 
 	size_t param_size(uint idx) {
-		static size_t sizes[8] = {
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::BoolType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>)
+		static const size_t sizes[8] = {
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(BoolType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType))
 		};
 		return sizes[idx];
 	}
 
-	__host__ __device__ RefType create_instance(ADL::RefType _pivot_f_b, ADL::RefType _pivot_f_nb, ADL::RefType _pivot_nf_b, ADL::RefType _pivot_nf_nb, ADL::BoolType _scc, ADL::RefType _f_and_b, ADL::RefType _not_f_and_b, ADL::RefType _f_and_not_b) {
-		RefType slot = claim_instance();
-		pivot_f_b[slot].store(_pivot_f_b, cuda::memory_order_relaxed);
-		pivot_f_nb[slot].store(_pivot_f_nb, cuda::memory_order_relaxed);
-		pivot_nf_b[slot].store(_pivot_nf_b, cuda::memory_order_relaxed);
-		pivot_nf_nb[slot].store(_pivot_nf_nb, cuda::memory_order_relaxed);
-		scc[slot].store(_scc, cuda::memory_order_relaxed);
-		f_and_b[slot].store(_f_and_b, cuda::memory_order_relaxed);
-		not_f_and_b[slot].store(_not_f_and_b, cuda::memory_order_relaxed);
-		f_and_not_b[slot].store(_f_and_not_b, cuda::memory_order_relaxed);
+	__device__ RefType create_instance(RefType _pivot_f_b,
+									   RefType _pivot_f_nb,
+									   RefType _pivot_nf_b,
+									   RefType _pivot_nf_nb,
+									   BoolType _scc,
+									   RefType _f_and_b,
+									   RefType _not_f_and_b,
+									   RefType _f_and_not_b,
+									   bool* stable){
+		RefType slot = claim_instance2();
+		STORE(pivot_f_b[slot], _pivot_f_b);
+		STORE(pivot_f_nb[slot], _pivot_f_nb);
+		STORE(pivot_nf_b[slot], _pivot_nf_b);
+		STORE(pivot_nf_nb[slot], _pivot_nf_nb);
+		STORE(scc[slot], _scc);
+		STORE(f_and_b[slot], _f_and_b);
+		STORE(not_f_and_b[slot], _not_f_and_b);
+		STORE(f_and_not_b[slot], _f_and_not_b);
+		*stable = false;
 		return slot;
 	}
 };
@@ -84,14 +95,9 @@ class Node : public Struct {
 public:
 	Node (void) : Struct() {}
 	
-	union {
-		void* parameters[3];
-		struct {
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* set;
-			cuda::atomic<ADL::BoolType, cuda::thread_scope_device>* fwd;
-			cuda::atomic<ADL::BoolType, cuda::thread_scope_device>* bwd;
-		};
-	};
+	ATOMIC(RefType)* set;
+	ATOMIC(BoolType)* fwd;
+	ATOMIC(BoolType)* bwd;
 
 	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "Node");
@@ -102,7 +108,7 @@ public:
 	};
 
 	void** get_parameters(void) {
-		return parameters;
+		return (void**)&set;
 	}
 
 	size_t child_size(void) {
@@ -110,19 +116,23 @@ public:
 	}
 
 	size_t param_size(uint idx) {
-		static size_t sizes[3] = {
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::BoolType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::BoolType, cuda::thread_scope_device>)
+		static const size_t sizes[3] = {
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(BoolType)),
+			sizeof(ATOMIC(BoolType))
 		};
 		return sizes[idx];
 	}
 
-	__host__ __device__ RefType create_instance(ADL::RefType _set, ADL::BoolType _fwd, ADL::BoolType _bwd) {
-		RefType slot = claim_instance();
-		set[slot].store(_set, cuda::memory_order_relaxed);
-		fwd[slot].store(_fwd, cuda::memory_order_relaxed);
-		bwd[slot].store(_bwd, cuda::memory_order_relaxed);
+	__device__ RefType create_instance(RefType _set,
+									   BoolType _fwd,
+									   BoolType _bwd,
+									   bool* stable){
+		RefType slot = claim_instance2();
+		STORE(set[slot], _set);
+		STORE(fwd[slot], _fwd);
+		STORE(bwd[slot], _bwd);
+		*stable = false;
 		return slot;
 	}
 };
@@ -131,13 +141,8 @@ class Edge : public Struct {
 public:
 	Edge (void) : Struct() {}
 	
-	union {
-		void* parameters[2];
-		struct {
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* s;
-			cuda::atomic<ADL::RefType, cuda::thread_scope_device>* t;
-		};
-	};
+	ATOMIC(RefType)* s;
+	ATOMIC(RefType)* t;
 
 	void assert_correct_info(InitFile::StructInfo* info) {
 		assert (info->name == "Edge");
@@ -147,7 +152,7 @@ public:
 	};
 
 	void** get_parameters(void) {
-		return parameters;
+		return (void**)&s;
 	}
 
 	size_t child_size(void) {
@@ -155,25 +160,25 @@ public:
 	}
 
 	size_t param_size(uint idx) {
-		static size_t sizes[2] = {
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>),
-			sizeof(cuda::atomic<ADL::RefType, cuda::thread_scope_device>)
+		static const size_t sizes[2] = {
+			sizeof(ATOMIC(RefType)),
+			sizeof(ATOMIC(RefType))
 		};
 		return sizes[idx];
 	}
 
-	__host__ __device__ RefType create_instance(ADL::RefType _s, ADL::RefType _t) {
-		RefType slot = claim_instance();
-		s[slot].store(_s, cuda::memory_order_relaxed);
-		t[slot].store(_t, cuda::memory_order_relaxed);
+	__device__ RefType create_instance(RefType _s,
+									   RefType _t,
+									   bool* stable){
+		RefType slot = claim_instance2();
+		STORE(s[slot], _s);
+		STORE(t[slot], _t);
+		*stable = false;
 		return slot;
 	}
 };
 
-
-
-FPManager host_FP = FPManager(FP_DEPTH);
-FPManager* device_FP;
+using namespace cooperative_groups;
 
 Edge host_Edge = Edge();
 Node host_Node = Node();
@@ -183,628 +188,274 @@ Edge* host_Edge_ptr = &host_Edge;
 Node* host_Node_ptr = &host_Node;
 NodeSet* host_NodeSet_ptr = &host_NodeSet;
 
-Edge* gm_Edge;
-Node* gm_Node;
-NodeSet* gm_NodeSet;
+__device__ Edge* __restrict__ edge;
+__device__ Node* __restrict__ node;
+__device__ NodeSet* __restrict__ nodeset;
 
 
+#define FP_DEPTH 2
+/* Transform an iter_idx into the fp_stack index
+   associated with that operation.
+*/
+#define FP_SET(X) (X)
+#define FP_RESET(X) ((X) + 1 >= 3 ? (X) + 1 - 3 : (X) + 1)
+#define FP_READ(X) ((X) + 2 >= 3 ? (X) + 2 - 3 : (X) + 2)
 
-__global__ void NodeSet_allocate_sets(FPManager* FP,
-									  inst_size nrof_instances,
-									  NodeSet* const nodeset,
-									  Node* const node,
-									  Edge* const edge,
-									  NodeSet* const host_nodeset){
-	grid_group grid = this_grid();
-	RefType t_idx = grid.thread_rank();
-	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
-	
-		if ((nodeset->pivot_f_b[self].load(cuda::memory_order_relaxed)) != 0) {
-			if ((nodeset->pivot_nf_nb[self].load(cuda::memory_order_relaxed)) == 0) {
-				/* f_and_b = self */
-				par_owner = self;
-				if(par_owner != 0){
-					ADL::RefType prev_val = nodeset->f_and_b[par_owner].load(cuda::memory_order_relaxed);
-					ADL::RefType new_val = self;
-					if (prev_val != new_val) {
-						nodeset->f_and_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
+__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH][3];
 
-				/* scc = true */
-				par_owner = self;
-				if(par_owner != 0){
-					ADL::BoolType prev_val = nodeset->scc[par_owner].load(cuda::memory_order_relaxed);
-					ADL::BoolType new_val = true;
-					if (prev_val != new_val) {
-						nodeset->scc[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-				/* pivot_f_b = 0 */
-				par_owner = self;
-				if(par_owner != 0){
-					ADL::RefType prev_val = nodeset->pivot_f_b[par_owner].load(cuda::memory_order_relaxed);
-					ADL::RefType new_val = 0;
-					if (prev_val != new_val) {
-						nodeset->pivot_f_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-			}
-			if ((nodeset->pivot_nf_nb[self].load(cuda::memory_order_relaxed)) != 0) {
-				/* f_and_b = nodeset->create_instance(0, 0, 0, 0, true, 0, 0, 0) */
-				par_owner = self;
-				if(par_owner != 0){
-					ADL::RefType prev_val = nodeset->f_and_b[par_owner].load(cuda::memory_order_relaxed);
-					ADL::RefType new_val = nodeset->create_instance(0, 0, 0, 0, true, 0, 0, 0);
-					if (prev_val != new_val) {
-						nodeset->f_and_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-				/* pivot_f_b = 0 */
-				par_owner = self;
-				if(par_owner != 0){
-					ADL::RefType prev_val = nodeset->pivot_f_b[par_owner].load(cuda::memory_order_relaxed);
-					ADL::RefType new_val = 0;
-					if (prev_val != new_val) {
-						nodeset->pivot_f_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-			}
-		}
-		if ((nodeset->pivot_f_nb[self].load(cuda::memory_order_relaxed)) != 0) {
-			/* f_and_not_b = nodeset->create_instance(0, (nodeset->pivot_f_nb[self].load(cuda::memory_order_relaxed)), 0, 0, false, 0, 0, 0) */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = nodeset->f_and_not_b[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = nodeset->create_instance(0, (nodeset->pivot_f_nb[self].load(cuda::memory_order_relaxed)), 0, 0, false, 0, 0, 0);
-				if (prev_val != new_val) {
-					nodeset->f_and_not_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_f_nb = 0 */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = nodeset->pivot_f_nb[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = 0;
-				if (prev_val != new_val) {
-					nodeset->pivot_f_nb[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-		}
-		if ((nodeset->pivot_nf_b[self].load(cuda::memory_order_relaxed)) != 0) {
-			/* not_f_and_b = nodeset->create_instance(0, 0, (nodeset->pivot_nf_b[self].load(cuda::memory_order_relaxed)), 0, false, 0, 0, 0) */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = nodeset->not_f_and_b[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = nodeset->create_instance(0, 0, (nodeset->pivot_nf_b[self].load(cuda::memory_order_relaxed)), 0, false, 0, 0, 0);
-				if (prev_val != new_val) {
-					nodeset->not_f_and_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_nf_b = 0 */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = nodeset->pivot_nf_b[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = 0;
-				if (prev_val != new_val) {
-					nodeset->pivot_nf_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-		}
+__device__ void clear_stack(int lvl, uint8_t* iter_idx) {
+	/*	Clears the stack on the FP_SET side.
+		The FP_RESET and FP_READ sides should remain the same.
+	*/
+	while(lvl >= 0){
+		fp_stack[lvl][FP_SET(iter_idx[lvl])].store(false, cuda::memory_order_relaxed);
+		lvl--;
 	}
-	
-
-	grid.sync();
-	bool created_instances = false;
-	if (t_idx == 0) {
-		created_instances |= nodeset->sync_nrof_instances(host_nodeset);
-		if (created_instances){
-			FP->set();
-		}
-	}
-
 }
 
-__global__ void NodeSet_initialise_pivot_fwd_bwd(FPManager* FP,
-												 inst_size nrof_instances,
-												 NodeSet* const nodeset,
-												 Node* const node,
-												 Edge* const edge){
-	grid_group grid = this_grid();
-	RefType t_idx = grid.thread_rank();
-	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
-	
-		if (!(nodeset->scc[self].load(cuda::memory_order_relaxed))) {
-			/* pivot_f_b.fwd = true */
-			par_owner = (nodeset->pivot_f_b[self].load(cuda::memory_order_relaxed));
-			if(par_owner != 0){
-				ADL::BoolType prev_val = node->fwd[par_owner].load(cuda::memory_order_relaxed);
-				ADL::BoolType new_val = true;
-				if (prev_val != new_val) {
-					node->fwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
+typedef void(*step_func)(RefType, bool*);
+template <step_func Step>
+__device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_block block, bool* stable){
+	for(int i = 0; i < I_PER_THREAD; i++){
+		const RefType self = block.size() * (i + grid.block_rank() * I_PER_THREAD) + block.thread_rank();
+		if (self >= nrof_instances) break;
 
-			/* pivot_f_b.bwd = true */
-			par_owner = (nodeset->pivot_f_b[self].load(cuda::memory_order_relaxed));
-			if(par_owner != 0){
-				ADL::BoolType prev_val = node->bwd[par_owner].load(cuda::memory_order_relaxed);
-				ADL::BoolType new_val = true;
-				if (prev_val != new_val) {
-					node->bwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_f_b = 0 */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = nodeset->pivot_f_b[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = 0;
-				if (prev_val != new_val) {
-					nodeset->pivot_f_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_f_nb.fwd = true */
-			par_owner = (nodeset->pivot_f_nb[self].load(cuda::memory_order_relaxed));
-			if(par_owner != 0){
-				ADL::BoolType prev_val = node->fwd[par_owner].load(cuda::memory_order_relaxed);
-				ADL::BoolType new_val = true;
-				if (prev_val != new_val) {
-					node->fwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_f_nb.bwd = true */
-			par_owner = (nodeset->pivot_f_nb[self].load(cuda::memory_order_relaxed));
-			if(par_owner != 0){
-				ADL::BoolType prev_val = node->bwd[par_owner].load(cuda::memory_order_relaxed);
-				ADL::BoolType new_val = true;
-				if (prev_val != new_val) {
-					node->bwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_f_nb = 0 */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = nodeset->pivot_f_nb[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = 0;
-				if (prev_val != new_val) {
-					nodeset->pivot_f_nb[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_nf_b.fwd = true */
-			par_owner = (nodeset->pivot_nf_b[self].load(cuda::memory_order_relaxed));
-			if(par_owner != 0){
-				ADL::BoolType prev_val = node->fwd[par_owner].load(cuda::memory_order_relaxed);
-				ADL::BoolType new_val = true;
-				if (prev_val != new_val) {
-					node->fwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_nf_b.bwd = true */
-			par_owner = (nodeset->pivot_nf_b[self].load(cuda::memory_order_relaxed));
-			if(par_owner != 0){
-				ADL::BoolType prev_val = node->bwd[par_owner].load(cuda::memory_order_relaxed);
-				ADL::BoolType new_val = true;
-				if (prev_val != new_val) {
-					node->bwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_nf_b = 0 */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = nodeset->pivot_nf_b[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = 0;
-				if (prev_val != new_val) {
-					nodeset->pivot_nf_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_nf_nb.fwd = true */
-			par_owner = (nodeset->pivot_nf_nb[self].load(cuda::memory_order_relaxed));
-			if(par_owner != 0){
-				ADL::BoolType prev_val = node->fwd[par_owner].load(cuda::memory_order_relaxed);
-				ADL::BoolType new_val = true;
-				if (prev_val != new_val) {
-					node->fwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_nf_nb.bwd = true */
-			par_owner = (nodeset->pivot_nf_nb[self].load(cuda::memory_order_relaxed));
-			if(par_owner != 0){
-				ADL::BoolType prev_val = node->bwd[par_owner].load(cuda::memory_order_relaxed);
-				ADL::BoolType new_val = true;
-				if (prev_val != new_val) {
-					node->bwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-			/* pivot_nf_nb = 0 */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = nodeset->pivot_nf_nb[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = 0;
-				if (prev_val != new_val) {
-					nodeset->pivot_nf_nb[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-		}
+		Step(self, stable);
 	}
-	
 }
-
-__global__ void Node_pivots_nominate(FPManager* FP,
-									 inst_size nrof_instances,
-									 NodeSet* const nodeset,
-									 Node* const node,
-									 Edge* const edge){
-	grid_group grid = this_grid();
-	RefType t_idx = grid.thread_rank();
-	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
-	
-		if (!(nodeset->scc[node->set[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) {
-			BoolType f = (node->fwd[self].load(cuda::memory_order_relaxed));
-			BoolType b = (node->bwd[self].load(cuda::memory_order_relaxed));
-			if ((f) && (b)) {
-				/* set.pivot_f_b = self */
-				par_owner = (node->set[self].load(cuda::memory_order_relaxed));
-				if(par_owner != 0){
-					ADL::RefType prev_val = nodeset->pivot_f_b[par_owner].load(cuda::memory_order_relaxed);
-					ADL::RefType new_val = self;
-					if (prev_val != new_val) {
-						nodeset->pivot_f_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-			}
-			if ((f) && (!(b))) {
-				/* set.pivot_f_nb = self */
-				par_owner = (node->set[self].load(cuda::memory_order_relaxed));
-				if(par_owner != 0){
-					ADL::RefType prev_val = nodeset->pivot_f_nb[par_owner].load(cuda::memory_order_relaxed);
-					ADL::RefType new_val = self;
-					if (prev_val != new_val) {
-						nodeset->pivot_f_nb[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-			}
-			if ((!(f)) && (b)) {
-				/* set.pivot_nf_b = self */
-				par_owner = (node->set[self].load(cuda::memory_order_relaxed));
-				if(par_owner != 0){
-					ADL::RefType prev_val = nodeset->pivot_nf_b[par_owner].load(cuda::memory_order_relaxed);
-					ADL::RefType new_val = self;
-					if (prev_val != new_val) {
-						nodeset->pivot_nf_b[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-			}
-			if ((!(f)) && (!(b))) {
-				/* set.pivot_nf_nb = self */
-				par_owner = (node->set[self].load(cuda::memory_order_relaxed));
-				if(par_owner != 0){
-					ADL::RefType prev_val = nodeset->pivot_nf_nb[par_owner].load(cuda::memory_order_relaxed);
-					ADL::RefType new_val = self;
-					if (prev_val != new_val) {
-						nodeset->pivot_nf_nb[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-			}
-		}
-	}
-	
-}
-
-__global__ void Node_divide_into_sets_reset_fwd_bwd(FPManager* FP,
-													inst_size nrof_instances,
-													NodeSet* const nodeset,
-													Node* const node,
-													Edge* const edge){
-	grid_group grid = this_grid();
-	RefType t_idx = grid.thread_rank();
-	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
-	
-		BoolType f = (node->fwd[self].load(cuda::memory_order_relaxed));
-		BoolType b = (node->bwd[self].load(cuda::memory_order_relaxed));
-		if ((f) && (b)) {
-			/* set = (nodeset->f_and_b[node->set[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = node->set[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = (nodeset->f_and_b[node->set[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed));
-				if (prev_val != new_val) {
-					node->set[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-		}
-		if ((!(f)) && (b)) {
-			/* set = (nodeset->not_f_and_b[node->set[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = node->set[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = (nodeset->not_f_and_b[node->set[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed));
-				if (prev_val != new_val) {
-					node->set[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-		}
-		if ((f) && (!(b))) {
-			/* set = (nodeset->f_and_not_b[node->set[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) */
-			par_owner = self;
-			if(par_owner != 0){
-				ADL::RefType prev_val = node->set[par_owner].load(cuda::memory_order_relaxed);
-				ADL::RefType new_val = (nodeset->f_and_not_b[node->set[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed));
-				if (prev_val != new_val) {
-					node->set[par_owner].store(new_val, cuda::memory_order_relaxed);
-					FP->set();
-				}
-			}
-
-		}
-		/* fwd = false */
-		par_owner = self;
-		if(par_owner != 0){
-			ADL::BoolType prev_val = node->fwd[par_owner].load(cuda::memory_order_relaxed);
-			ADL::BoolType new_val = false;
-			if (prev_val != new_val) {
-				node->fwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-				FP->set();
-			}
-		}
-
-		/* bwd = false */
-		par_owner = self;
-		if(par_owner != 0){
-			ADL::BoolType prev_val = node->bwd[par_owner].load(cuda::memory_order_relaxed);
-			ADL::BoolType new_val = false;
-			if (prev_val != new_val) {
-				node->bwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-				FP->set();
-			}
-		}
-
-	}
-	
-}
-
-__global__ void Edge_compute_fwd_bwd(FPManager* FP,
-									 inst_size nrof_instances,
-									 NodeSet* const nodeset,
-									 Node* const node,
-									 Edge* const edge){
-	grid_group grid = this_grid();
-	RefType t_idx = grid.thread_rank();
-	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
-	
-		if ((node->set[edge->t[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) == (node->set[edge->s[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed))) {
-			if (node->fwd[edge->s[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) {
-				/* t.fwd = true */
-				par_owner = (edge->t[self].load(cuda::memory_order_relaxed));
-				if(par_owner != 0){
-					ADL::BoolType prev_val = node->fwd[par_owner].load(cuda::memory_order_relaxed);
-					ADL::BoolType new_val = true;
-					if (prev_val != new_val) {
-						node->fwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-			}
-			if (node->bwd[edge->t[self].load(cuda::memory_order_relaxed)].load(cuda::memory_order_relaxed)) {
-				/* s.bwd = true */
-				par_owner = (edge->s[self].load(cuda::memory_order_relaxed));
-				if(par_owner != 0){
-					ADL::BoolType prev_val = node->bwd[par_owner].load(cuda::memory_order_relaxed);
-					ADL::BoolType new_val = true;
-					if (prev_val != new_val) {
-						node->bwd[par_owner].store(new_val, cuda::memory_order_relaxed);
-						FP->set();
-					}
-				}
-
-			}
-		}
-	}
-	
-}
-__global__ void NodeSet_print(NodeSet* nodeset,
-							  inst_size nrof_instances){
-	grid_group grid = this_grid();
-	RefType t_idx = grid.thread_rank();
-	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
-		if (self != 0) {
-			printf("NodeSet(%u): pivot_f_b=%u, pivot_f_nb=%u, pivot_nf_b=%u, pivot_nf_nb=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, nodeset->pivot_f_b[self].load(cuda::memory_order_relaxed), nodeset->pivot_f_nb[self].load(cuda::memory_order_relaxed), nodeset->pivot_nf_b[self].load(cuda::memory_order_relaxed), nodeset->pivot_nf_nb[self].load(cuda::memory_order_relaxed), nodeset->scc[self].load(cuda::memory_order_relaxed), nodeset->f_and_b[self].load(cuda::memory_order_relaxed), nodeset->not_f_and_b[self].load(cuda::memory_order_relaxed), nodeset->f_and_not_b[self].load(cuda::memory_order_relaxed));
+template<typename T>
+__device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {
+	if (owner != 0){
+		T old_val = LOAD(params[owner]);
+		if (old_val != new_val){
+			STORE(params[owner], new_val);
+			*stable = false;
 		}
 	}
 }
 
-__global__ void Node_print(Node* node,
-						   inst_size nrof_instances){
-	grid_group grid = this_grid();
-	RefType t_idx = grid.thread_rank();
-	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
-		if (self != 0) {
-			printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, node->set[self].load(cuda::memory_order_relaxed), node->fwd[self].load(cuda::memory_order_relaxed), node->bwd[self].load(cuda::memory_order_relaxed));
+__device__ void NodeSet_print(const RefType self,
+							  bool* stable){
+	if (self != 0) {
+		printf("NodeSet(%u): pivot_f_b=%u, pivot_f_nb=%u, pivot_nf_b=%u, pivot_nf_nb=%u, scc=%u, f_and_b=%u, not_f_and_b=%u, f_and_not_b=%u\n", self, LOAD(nodeset->pivot_f_b[self]), LOAD(nodeset->pivot_f_nb[self]), LOAD(nodeset->pivot_nf_b[self]), LOAD(nodeset->pivot_nf_nb[self]), LOAD(nodeset->scc[self]), LOAD(nodeset->f_and_b[self]), LOAD(nodeset->not_f_and_b[self]), LOAD(nodeset->f_and_not_b[self]));
+	}
+}
+
+__device__ void NodeSet_allocate_sets(const RefType self,
+									  bool* stable){
+	
+	if ((LOAD(nodeset->pivot_f_b[self]) != 0)) {
+		if ((LOAD(nodeset->pivot_nf_nb[self]) == 0)) {
+			// f_and_b := this;
+			SetParam<RefType>(self, nodeset->f_and_b, self, stable);
+			// scc := true;
+			SetParam<BoolType>(self, nodeset->scc, true, stable);
+			// pivot_f_b := null;
+			SetParam<RefType>(self, nodeset->pivot_f_b, 0, stable);
+		}
+		if ((LOAD(nodeset->pivot_nf_nb[self]) != 0)) {
+			// f_and_b := NodeSet(null, null, null, null, true, null, null, null);
+			SetParam<RefType>(self, nodeset->f_and_b, nodeset->create_instance(0, 0, 0, 0, true, 0, 0, 0, stable), stable);
+			// pivot_f_b := null;
+			SetParam<RefType>(self, nodeset->pivot_f_b, 0, stable);
+		}
+	}
+	if ((LOAD(nodeset->pivot_f_nb[self]) != 0)) {
+		// f_and_not_b := NodeSet(null, pivot_f_nb, null, null, false, null, null, null);
+		SetParam<RefType>(self, nodeset->f_and_not_b, nodeset->create_instance(0, LOAD(nodeset->pivot_f_nb[self]), 0, 0, false, 0, 0, 0, stable), stable);
+		// pivot_f_nb := null;
+		SetParam<RefType>(self, nodeset->pivot_f_nb, 0, stable);
+	}
+	if ((LOAD(nodeset->pivot_nf_b[self]) != 0)) {
+		// not_f_and_b := NodeSet(null, null, pivot_nf_b, null, false, null, null, null);
+		SetParam<RefType>(self, nodeset->not_f_and_b, nodeset->create_instance(0, 0, LOAD(nodeset->pivot_nf_b[self]), 0, false, 0, 0, 0, stable), stable);
+		// pivot_nf_b := null;
+		SetParam<RefType>(self, nodeset->pivot_nf_b, 0, stable);
+	}
+}
+
+__device__ void NodeSet_initialise_pivot_fwd_bwd(const RefType self,
+												 bool* stable){
+	
+	if ((!WLOAD(BoolType, nodeset->scc[self]))) {
+		// pivot_f_b.fwd := true;
+		SetParam<BoolType>(LOAD(nodeset->pivot_f_b[self]), node->fwd, true, stable);
+		// pivot_f_b.bwd := true;
+		SetParam<BoolType>(LOAD(nodeset->pivot_f_b[self]), node->bwd, true, stable);
+		// pivot_f_b := null;
+		SetParam<RefType>(self, nodeset->pivot_f_b, 0, stable);
+		// pivot_f_nb.fwd := true;
+		SetParam<BoolType>(LOAD(nodeset->pivot_f_nb[self]), node->fwd, true, stable);
+		// pivot_f_nb.bwd := true;
+		SetParam<BoolType>(LOAD(nodeset->pivot_f_nb[self]), node->bwd, true, stable);
+		// pivot_f_nb := null;
+		SetParam<RefType>(self, nodeset->pivot_f_nb, 0, stable);
+		// pivot_nf_b.fwd := true;
+		SetParam<BoolType>(LOAD(nodeset->pivot_nf_b[self]), node->fwd, true, stable);
+		// pivot_nf_b.bwd := true;
+		SetParam<BoolType>(LOAD(nodeset->pivot_nf_b[self]), node->bwd, true, stable);
+		// pivot_nf_b := null;
+		SetParam<RefType>(self, nodeset->pivot_nf_b, 0, stable);
+		// pivot_nf_nb.fwd := true;
+		SetParam<BoolType>(LOAD(nodeset->pivot_nf_nb[self]), node->fwd, true, stable);
+		// pivot_nf_nb.bwd := true;
+		SetParam<BoolType>(LOAD(nodeset->pivot_nf_nb[self]), node->bwd, true, stable);
+		// pivot_nf_nb := null;
+		SetParam<RefType>(self, nodeset->pivot_nf_nb, 0, stable);
+	}
+}
+
+__device__ void Node_print(const RefType self,
+						   bool* stable){
+	if (self != 0) {
+		printf("Node(%u): set=%u, fwd=%u, bwd=%u\n", self, LOAD(node->set[self]), LOAD(node->fwd[self]), LOAD(node->bwd[self]));
+	}
+}
+
+__device__ void Node_pivots_nominate(const RefType self,
+									 bool* stable){
+	
+	if ((!WLOAD(BoolType, nodeset->scc[WLOAD(RefType, node->set[self])]))) {
+		BoolType f = WLOAD(BoolType, node->fwd[self]);
+		BoolType b = WLOAD(BoolType, node->bwd[self]);
+		if ((f && b)) {
+			// set.pivot_f_b := this;
+			SetParam<RefType>(WLOAD(RefType, node->set[self]), nodeset->pivot_f_b, self, stable);
+		}
+		if ((f && (!b))) {
+			// set.pivot_f_nb := this;
+			SetParam<RefType>(WLOAD(RefType, node->set[self]), nodeset->pivot_f_nb, self, stable);
+		}
+		if (((!f) && b)) {
+			// set.pivot_nf_b := this;
+			SetParam<RefType>(WLOAD(RefType, node->set[self]), nodeset->pivot_nf_b, self, stable);
+		}
+		if (((!f) && (!b))) {
+			// set.pivot_nf_nb := this;
+			SetParam<RefType>(WLOAD(RefType, node->set[self]), nodeset->pivot_nf_nb, self, stable);
 		}
 	}
 }
 
-__global__ void Edge_print(Edge* edge,
-						   inst_size nrof_instances){
-	grid_group grid = this_grid();
-	RefType t_idx = grid.thread_rank();
-	RefType par_owner;
-	for(RefType self = t_idx; self < nrof_instances; self += grid.num_threads()){
-		if (self != 0) {
-			printf("Edge(%u): s=%u, t=%u\n", self, edge->s[self].load(cuda::memory_order_relaxed), edge->t[self].load(cuda::memory_order_relaxed));
+__device__ void Node_divide_into_sets_reset_fwd_bwd(const RefType self,
+													bool* stable){
+	
+	BoolType f = LOAD(node->fwd[self]);
+	BoolType b = LOAD(node->bwd[self]);
+	if ((f && b)) {
+		// set := set.f_and_b;
+		SetParam<RefType>(self, node->set, WLOAD(RefType, nodeset->f_and_b[LOAD(node->set[self])]), stable);
+	}
+	if (((!f) && b)) {
+		// set := set.not_f_and_b;
+		SetParam<RefType>(self, node->set, WLOAD(RefType, nodeset->not_f_and_b[LOAD(node->set[self])]), stable);
+	}
+	if ((f && (!b))) {
+		// set := set.f_and_not_b;
+		SetParam<RefType>(self, node->set, WLOAD(RefType, nodeset->f_and_not_b[LOAD(node->set[self])]), stable);
+	}
+	// fwd := false;
+	SetParam<BoolType>(self, node->fwd, false, stable);
+	// bwd := false;
+	SetParam<BoolType>(self, node->bwd, false, stable);
+}
+
+__device__ void Edge_print(const RefType self,
+						   bool* stable){
+	if (self != 0) {
+		printf("Edge(%u): s=%u, t=%u\n", self, LOAD(edge->s[self]), LOAD(edge->t[self]));
+	}
+}
+
+__device__ void Edge_compute_fwd_bwd(const RefType self,
+									 bool* stable){
+	
+	if ((WLOAD(RefType, node->set[WLOAD(RefType, edge->t[self])]) == WLOAD(RefType, node->set[WLOAD(RefType, edge->s[self])]))) {
+		if (LOAD(node->fwd[WLOAD(RefType, edge->s[self])])) {
+			// t.fwd := true;
+			SetParam<BoolType>(WLOAD(RefType, edge->t[self]), node->fwd, true, stable);
+		}
+		if (LOAD(node->bwd[WLOAD(RefType, edge->t[self])])) {
+			// s.bwd := true;
+			SetParam<BoolType>(WLOAD(RefType, edge->s[self]), node->bwd, true, stable);
 		}
 	}
 }
 
 
-void launch_NodeSet_allocate_sets() {
-	inst_size nrof_instances = host_NodeSet.nrof_instances();
-	void* NodeSet_allocate_sets_args[] = {
-		&device_FP,
-		&nrof_instances,
-		&gm_NodeSet,
-		&gm_Node,
-		&gm_Edge,
-		&host_NodeSet_ptr
-	};
-	auto dims = ADL::get_launch_dims(nrof_instances, (void*)NodeSet_allocate_sets);
+__global__ void schedule_kernel(){
+	const grid_group grid = this_grid();
+	const thread_block block = this_thread_block();
+	const bool is_thread0 = grid.thread_rank() == 0;
+	inst_size nrof_instances;
+	uint16_t struct_step_parity = 0; // bitmask
+	bool stable = true; // Only used to compile steps outside fixpoints
+	uint8_t iter_idx[FP_DEPTH] = {0}; // Denotes which fp_stack index ([0, 2]) is currently being set.
 
-	CHECK(
-		cudaLaunchCooperativeKernel(
-			(void*)NodeSet_allocate_sets,
-			std::get<0>(dims),
-			std::get<1>(dims),
-			NodeSet_allocate_sets_args
-		)
-	);
-	CHECK(cudaDeviceSynchronize());
-}
+	do{
+		bool stable = true;
+		if (is_thread0){
+			/* Resets the next fp_stack index in advance. */
+			fp_stack[0][FP_RESET(iter_idx[0])].store(true, cuda::memory_order_relaxed);
+		}
 
-void launch_NodeSet_initialise_pivot_fwd_bwd() {
-	inst_size nrof_instances = host_NodeSet.nrof_instances();
-	void* NodeSet_initialise_pivot_fwd_bwd_args[] = {
-		&device_FP,
-		&nrof_instances,
-		&gm_NodeSet,
-		&gm_Node,
-		&gm_Edge
-	};
-	auto dims = ADL::get_launch_dims(nrof_instances, (void*)NodeSet_initialise_pivot_fwd_bwd);
 
-	CHECK(
-		cudaLaunchCooperativeKernel(
-			(void*)NodeSet_initialise_pivot_fwd_bwd,
-			std::get<0>(dims),
-			std::get<1>(dims),
-			NodeSet_initialise_pivot_fwd_bwd_args
-		)
-	);
-	CHECK(cudaDeviceSynchronize());
-}
+		TOGGLE_STEP_PARITY(Node);
+		nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
+		executeStep<Node_pivots_nominate>(nrof_instances, grid, block, &stable);
+		node->update_counters(!STEP_PARITY(Node));
 
-void launch_Node_pivots_nominate() {
-	inst_size nrof_instances = host_Node.nrof_instances();
-	void* Node_pivots_nominate_args[] = {
-		&device_FP,
-		&nrof_instances,
-		&gm_NodeSet,
-		&gm_Node,
-		&gm_Edge
-	};
-	auto dims = ADL::get_launch_dims(nrof_instances, (void*)Node_pivots_nominate);
+		grid.sync();
 
-	CHECK(
-		cudaLaunchCooperativeKernel(
-			(void*)Node_pivots_nominate,
-			std::get<0>(dims),
-			std::get<1>(dims),
-			Node_pivots_nominate_args
-		)
-	);
-	CHECK(cudaDeviceSynchronize());
-}
+		TOGGLE_STEP_PARITY(NodeSet);
+		nrof_instances = nodeset->nrof_instances2(STEP_PARITY(NodeSet));
+		executeStep<NodeSet_allocate_sets>(nrof_instances, grid, block, &stable);
+		nodeset->update_counters(!STEP_PARITY(NodeSet));
 
-void launch_Node_divide_into_sets_reset_fwd_bwd() {
-	inst_size nrof_instances = host_Node.nrof_instances();
-	void* Node_divide_into_sets_reset_fwd_bwd_args[] = {
-		&device_FP,
-		&nrof_instances,
-		&gm_NodeSet,
-		&gm_Node,
-		&gm_Edge
-	};
-	auto dims = ADL::get_launch_dims(nrof_instances, (void*)Node_divide_into_sets_reset_fwd_bwd);
+		grid.sync();
 
-	CHECK(
-		cudaLaunchCooperativeKernel(
-			(void*)Node_divide_into_sets_reset_fwd_bwd,
-			std::get<0>(dims),
-			std::get<1>(dims),
-			Node_divide_into_sets_reset_fwd_bwd_args
-		)
-	);
-	CHECK(cudaDeviceSynchronize());
-}
+		TOGGLE_STEP_PARITY(Node);
+		nrof_instances = node->nrof_instances2(STEP_PARITY(Node));
+		executeStep<Node_divide_into_sets_reset_fwd_bwd>(nrof_instances, grid, block, &stable);
+		node->update_counters(!STEP_PARITY(Node));
 
-void launch_Edge_compute_fwd_bwd() {
-	inst_size nrof_instances = host_Edge.nrof_instances();
-	void* Edge_compute_fwd_bwd_args[] = {
-		&device_FP,
-		&nrof_instances,
-		&gm_NodeSet,
-		&gm_Node,
-		&gm_Edge
-	};
-	auto dims = ADL::get_launch_dims(nrof_instances, (void*)Edge_compute_fwd_bwd);
+		grid.sync();
 
-	CHECK(
-		cudaLaunchCooperativeKernel(
-			(void*)Edge_compute_fwd_bwd,
-			std::get<0>(dims),
-			std::get<1>(dims),
-			Edge_compute_fwd_bwd_args
-		)
-	);
-	CHECK(cudaDeviceSynchronize());
+		TOGGLE_STEP_PARITY(NodeSet);
+		nrof_instances = nodeset->nrof_instances2(STEP_PARITY(NodeSet));
+		executeStep<NodeSet_initialise_pivot_fwd_bwd>(nrof_instances, grid, block, &stable);
+		nodeset->update_counters(!STEP_PARITY(NodeSet));
+
+		grid.sync();
+
+		do{
+			bool stable = true;
+			if (is_thread0){
+				/* Resets the next fp_stack index in advance. */
+				fp_stack[1][FP_RESET(iter_idx[1])].store(true, cuda::memory_order_relaxed);
+			}
+
+
+			TOGGLE_STEP_PARITY(Edge);
+			nrof_instances = edge->nrof_instances2(STEP_PARITY(Edge));
+			executeStep<Edge_compute_fwd_bwd>(nrof_instances, grid, block, &stable);
+			edge->update_counters(!STEP_PARITY(Edge));
+			if(!stable){
+				clear_stack(1, iter_idx);
+			}
+			/* The next index to set is the one that has been reset. */
+			iter_idx[1] = FP_RESET(iter_idx[1]);
+			grid.sync();
+		} while(!fp_stack[1][FP_READ(iter_idx[1])].load(cuda::memory_order_relaxed));
+
+		if(!stable){
+			clear_stack(0, iter_idx);
+		}
+		/* The next index to set is the one that has been reset. */
+		iter_idx[0] = FP_RESET(iter_idx[0]);
+		grid.sync();
+	} while(!fp_stack[0][FP_READ(iter_idx[0])].load(cuda::memory_order_relaxed));
+
 }
 
 
@@ -813,87 +464,44 @@ int main(int argc, char **argv) {
 		printf("Supply a .init file.\n");
 		exit(1);
 	}
-	
+
 	std::vector<InitFile::StructInfo> structs = InitFile::parse(argv[1]);
+	cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 1048576);
 	CHECK(cudaHostRegister(&host_Edge, sizeof(Edge), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_Node, sizeof(Node), cudaHostRegisterDefault));
 	CHECK(cudaHostRegister(&host_NodeSet, sizeof(NodeSet), cudaHostRegisterDefault));
 
-	host_Edge.initialise(&structs[0], 100);
-	host_Node.initialise(&structs[1], 100);
-	host_NodeSet.initialise(&structs[2], 100);
+	host_Edge.initialise(&structs[0], structs[0].nrof_instances + 1);
+	host_Node.initialise(&structs[1], structs[1].nrof_instances + 1);
+	host_NodeSet.initialise(&structs[2], structs[2].nrof_instances + 1);
 
+	inst_size max_nrof_executing_instances = max(structs[2].nrof_instances + 1, max(structs[1].nrof_instances + 1, structs[0].nrof_instances + 1));
 	CHECK(cudaDeviceSynchronize());
 
-	gm_Edge = (Edge*)host_Edge.to_device();
-	gm_Node = (Node*)host_Node.to_device();
-	gm_NodeSet = (NodeSet*)host_NodeSet.to_device();
+	Edge * const loc_edge = (Edge*)host_Edge.to_device();
+	Node * const loc_node = (Node*)host_Node.to_device();
+	NodeSet * const loc_nodeset = (NodeSet*)host_NodeSet.to_device();
+
+	CHECK(cudaMemcpyToSymbol(edge, &loc_edge, sizeof(Edge * const)));
+	CHECK(cudaMemcpyToSymbol(node, &loc_node, sizeof(Node * const)));
+	CHECK(cudaMemcpyToSymbol(nodeset, &loc_nodeset, sizeof(NodeSet * const)));
+
+	cuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
+	CHECK(cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack));
+	CHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));
+	void* schedule_kernel_args[] = {};
+	auto dims = ADL::get_launch_dims((max_nrof_executing_instances + I_PER_THREAD - 1) / I_PER_THREAD, (void*)schedule_kernel);
+
+
+	CHECK(
+		cudaLaunchCooperativeKernel(
+			(void*)schedule_kernel,
+			std::get<0>(dims),
+			std::get<1>(dims),
+			schedule_kernel_args
+		)
+	);
 
 
 
-	size_t printf_size;
-	cudaDeviceGetLimit(&printf_size, cudaLimitPrintfFifoSize);
-	cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 2 * printf_size);
-
-
-	host_FP.push();
-	device_FP = host_FP.to_device();
-
-
-
-	host_FP.copy_from(device_FP);
-	host_FP.push();
-	do{
-		host_FP.reset();
-		host_FP.copy_to(device_FP);
-
-		launch_Node_pivots_nominate();
-
-
-
-
-		launch_NodeSet_allocate_sets();
-
-
-
-
-		launch_Node_divide_into_sets_reset_fwd_bwd();
-
-
-
-
-		launch_NodeSet_initialise_pivot_fwd_bwd();
-
-
-
-		host_FP.copy_from(device_FP);
-		host_FP.push();
-		do{
-			host_FP.reset();
-			host_FP.copy_to(device_FP);
-
-			launch_Edge_compute_fwd_bwd();
-
-
-
-			host_FP.copy_from(device_FP);
-			if(!host_FP.done()) host_FP.clear();
-		}
-		while(!host_FP.done());
-		host_FP.pop();
-		host_FP.copy_to(device_FP);
-
-		host_FP.copy_from(device_FP);
-		if(!host_FP.done()) host_FP.clear();
-	}
-	while(!host_FP.done());
-	host_FP.pop();
-	host_FP.copy_to(device_FP);
-
-	Node_print<<<(host_Node.nrof_instances() + 512 - 1)/512, 512>>>(gm_Node, host_Node.nrof_instances());
-	CHECK(cudaDeviceSynchronize());
-
-
-
-	
 }

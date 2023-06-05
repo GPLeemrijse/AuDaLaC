@@ -1,0 +1,223 @@
+
+/* Single thread run on GPU */
+__global__ void schedule(){
+	
+	step1<<<1 per instance>>>();
+
+	/* If step 1 creates instances, sync & accomodate. OR overallocate.*/
+
+	Fix1<<<See note above about nrof threads>>>();
+
+	step5<<<at least 1 per instance>>>();
+}
+
+__global__ void Fix1(){
+	(__shared__) bool stable = true;
+	
+	do {
+		step2<<<>>>();
+
+		grid_sync();
+
+		step3_body();
+
+		do {
+			step4_body();
+
+		} while (!stable[1]);
+	} while (!stable[0]);
+}
+
+
+
+main {
+	
+	memory_copy();
+
+	schedule<<<max_nrof_blocks, 1>>>();
+
+}
+
+
+/**
+
+step1 < Fix(step2 < step3 < Fix(step4)) < step5 
+
+
+*/
+
+
+bool gm_stable[FP_DEPTH] = {true};
+
+// cudaOccupancyMaxActiveBlocksPerMultiprocessor * cudaDevAttrMultiProcessorCount
+// Possibly limit by maximum number of instances?
+__global__ void Schedule(){
+	(__shared__) bool stable[FP_DEPTH][BANK_SIZE];
+
+	grid_group grid = this_grid();
+	block_group block = this_block();
+
+	assert (BANK_SIZE = WARP_SIZE);
+	assert (FP_DEPTH * BANK_SIZE < block.num_threads())
+
+	RefType t_idx = grid.thread_rank();
+
+	for(RefType self = t_idx; self < step1_nrof_instances; self += grid.num_threads()){
+		step1_body();
+	}
+
+	grid_sync();
+
+	if(thread_rank() < FP_DEPTH * BANK_SIZE) {
+		((bool*)stable)[thread_rank()] = true;
+	}
+
+	block_sync();
+
+	do {
+		for(RefType self = t_idx; self < step2_nrof_instances; self += grid.num_threads()){
+			step2_body();
+		}
+
+		grid_sync();
+
+		for(RefType self = t_idx; self < step3_nrof_instances; self += grid.num_threads()){
+			step3_body();
+		}
+
+		if (thread_rank() < BANK_SIZE) {
+			stable[1][thread_rank()] = true;
+		}
+		do {
+			for(RefType self = t_idx; self < step4_nrof_instances; self += grid.num_threads()){
+				step4_body();
+			}
+			
+			bool red_stable = reduce(stable[1]); // Should sync block
+			if (!red_stable) {
+				for(i = 0; i < FP_DEPTH; i++){
+					if (thread_rank() < BANK_SIZE) {
+						stable[i][thread_rank()] = false;
+					}
+					gm_stable[i] = false;
+				}
+			}
+			sync_grid();
+			if (thread_rank() < BANK_SIZE) {
+				stable[1][thread_rank()] = gm_stable[1];
+			}
+		} while (!stable[1]); // Possibly have some pragma's here for unison?
+	} while (!stable[0]); // Possibly have some pragma's here for unison?
+}
+
+
+
+/// -----------------------------------
+
+
+FPManager* device_FP;
+
+// cudaOccupancyMaxActiveBlocksPerMultiprocessor * cudaDevAttrMultiProcessorCount
+// Possibly limit by maximum number of instances?
+__global__ void Schedule(){
+	__shared__ bool stable[FP_DEPTH];
+
+	grid_group grid = this_grid();
+	block_group block = this_block();
+
+	assert (FP_DEPTH < block.num_threads());
+
+	if(thread_rank() < FP_DEPTH) {
+		stable[thread_rank()] = true;
+	}
+
+	block_sync();
+
+	RefType t_idx = grid.thread_rank();
+
+	for(RefType self = t_idx; self < step1_nrof_instances; self += grid.num_threads()){
+		step1_body();
+	}
+
+	grid_sync();
+
+	do {
+		for(RefType self = t_idx; self < step2_nrof_instances; self += grid.num_threads()){
+			step2_body();
+		}
+
+		grid_sync();
+
+		for(RefType self = t_idx; self < step3_nrof_instances; self += grid.num_threads()){
+			step3_body();
+		}
+
+		if (threadrank() == 0) {
+			stable[1] = true;
+		}
+		
+		do {
+			for(RefType self = t_idx; self < step4_nrof_instances; self += grid.num_threads()){
+				step4_body();
+			}
+			
+			bool red_stable = reduce(stable[1]); // Should sync block
+			if (!red_stable) {
+				for(i = 0; i < FP_DEPTH; i++){
+					if (thread_rank() < BANK_SIZE) {
+						stable[i][thread_rank()] = false;
+					}
+					gm_stable[i] = false;
+				}
+			}
+			sync_grid();
+			if (thread_rank() < BANK_SIZE) {
+				stable[1][thread_rank()] = gm_stable[1];
+			}
+		} while (!stable[1]); // Possibly have some pragma's here for unison?
+	} while (!stable[0]); // Possibly have some pragma's here for unison?
+}
+
+
+
+
+do {
+	set_locally_stable();
+
+	if (...) {
+		set_unstable();
+	}
+
+	grid.sync();
+
+
+} while();
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+!!Make a per-block decision which struct to execute!!
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+const inst_size nrof_node_instances = node->nrof_instances();
+const inst_size warp_size_multiple_node = ((nrof_node_instances + WARP_SIZE - 1) / WARP_SIZE) * WARP_SIZE;
+
+const inst_size nrof_edge_instances = edge->nrof_instances();
+
+
+for(int i = 0; i < INSTS_PER_THREAD; i++){
+	RefType self = block_size * (i + block_idx * INSTS_PER_THREAD) + block_rank;
+	if (self >= warp_size_multiple_node){
+		self -= warp_size_multiple_node;
+		if (self < nrof_edge_instances)
+		do_edge(self);
+	} else {
+
+	}
+
+	if (self >= nrof_node_instances){
+		if (self < warp_size_multiple_node) break;
+	}
+
+	else if ()
+	
+	Body: Node.print
+}

@@ -1,0 +1,15 @@
+
+struct Node (reachable : Bool) {
+    
+}
+
+struct Edge (n1 : Node, n2 : Node) {
+    reachability {
+        if n1.reachable then {
+            n2.reachable := true;
+        }
+    }
+}
+
+Fix(reachability) < Node.print
+    

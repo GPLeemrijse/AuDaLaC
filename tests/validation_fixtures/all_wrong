@@ -1,4 +1,4 @@
-struct Node (reachable : Bool, reachable: Bool) {
+struct Node (reachable : Bool, reachable: Bool, something: Nat) {
     init {
         Nat n1 := 1;
         Nat n1 := 2;
@@ -31,9 +31,11 @@ struct Node(test : Nat) {
     
 }
 
-struct Edge(){
+struct Edge(n : Node){
     init {
         Node t3 := this;
+
+        n.something.abc := 12;
     }
 }
 

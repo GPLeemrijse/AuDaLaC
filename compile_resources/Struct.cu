@@ -9,7 +9,7 @@ __host__ void Struct::free(void) {
 	if (is_initialised) {
 		void** params = get_parameters();
 
-		for (int p = 0; p < nrof_parameters; p++){ 
+		for (int p = 0; p < nrof_parameters; p++){
 			CHECK(
 				cudaFree(params[p])
 			);
@@ -17,13 +17,17 @@ __host__ void Struct::free(void) {
 	}
 }
 
-__host__ void* Struct::to_device(void) {
+__host__ void* Struct::to_device(void* allocated_ptr) {
 	void* device_ptr;
 	size_t s = child_size();
 
-	CHECK(
-		cudaMalloc(&device_ptr, s)
-	);
+	if (allocated_ptr != NULL) {
+		device_ptr = allocated_ptr;
+	} else {
+		CHECK(
+			cudaMalloc(&device_ptr, s)
+		);
+	}
 
 	CHECK(
 		cudaMemcpy(device_ptr, this, s, cudaMemcpyHostToDevice)
@@ -34,6 +38,9 @@ __host__ void* Struct::to_device(void) {
 
 __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity){
 	assert_correct_info(info);
+	if (info->nrof_instances >= capacity) {
+		fprintf(stderr, "Error: %u instances supplied while the capacity is %u.\n", info->nrof_instances, capacity);
+	}
 	assert (info->nrof_instances < capacity);
 
 	void** params = get_parameters();
@@ -86,12 +93,19 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 
 	this->instantiated_instances = info->nrof_instances + 1; // null-instance
 	this->active_instances = info->nrof_instances + 1;
+	this->created_instances = info->nrof_instances + 1;
+	this->executing_instances[0].store(info->nrof_instances + 1, cuda::memory_order_relaxed);
+	this->executing_instances[1].store(info->nrof_instances + 1, cuda::memory_order_relaxed);
 	this->capacity = capacity;
 	this->is_initialised = true;
 }
 
 __host__ __device__ inst_size Struct::nrof_instances(void){
 	return active_instances.load(cuda::memory_order_seq_cst);
+}
+
+__host__ __device__ inst_size Struct::nrof_instances2(bool step_parity){
+	return executing_instances[(uint)step_parity].load(cuda::memory_order_relaxed);
 }
 
 __host__ __device__ inst_size Struct::difference(void){
@@ -113,12 +127,14 @@ __host__ __device__ bool Struct::sync_nrof_instances(Struct* other) {
 	}
 
 	#ifdef __CUDA_ARCH__
+		/*NOTE: Also copies to instantiated_instances, so keep those sequential in memory. */
 		memcpy(
 			&other->active_instances, // dst
 			&this->active_instances,
 			sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>) * 2
 		);
 	#else
+		/*NOTE: Also copies to instantiated_instances, so keep those sequential in memory. */
 		CHECK(
 			cudaMemcpy(
 				&other->active_instances, // dst

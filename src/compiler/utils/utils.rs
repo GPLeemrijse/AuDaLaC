@@ -13,16 +13,13 @@ pub fn as_c_type(t: &Type) -> String {
     }
 }
 
-pub fn as_type_enum(t: &Type) -> String {
-    use Type::*;
-    match t {
-        Named(..) => "Ref".to_string(),
-        String => "String".to_string(),
-        Nat => "Nat".to_string(),
-        Int => "Int".to_string(),
-        Bool => "Bool".to_string(),
-        Null => "Ref".to_string(),
-    }
+pub fn format_signature(sig: &String, params: Vec<String>, padding: usize) -> String {
+    let indent = format!(
+        ",\n{}{}",
+        "\t".repeat((sig.len() + 1 + padding * 4) / 4),
+        " ".repeat((sig.len() + 1 + padding * 4) % 4)
+    );
+    format!("{sig}({}){{", params.join(&indent))
 }
 
 pub fn as_printf(t: &Type) -> String {
