@@ -89,7 +89,7 @@ pub struct Config<'a> {
 }
 
 impl<'a> Config<'_> {
-    pub const HEADER : &str = "config,memorder,voting-strat,tpb,ipt,weak_read_only";
+    pub const HEADER : &str = "config,memorder,voting-strat,tpb,ipt,weak_read_only,division_strat";
 
     pub fn new(
         m : &'a str,
@@ -172,7 +172,7 @@ impl<'a> Config<'_> {
 
 impl Display for Config<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let tuple = format!("{}-{}-{}-{}",self.memorder, self.voting, self.tpb, self.ipt);
+        let tuple = format!("{}-{}-{}-{}-{}-{}",self.memorder, self.voting, self.tpb, self.ipt, self.weak_ro, self.d_strat);
         write!(f, "{}", self.name.unwrap_or(&tuple))
     }
 }
