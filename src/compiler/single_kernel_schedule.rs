@@ -60,8 +60,6 @@ impl SingleKernelSchedule<'_> {
         formatdoc! {"
 			{ind}const grid_group grid = this_grid();
 			{ind}const thread_block block = this_thread_block();
-			{ind}const bool is_thread0 = grid.thread_rank() == 0;
-			{ind}inst_size nrof_instances;
 			{ind}{bitmask_type} struct_step_parity = 0; // bitmask
 			{ind}bool stable = true; // Only used to compile steps outside fixpoints
 			{stab_stack}
@@ -175,7 +173,7 @@ impl SingleKernelSchedule<'_> {
 
             formatdoc! {"
 				{indent}TOGGLE_STEP_PARITY({struct_name});
-				{indent}nrof_instances = {nrof_instances};
+				{indent}inst_size nrof_instances = {nrof_instances};
 				{indent}{step_execution}{counter_updates}"
             }
         } else {

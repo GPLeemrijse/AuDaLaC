@@ -24,7 +24,7 @@ pub fn memorder_impact_configs() -> Vec<Config<'static>> {
     let tpb = ["128", "512"];
     let ipt = ["4", "32"];
     let w = ["0"];
-    let d = ["blocksize"];
+    let d = ["gridsize"];
 
     Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
 }
@@ -35,7 +35,7 @@ pub fn voting_impact_configs() -> Vec<Config<'static>> {
     let tpb = ["128", "512"];
     let ipt = ["4", "32"];
     let w = ["0"];
-    let d = ["blocksize"];
+    let d = ["gridsize"];
 
     Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
 }
@@ -46,7 +46,7 @@ pub fn weak_ro_impact_configs() -> Vec<Config<'static>> {
     let tpb = ["128", "512"];
     let ipt = ["4", "32"];
     let w = ["0", "1"];
-    let d = ["blocksize"];
+    let d = ["gridsize"];
 
     Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
 }
@@ -68,7 +68,7 @@ pub fn block_size_impact_configs() -> Vec<Config<'static>> {
     let tpb = ["64", "128", "256", "512", "1024"];
     let ipt = ["1", "4", "16", "32"];
     let w = ["1"];
-    let d = ["blocksize"];
+    let d = ["gridsize"];
 
     Config::cartesian(&orders, &voting_strat, &tpb, &ipt, &w, &d)
 }
