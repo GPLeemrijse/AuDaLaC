@@ -65,20 +65,24 @@ struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 			if w.rho.top then {
 				m.top := true;
 			}
-			if !m.top then {
+			if !w.rho.top then {
 				Bool incr := false;
 				
 				// Attempt to increase least significant measure
 				if v.p >= 3 && w.rho.p3 < max.p3 then {
 					m.p3 := w.rho.p3 + 1;
+					m.p1 := w.rho.p1;
+					m.top := false;
 					incr := true;
 				}
+
 				// If not increased, check next priority.
 				if !incr then {
-					m.p3 := 0;
 					// incrementing p1 possible
 					if v.p >= 1 && w.rho.p1 < max.p1 then {
+						m.p3 := 0;
 						m.p1 := w.rho.p1 + 1;
+						m.top := false;
 						incr := true;
 					}
 					// If p1 couldn't be incremented, Top is the only option.
