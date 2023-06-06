@@ -8,11 +8,7 @@ class Node:
 		self.prio = prio;
 		self.owner = owner;
 
-
-nodes = [];
-edges = [];
 regex = re.compile(r"([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+(,[0-9]+)*);");
-prios = [0, 0, 0, 0, 0];
 
 
 def edge_inst(u, v, idx):
@@ -25,6 +21,9 @@ def main():
 	args = parser.parse_args()
 
 	for in_file in args.pg_files:
+		nodes = [];
+		edges = [];
+		prios = [0, 0, 0, 0, 0];
 		file_name = in_file.name.split("/")[-1];
 		assert(file_name.endswith(".gm"));
 		output_file_name = os.path.join(args.output_dir, file_name[:-3] + ".init");
