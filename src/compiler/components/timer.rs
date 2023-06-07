@@ -57,7 +57,7 @@ impl CompileComponent for Timer {
 				\tprintf(\"Total walltime GPU: %0.6f ms\\n\", ms);
 			"})
         } else {
-            None
+            Some("\tCHECK(cudaDeviceSynchronize());".to_string())
         }
     }
 }
