@@ -15,9 +15,7 @@ def main():
 	args = parser.parse_args()
 
 	for n in args.N:
-		nums = [0] * n;
-		for i in range(n):
-			nums[i] = random.randint(-1000, 1000);
+		nums = random.sample(range(-1000000, 1000000), n);
 
 		output_file_name = os.path.join(args.output_dir, f"prefix_sum_{n}.init");
 
