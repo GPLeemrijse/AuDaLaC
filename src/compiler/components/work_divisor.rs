@@ -2,7 +2,6 @@ use crate::compiler::compilation_traits::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 
-
 pub enum DivisionStrategy {
     Dynamic,
 }
@@ -55,7 +54,7 @@ impl<'a> WorkDivisor {
     }
 
     fn launch_dims_function(&self) -> String {
-        formatdoc!{"
+        formatdoc! {"
             __host__ std::tuple<dim3, dim3> get_launch_dims(inst_size max_nrof_executing_instances, const void* kernel){{
               int numBlocksPerSm = 0;
               int tpb = THREADS_PER_BLOCK;
@@ -66,9 +65,9 @@ impl<'a> WorkDivisor {
               
               int max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
               int wanted_blocks = (max_nrof_executing_instances + tpb - 1)/tpb;
-              int used_blocks = max(max_blocks, wanted_blocks);
+              int used_blocks = min(max_blocks, wanted_blocks);
 
-              fprintf(stderr, \"Launching %u/%u blocks of %u threads = %u threads. Resulting in max %u instances per thread.\\n\", used_blocks, max_blocks, tpb, used_blocks * tpb, max_nrof_executing_instances / (used_blocks * tpb));
+              fprintf(stderr, \"Launching %u/%u blocks of %u threads = %u threads.\\nResulting in max %u instances per thread.\\n\", used_blocks, max_blocks, tpb, used_blocks * tpb, (max_nrof_executing_instances + (used_blocks * tpb) - 1) / (used_blocks * tpb));
 
               dim3 dimBlock(tpb, 1, 1);
               dim3 dimGrid(used_blocks, 1, 1);
@@ -139,11 +138,7 @@ impl CompileComponent for WorkDivisor {
     }
 
     fn functions(&self) -> Option<String> {
-        Some(
-            self.execute_step_function()
-            +
-            &self.launch_dims_function()
-        )
+        Some(self.execute_step_function() + &self.launch_dims_function())
     }
 
     fn kernels(&self) -> Option<String> {

@@ -51,7 +51,7 @@ fn main() {
         (@arg schedule_strat: -S --schedule_strat possible_value("in-kernel") possible_value("on-host") default_value("in-kernel") "Which schedule strategy to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("relaxed") "Which memory order to use.")
         (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
-        (@arg weak_ro: -w --weak_ro possible_value("1") possible_value("0") default_value("1") "Use weak loads for read-only parameters.")
+        (@arg weak_ld_st: -wldst --weak_ld_st possible_value("1") possible_value("0") default_value("1") "Use weak loads and stores for non-racing parameters.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofinstances: -N --nrofinstances +takes_value required(false) multiple(true) value_parser(parse_key_val::<String, usize>) "nrof struct instances memory is allocated for.")
         (@arg threads_per_block: -T --threadsperblock +takes_value default_value("256") value_parser(clap::value_parser!(usize)) "Number of threads per block.")
@@ -63,7 +63,7 @@ fn main() {
     .get_matches();
 
     let print_ast = args.is_present("print_ast");
-    let weak_ro = args.value_of("weak_ro").unwrap() == "1";
+    let weak_ld_st = args.value_of("weak_ld_st").unwrap() == "1";
     let time = args.is_present("time");
     let init_file = args.is_present("init_file");
     let print_unstable = args.is_present("printunstable");
@@ -129,7 +129,8 @@ fn main() {
                         ),
                     };
 
-                    let step_transpiler = StepBodyCompiler::new(&type_info, true, print_unstable, weak_ro);
+                    let step_transpiler =
+                        StepBodyCompiler::new(&type_info, true, print_unstable, weak_ld_st);
 
                     let work_divisor = WorkDivisor::new(
                         threads_per_block, // tpb
