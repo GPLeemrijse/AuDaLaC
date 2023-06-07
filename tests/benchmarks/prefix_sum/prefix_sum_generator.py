@@ -34,11 +34,11 @@ def main():
 		with open(solution_file_name, "w") as out_file:
 			prefix_sum = 0;
 			for (idx, val) in enumerate(nums):
+				prefix_sum += val;
 				if (idx + 1) % 5000 == 1:
 					out_file.writelines([
 						f"({idx+1}, {prefix_sum})\n"
 					]);
-				prefix_sum += val;
 
 
 
