@@ -28,6 +28,20 @@ struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Mea
 			$$printf("Number of odd won vertices = %u\n", nrof_odd_wins);
 		}
 	}
+
+	print_nrof_nodes {
+		if this == null then {
+			$$printf("Number nodes = (%u, %u)\n", node->nrof_instances2(true), node->nrof_instances2(false));
+		}
+	}
+
+	print_max {
+		Nat p1 := max.p1;
+		Nat p3 := max.p3;
+		$$if (self == 1) {
+			$$printf("Max = (%u, %u)\n", p1, p3);
+		$$}
+	}
 }
 
 struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
@@ -160,6 +174,8 @@ struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 struct Measure(top : Bool, p1 : Nat, p3 : Nat) {
 }
 
+print_nrof_nodes <
+print_max <
 self_loops_to_top <
 Fix (
 	prog <
@@ -168,5 +184,6 @@ Fix (
 	Fix(priority_3) <
 	max_candidate
 ) <
+print_nrof_nodes <
 count_odd <
 print_odd

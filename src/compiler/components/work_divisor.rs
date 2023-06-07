@@ -33,11 +33,11 @@ impl<'a> WorkDivisor {
         )
     }
 
-    pub fn execute_step(&self, kernel_name: &String) -> String {
+    pub fn execute_step(&self, kernel_name: &String, nrof_instances: String) -> String {
         if self.print_unstable {
-            formatdoc!("executeStep<{kernel_name}>(nrof_instances, grid, block, &stable, \"{kernel_name}\");")
+            formatdoc!("executeStep<{kernel_name}>({nrof_instances}, grid, block, &stable, \"{kernel_name}\");")
         } else {
-            formatdoc!("executeStep<{kernel_name}>(nrof_instances, grid, block, &stable);")
+            formatdoc!("executeStep<{kernel_name}>({nrof_instances}, grid, block, &stable);")
         }
     }
 
