@@ -1,0 +1,33 @@
+struct ListElem(val : Int, next: ListElem, newNext: ListElem, comp: ListElem, has_inc: Bool) {
+	find_order {
+		if (comp != null) then {
+			if (comp.val > val && (comp.val < newNext.val || newNext == null)) then {
+				newNext := comp;
+			}
+			comp := comp.next;
+		}
+	}
+
+	reorder {
+		next := newNext;
+		next.has_inc := true;
+	}
+
+	create_printer {
+		if this != null && !has_inc then {
+			Printer p := Printer(this);
+		}
+	}
+}
+
+struct Printer(cur: ListElem) {
+	print_ordered {
+		if this != null then {
+			Int val := cur.val;
+			$$printf("%d\n", val);
+			cur := cur.next;
+		}
+	}
+}
+
+Fix(find_order) < reorder < create_printer < Fix(print_ordered)

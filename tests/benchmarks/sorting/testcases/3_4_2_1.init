@@ -1,0 +1,9 @@
+ADL structures 2
+ListElem Int ListElem ListElem ListElem Bool
+Printer ListElem
+ListElem instances 4 4
+3 2 0 1 0
+4 3 0 1 0
+2 4 0 1 0
+1 0 0 1 0
+Printer instances 0 0
