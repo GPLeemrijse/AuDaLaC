@@ -1,0 +1,21 @@
+struct ListElem(val : Int, prev: ListElem, auxprev: ListElem, auxval : Int) {
+	prefixOne {
+		auxval := prev.val;
+		auxprev := prev.prev;
+	}
+
+	prefixTwo {
+		val := val + auxval;
+		prev := auxprev;
+	}
+
+	print_sol {
+		$$bool should_print = (self % 5000 == 1);
+		$$if (should_print) {
+			Int ld_val := val;
+			$$printf("(%u, %d)\n", self, ld_val);
+		$$}
+	}
+}
+
+Fix(prefixOne < prefixTwo) < print_sol
