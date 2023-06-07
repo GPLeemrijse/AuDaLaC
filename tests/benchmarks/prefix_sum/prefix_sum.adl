@@ -10,10 +10,11 @@ struct ListElem(val : Int, prev: ListElem, auxprev: ListElem, auxval : Int) {
 	}
 
 	print_sol {
-		if this != null then {
+		$$bool should_print = (self % 5000 == 1);
+		$$if (should_print) {
 			Int ld_val := val;
 			$$printf("(%u, %d)\n", self, ld_val);
-		}
+		$$}
 	}
 }
 
