@@ -91,9 +91,15 @@ impl CompileComponent for StructManagers<'_> {
         let scope = self.scope.as_cuda_scope();
         let store_macro = if self.memorder.is_strong() {
             let order = self.memorder.as_cuda_order(Some(MemoryOperation::Store));
-            format!("A.store(B, {order})")
+            format!("A.store(V, {order})")
         } else {
-            format!("A = B")
+            format!("A = V")
+        };
+
+        let weak_store_macro = if self.memorder.is_strong() {
+            format!("*((T*)&A) = V")
+        } else {
+            format!("A = V")
         };
 
         let load_macro = if self.memorder.is_strong() {
@@ -105,9 +111,12 @@ impl CompileComponent for StructManagers<'_> {
 
         Some(formatdoc! {"
 			#define ATOMIC(T) cuda::atomic<T, {scope}>
-			#define STORE(A, B) {store_macro}
+			#define STORE(A, V) {store_macro}
 			#define LOAD(A) {load_macro}
+
 			#define WLOAD(T, A) *((T*)&A)
+			#define WSTORE(T, A, V) {weak_store_macro}
+
 		"})
     }
 
@@ -237,18 +246,17 @@ impl CompileComponent for StructManagers<'_> {
 
         for (idx, struct_name) in struct_names.iter().enumerate() {
             let s_name_lwr = struct_name.to_lowercase();
-            let allocated_space : Option<&usize> = self
-                .allocated_per_instance
-                .get(*struct_name);
+            let allocated_space: Option<&usize> = self.allocated_per_instance.get(*struct_name);
 
             let n_insts;
             if allocated_space.is_none() {
-                println!("Warning: did not find number of instances to allocate for {struct_name}.");
+                println!(
+                    "Warning: did not find number of instances to allocate for {struct_name}."
+                );
                 n_insts = format!("structs[{idx}].nrof_instances + 1");
             } else {
                 n_insts = allocated_space.unwrap().to_string();
             }
-
 
             registers.push_str(&format!{"\tCHECK(cudaHostRegister(&host_{struct_name}, sizeof({struct_name}), cudaHostRegisterDefault));\n"});
             inits.push_str(
@@ -266,7 +274,8 @@ impl CompileComponent for StructManagers<'_> {
             }
         }
 
-        let max_instances = format!("\tinst_size max_nrof_executing_instances = {max_executor_str};");
+        let max_instances =
+            format!("\tinst_size max_nrof_executing_instances = {max_executor_str};");
 
         res.push_str(&formatdoc! {"
 			{registers}

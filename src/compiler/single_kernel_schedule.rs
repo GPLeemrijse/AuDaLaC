@@ -209,9 +209,9 @@ impl SingleKernelSchedule<'_> {
 
         let kernel_signature = format_signature(&func_header, params, 0);
 
-        let step_body =
-            self.step_transpiler
-                .step_body_as_c(self.program, strct, step);
+        let step_body = self
+            .step_transpiler
+            .step_body_as_c(self.program, strct, step);
 
         formatdoc! {"
 			{kernel_signature}

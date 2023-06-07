@@ -2,7 +2,6 @@ use crate::compiler::compilation_traits::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 
-
 pub enum DivisionStrategy {
     Dynamic,
 }
@@ -55,7 +54,7 @@ impl<'a> WorkDivisor {
     }
 
     fn launch_dims_function(&self) -> String {
-        formatdoc!{"
+        formatdoc! {"
             __host__ std::tuple<dim3, dim3> get_launch_dims(inst_size max_nrof_executing_instances, const void* kernel){{
               int numBlocksPerSm = 0;
               int tpb = THREADS_PER_BLOCK;
@@ -139,11 +138,7 @@ impl CompileComponent for WorkDivisor {
     }
 
     fn functions(&self) -> Option<String> {
-        Some(
-            self.execute_step_function()
-            +
-            &self.launch_dims_function()
-        )
+        Some(self.execute_step_function() + &self.launch_dims_function())
     }
 
     fn kernels(&self) -> Option<String> {
