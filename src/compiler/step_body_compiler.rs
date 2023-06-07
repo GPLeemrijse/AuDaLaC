@@ -336,7 +336,7 @@ impl StepBodyCompiler<'_> {
                 template<typename T>
                 __device__ void WSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable, const char* par_str) {{
                     if (owner != 0){{
-                        T old_val = WLOAD(params[owner]);
+                        T old_val = WLOAD(T, params[owner]);
                         if (old_val != new_val){{
                             WSTORE(T, params[owner], new_val);
                             *stable = false;
@@ -350,7 +350,7 @@ impl StepBodyCompiler<'_> {
                 template<typename T>
                 __device__ void WSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {{
                     if (owner != 0){{
-                        T old_val = WLOAD(params[owner]);
+                        T old_val = WLOAD(T, params[owner]);
                         if (old_val != new_val){{
                             WSTORE(T, params[owner], new_val);
                             *stable = false;
