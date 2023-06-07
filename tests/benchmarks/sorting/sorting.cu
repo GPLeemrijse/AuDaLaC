@@ -228,7 +228,7 @@ __device__ void ListElem_reorder(const RefType self,
 __device__ void ListElem_create_printer(const RefType self,
 										bool* stable){
 	
-	if ((!WLOAD(BoolType, listelem->has_inc[self]))) {
+	if (((self != 0) && (!WLOAD(BoolType, listelem->has_inc[self])))) {
 		RefType p = printer->create_instance(self, stable);
 	}
 }
@@ -240,13 +240,15 @@ __device__ void Printer_print(const RefType self,
 	}
 }
 
-__device__ void Printer_print(const RefType self,
-							  bool* stable){
+__device__ void Printer_print_ordered(const RefType self,
+									  bool* stable){
 	
-	IntType val = WLOAD(IntType, listelem->val[WLOAD(RefType, printer->cur[self])]);
-	printf("%d\n", val);
-	// cur := cur.next;
-	WSetParam<RefType>(self, printer->cur, WLOAD(RefType, listelem->next[WLOAD(RefType, printer->cur[self])]), stable);
+	if ((self != 0)) {
+		IntType val = WLOAD(IntType, listelem->val[WLOAD(RefType, printer->cur[self])]);
+		printf("%d\n", val);
+		// cur := cur.next;
+		WSetParam<RefType>(self, printer->cur, WLOAD(RefType, listelem->next[WLOAD(RefType, printer->cur[self])]), stable);
+	}
 }
 
 
@@ -299,7 +301,7 @@ __global__ void schedule_kernel(){
 
 
 		TOGGLE_STEP_PARITY(Printer);
-		executeStep<Printer_print>(printer->nrof_instances2(STEP_PARITY(Printer)), grid, block, &stable);
+		executeStep<Printer_print_ordered>(printer->nrof_instances2(STEP_PARITY(Printer)), grid, block, &stable);
 		printer->update_counters(!STEP_PARITY(Printer));
 		if(!stable){
 			clear_stack(0, iter_idx);

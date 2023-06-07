@@ -14,18 +14,20 @@ struct ListElem(val : Int, next: ListElem, newNext: ListElem, comp: ListElem, ha
 	}
 
 	create_printer {
-		if !has_inc then {
+		if this != null && !has_inc then {
 			Printer p := Printer(this);
 		}
 	}
 }
 
 struct Printer(cur: ListElem) {
-	print {
-		Int val := cur.val;
-		$$printf("%d\n", val);
-		cur := cur.next;
+	print_ordered {
+		if this != null then {
+			Int val := cur.val;
+			$$printf("%d\n", val);
+			cur := cur.next;
+		}
 	}
 }
 
-Fix(find_order) < reorder < create_printer < Fix(print)
+Fix(find_order) < reorder < create_printer < Fix(print_ordered)
