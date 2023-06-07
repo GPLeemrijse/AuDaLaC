@@ -66,7 +66,7 @@ impl FPStrategy for NaiveAlternatingFixpoint {
         let indent = "\t".repeat(lvl + 2);
         formatdoc! {"
 			{indent}bool stable = true;
-			{indent}if (is_thread0){{
+			{indent}if (grid.thread_rank() == 0){{
 			{indent}	/* Resets the next fp_stack index in advance. */
 			{indent}	fp_stack[{lvl}][FP_RESET(iter_idx[{lvl}])].store(true, cuda::memory_order_relaxed);
 			{indent}}}

@@ -7,9 +7,6 @@
 
 #define MAX_FP_DEPTH 16
 
-#ifndef THREADS_PER_BLOCK
-#define THREADS_PER_BLOCK 256
-#endif
 
 
 #define CHECK(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -51,35 +48,6 @@ namespace ADL {
 	    Bool,
 	    Ref
 	};
-
-   enum OccupancyStrategy {
-      MaxOccupancy = 0,
-      OneBlockPerSM = 1,
-   };
-
-   static std::tuple<dim3, dim3> get_launch_dims(inst_size nrof_threads, const void* kernel, OccupancyStrategy strat = MaxOccupancy){
-      assert(strat == MaxOccupancy);
-      int numBlocksPerSm = 0;
-      int tpb = THREADS_PER_BLOCK;
-
-      cudaDeviceProp deviceProp;
-      cudaGetDeviceProperties(&deviceProp, 0);
-      cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, tpb, 0);
-      
-      int max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
-      int needed_blocks = (nrof_threads + tpb - 1)/tpb;
-
-      if (needed_blocks > max_blocks) {
-         fprintf(stderr, "Needed %u blocks, but %u blocks is the maximum.\nAdjust instances per thread (-M), or allocate for fewer instances (-N).\n", needed_blocks, max_blocks);
-      }
-      assert(needed_blocks <= max_blocks);
-
-      fprintf(stderr, "Launching %u/%u blocks of %u threads = %u threads.\n", needed_blocks, max_blocks, tpb, needed_blocks * tpb);
-
-      dim3 dimBlock(tpb, 1, 1);
-      dim3 dimGrid(needed_blocks, 1, 1);
-      return std::make_tuple(dimGrid, dimBlock);
-   }
 
 	static Type parse_type_string(std::string s) {
       if (s == "Int") return Int;

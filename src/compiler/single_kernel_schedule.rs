@@ -12,7 +12,7 @@ pub struct SingleKernelSchedule<'a> {
     fp: &'a dyn FPStrategy,
     step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
     step_transpiler: &'a StepBodyCompiler<'a>,
-    work_divisor: &'a WorkDivisor<'a>,
+    work_divisor: &'a WorkDivisor,
 }
 
 impl SingleKernelSchedule<'_> {
@@ -60,8 +60,6 @@ impl SingleKernelSchedule<'_> {
         formatdoc! {"
 			{ind}const grid_group grid = this_grid();
 			{ind}const thread_block block = this_thread_block();
-			{ind}const bool is_thread0 = grid.thread_rank() == 0;
-			{ind}inst_size nrof_instances;
 			{ind}{bitmask_type} struct_step_parity = 0; // bitmask
 			{ind}bool stable = true; // Only used to compile steps outside fixpoints
 			{stab_stack}
@@ -171,11 +169,10 @@ impl SingleKernelSchedule<'_> {
                 .collect::<Vec<String>>()
                 .join("");
 
-            let step_execution = self.work_divisor.execute_step(&func_name);
+            let step_execution = self.work_divisor.execute_step(&func_name, nrof_instances);
 
             formatdoc! {"
 				{indent}TOGGLE_STEP_PARITY({struct_name});
-				{indent}nrof_instances = {nrof_instances};
 				{indent}{step_execution}{counter_updates}"
             }
         } else {

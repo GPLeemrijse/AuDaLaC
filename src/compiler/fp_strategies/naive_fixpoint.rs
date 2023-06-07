@@ -50,7 +50,7 @@ impl FPStrategy for NaiveFixpoint {
         formatdoc! {"
 			{indent}bool stable = true;
 			{indent}grid.sync();
-			{indent}if (is_thread0)
+			{indent}if (grid.thread_rank() == 0)
 			{indent}	fp_stack[{lvl}].store(true, cuda::memory_order_relaxed);
 			{indent}grid.sync();
 		"}

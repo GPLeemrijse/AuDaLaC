@@ -162,12 +162,13 @@ impl StepBodyCompiler<'_> {
                 .var_exp_type_info
                 .get(&(exp as *const Exp))
                 .expect("Could not find var expression in type info.");
-            let is_parameter = strct.parameter_by_name(&parts[0]).is_some();
+            let is_param_owned_by_self = strct.parameter_by_name(&parts[0]).is_some();
+            let is_param_owned_by_local_var = !is_param_owned_by_self && parts.len() > 1;
 
             let (exp_as_c, owner);
 
             // For parameters, the 'self' part is implicit.
-            if is_parameter {
+            if is_param_owned_by_self {
                 (exp_as_c, owner) = self.stitch_parts_and_types(zip(
                     ["self".to_string()].iter().chain(parts.iter()),
                     [Type::Named(strct.name.clone())].iter().chain(types.iter()),
@@ -175,7 +176,7 @@ impl StepBodyCompiler<'_> {
             } else {
                 (exp_as_c, owner) = self.stitch_parts_and_types(zip(parts.iter(), types.iter()), ro_params);
             }
-            return (exp_as_c, owner, is_parameter);
+            return (exp_as_c, owner, is_param_owned_by_self || is_param_owned_by_local_var);
         }
         panic!("Expected Var expression.");
     }
@@ -256,5 +257,95 @@ impl StepBodyCompiler<'_> {
 				}}
 			")
         }
+    }
+
+    fn weak_set_param_function(&self) -> String {
+        if self.print_unstable {
+            formatdoc!("
+                template<typename T>
+                __device__ void WSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable, const char* par_str) {{
+                    if (owner != 0){{
+                        T old_val = WLOAD(params[owner]);
+                        if (old_val != new_val){{
+                            WSTORE(params[owner], new_val);
+                            *stable = false;
+                            printf(\"%s was set (%u).\\n\", par_str, owner);
+                        }}
+                    }}
+                }}
+            ")
+        } else {
+            formatdoc!("
+                template<typename T>
+                __device__ void WSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {{
+                    if (owner != 0){{
+                        T old_val = WLOAD(params[owner]);
+                        if (old_val != new_val){{
+                            WSTORE(params[owner], new_val);
+                            *stable = false;
+                        }}
+                    }}
+                }}
+            ")
+        }
+    }
+}
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use crate::StepBodyCompiler;
+    use crate::parser::*;
+    use indoc::formatdoc;
+
+    #[test]
+    fn test_local_variable_as_parameter(){
+        let program = ProgramParser::new().parse(
+            "struct S1(p1 : Nat, p2: S1) {
+                step1 {
+                    S1 p2_alias := p2;
+                    p2 := p2_alias;
+                    p2_alias.p1 := 12;
+                }
+            }
+
+            step1",
+        ).unwrap();
+
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
+
+        let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
+        let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
+
+        let step_compiler = StepBodyCompiler::new(
+            &type_info,
+            true,
+            false,
+            true,
+            true
+        );
+
+        let expected = formatdoc!("
+
+            \tRefType p2_alias = LOAD(s1->p2[self]);
+            \t// p2 := p2_alias;
+            \tSetParam<RefType>(self, s1->p2, p2_alias, stable);
+            \t// p2_alias.p1 := 12;
+            \tSetParam<NatType>(p2_alias, s1->p1, 12, stable);"
+        );
+
+        let received = step_compiler.step_body_as_c(&program, &s1, &step1);
+
+        if expected != received {
+            eprintln!("Expected:\n---\n{expected}");
+            eprintln!("\nReceived:\n---\n{received}");
+
+        }
+        assert_eq!(expected, received);
+
     }
 }
