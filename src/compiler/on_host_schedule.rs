@@ -11,7 +11,7 @@ pub struct OnHostSchedule<'a> {
     fp: &'a dyn FPStrategy,
     step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
     step_transpiler: &'a StepBodyCompiler<'a>,
-    work_divisor: &'a WorkDivisor<'a>,
+    work_divisor: &'a WorkDivisor,
 }
 
 impl OnHostSchedule<'_> {
@@ -19,7 +19,7 @@ impl OnHostSchedule<'_> {
         program: &'a Program,
         fp: &'a dyn FPStrategy,
         step_transpiler: &'a StepBodyCompiler<'_>,
-        work_divisor: &'a WorkDivisor<'a>,
+        work_divisor: &'a WorkDivisor,
     ) -> OnHostSchedule<'a> {
         OnHostSchedule {
             program,

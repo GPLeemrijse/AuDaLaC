@@ -92,7 +92,7 @@ struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
 				}
 			}
 		}
-		Bool is_stable := top_old == m.top && p1_old == m.p1 && p3_old == m.p3;
+		Bool is_stable := (top_old == m.top) && (p1_old == m.p1) && (p3_old == m.p3);
 
 		/* If m is v's candidate, and m changed, reset v's candidate. */
 		if !is_stable && v.candidate == m then {

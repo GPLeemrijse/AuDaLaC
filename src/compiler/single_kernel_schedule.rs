@@ -12,7 +12,7 @@ pub struct SingleKernelSchedule<'a> {
     fp: &'a dyn FPStrategy,
     step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
     step_transpiler: &'a StepBodyCompiler<'a>,
-    work_divisor: &'a WorkDivisor<'a>,
+    work_divisor: &'a WorkDivisor,
 }
 
 impl SingleKernelSchedule<'_> {
