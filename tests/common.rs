@@ -22,7 +22,7 @@ pub fn memorder_impact_configs() -> Vec<Config<'static>> {
     let orders = ["relaxed", "seqcons", "acqrel"];
     let voting_strat = ["naive-alternating"];
     let tpb = ["128", "512"];
-    let w = ["1"];
+    let w = ["0", "1"];
 
     Config::cartesian(&orders, &voting_strat, &tpb, &w)
 }
@@ -84,14 +84,14 @@ impl<'a> Config<'_> {
             self.voting.to_string(),
             "-T".to_string(),
             self.tpb.to_string(),
-            "-wldst".to_string(),
+            "-w".to_string(),
             self.weak_non_racing.to_string(),
         ]
     }
 
     pub fn as_csv_row(&self) -> String {
         format!(
-            "{},{},{},{},{},",
+            "{},{},{},{},{}",
             self, self.memorder, self.voting, self.tpb, self.weak_non_racing,
         )
     }

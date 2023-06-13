@@ -1,3 +1,4 @@
+use std::time::Duration;
 use crate::benchmarks::bench_testcases;
 use crate::benchmarks::compile_config;
 use crate::common::*;
@@ -147,6 +148,7 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
             fname2nrof_edges,
             REPS,
             &mut result_file,
+            Duration::from_secs(10)
         );
     }
 
@@ -167,6 +169,7 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
             fname2nrof_edges,
             REPS,
             &mut result_file,
+            Duration::from_secs(10)
         );
     }
 }

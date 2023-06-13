@@ -1,3 +1,4 @@
+use std::time::Duration;
 use crate::benchmarks::bench_testcases;
 use crate::benchmarks::compile_config;
 use crate::common::*;
@@ -37,7 +38,7 @@ fn invar_inev_eat_set() -> Vec<(&'static str, Vec<&'static str>)> {
             "tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_inevitably_eat.init",
             "tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_inevitably_eat.init",
             "tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_inevitably_eat.init",
-            "tests/benchmarks/SPM/testcases/dining/dining_10.invariantly_inevitably_eat.init",
+            "tests/benchmarks/SPM/testcases/dining/dining_9.invariantly_inevitably_eat.init",
         ],
     )]
 }
@@ -73,7 +74,8 @@ fn benchmark_spm_set(configs: &Vec<Config>, testcases: &Vec<(&str, Vec<&str>)>, 
 
     eprintln!("Benchmarking SPM ({set_name})...");
 
-    for c in configs {
+    for (idx, c) in configs.iter().enumerate() {
+        eprintln!("\tTesting SPM config {}/{}: {c}", idx + 1, configs.len());
         let compile_err = compile_config("SPM", "tests/benchmarks/SPM", None, c, Vec::new()).err();
 
         if let Some(e) = compile_err {
@@ -88,6 +90,7 @@ fn benchmark_spm_set(configs: &Vec<Config>, testcases: &Vec<(&str, Vec<&str>)>, 
             fname2problemsize,
             REPS,
             &mut result_file,
+            Duration::from_secs(60)
         );
     }
 }
