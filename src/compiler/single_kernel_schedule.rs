@@ -207,7 +207,7 @@ impl SingleKernelSchedule<'_> {
 
         let params = self.kernel_parameters(true);
 
-        let kernel_signature = format_signature(&func_header, params, 0);
+        let kernel_signature = format_signature(&func_header, &params, 0);
 
         let step_body = self
             .step_transpiler
@@ -226,7 +226,7 @@ impl SingleKernelSchedule<'_> {
 
         let params = self.kernel_parameters(true);
 
-        let kernel_signature = format_signature(&func_header, params, 0);
+        let kernel_signature = format_signature(&func_header, &params, 0);
 
         let s_name = &strct.name;
         let s_name_lwr = s_name.to_lowercase();
@@ -320,7 +320,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 
     fn kernels(&self) -> Option<String> {
         let kernel_header = format!("__global__ void {}", SingleKernelSchedule::KERNEL_NAME);
-        let kernel_signature = format_signature(&kernel_header, Vec::new(), 0);
+        let kernel_signature = format_signature(&kernel_header, &Vec::new(), 0);
 
         let kernel_schedule_body = self.kernel_schedule_body();
 

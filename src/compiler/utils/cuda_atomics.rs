@@ -1,3 +1,4 @@
+#[derive(PartialEq, PartialOrd)]
 pub enum MemOrder {
     Weak,
     Relaxed,
@@ -22,7 +23,7 @@ impl MemOrder {
     }
 
     pub fn is_strong(&self) -> bool {
-        !matches!(self, MemOrder::Weak)
+        self > &MemOrder::Weak
     }
 
     pub fn as_cuda_order(&self, op: Option<MemoryOperation>) -> String {

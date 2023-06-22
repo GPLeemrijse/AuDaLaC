@@ -13,7 +13,7 @@ pub fn as_c_type(t: &Type) -> String {
     }
 }
 
-pub fn format_signature(sig: &String, params: Vec<String>, padding: usize) -> String {
+pub fn format_signature(sig: &String, params: &Vec<String>, padding: usize) -> String {
     let indent = format!(
         ",\n{}{}",
         "\t".repeat((sig.len() + 1 + padding * 4) / 4),
