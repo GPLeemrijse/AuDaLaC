@@ -1,3 +1,5 @@
+use crate::analysis::fixpoint_depth;
+use crate::analysis::get_step_to_structs;
 use crate::compiler::{ScheduleManager, StructManager};
 use crate::parser::ast::*;
 use indoc::formatdoc;
@@ -25,7 +27,7 @@ impl ScheduleManager for CoalescedScheduleManager<'_> {
         formatdoc! {"
 			#define FP_DEPTH {}
 			#define THREADS_PER_BLOCK {tpb}
-		", self.program.schedule.fixpoint_depth()}
+		", fixpoint_depth(&self.program.schedule)}
     }
 
     fn struct_typedef(&self) -> String {
@@ -103,7 +105,7 @@ impl CoalescedScheduleManager<'_> {
     ) -> CoalescedScheduleManager<'a> {
         CoalescedScheduleManager {
             program,
-            step_to_structs: program.get_step_to_structs(),
+            step_to_structs: get_step_to_structs(program),
             struct_manager,
             tpb: 512,
             printnthinst,

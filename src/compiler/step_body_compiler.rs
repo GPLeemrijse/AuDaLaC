@@ -1,3 +1,4 @@
+use crate::analysis::racing_parameters;
 use crate::compiler::utils::*;
 use crate::parser::ast::*;
 use indoc::formatdoc;
@@ -32,7 +33,7 @@ impl StepBodyCompiler<'_> {
             strct,
             step,
             1,
-            &step.racing_parameters(program, strct, self.var_exp_type_info),
+            &racing_parameters(step, program, strct, self.var_exp_type_info),
         )
     }
 

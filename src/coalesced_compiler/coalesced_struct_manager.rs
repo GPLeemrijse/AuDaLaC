@@ -1,3 +1,5 @@
+use crate::analysis::declarations;
+use crate::analysis::constructors;
 use crate::coalesced_compiler::*;
 use crate::compiler::utils::{MemOrder, MemoryOperation, Scope};
 use crate::compiler::StructManager;
@@ -220,8 +222,7 @@ impl StructManager for CoalescedStructManager<'_> {
                 .collect(),
         );
 
-        let mut constructed_types: Vec<String> = step
-            .constructors()
+        let mut constructed_types: Vec<String> = constructors(step)
             .iter()
             .map(|c| format!("{}* const host_{}", c, c.to_lowercase()))
             .collect();
@@ -241,8 +242,7 @@ impl StructManager for CoalescedStructManager<'_> {
                 .collect(),
         );
 
-        let mut constructed_types: Vec<String> = step
-            .constructors()
+        let mut constructed_types: Vec<String> = constructors(step)
             .iter()
             .map(|c| format!("&host_{c}_ptr"))
             .collect();
@@ -309,7 +309,7 @@ impl CoalescedStructManager<'_> {
         let pre_step_c = self.pre_step_c();
         let post_step_c = self.post_step_c();
 
-        let constructs = step.constructors();
+        let constructs = constructors(step);
         let sync_suffix;
         if constructs.is_empty() {
             sync_suffix = "".to_string();
@@ -502,7 +502,7 @@ impl CoalescedStructManager<'_> {
     ) -> Vec<&'a Type> {
         let mut cur_strct: &ADLStruct = strct;
         let mut p_types: Vec<&Type> = Vec::new();
-        let declarations: Vec<(&String, &Type)> = step.declarations();
+        let declarations: Vec<(&String, &Type)> = declarations(step);
         let local_par_type: Option<&Type> = declarations
             .iter()
             .find(|(s, _)| **s == parts[0])

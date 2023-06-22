@@ -1,3 +1,6 @@
+use crate::analysis::earliest_subschedule;
+use crate::analysis::get_step_to_structs;
+use crate::analysis::constructors;
 use crate::compiler::compilation_traits::*;
 use crate::compiler::utils::*;
 use crate::compiler::StepBodyCompiler;
@@ -28,7 +31,7 @@ impl SingleKernelSchedule<'_> {
         SingleKernelSchedule {
             program,
             fp,
-            step_to_structs: program.get_step_to_structs(),
+            step_to_structs: get_step_to_structs(program),
             step_transpiler: step_transpiler,
             work_divisor: work_divisor,
         }
@@ -89,7 +92,7 @@ impl SingleKernelSchedule<'_> {
             let is_stable = self.fp.is_stable(fp_level);
 
             let sync = if self.fp.requires_intra_fixpoint_sync()
-                && s.earliest_subschedule().is_fixpoint()
+                && earliest_subschedule(s).is_fixpoint()
             {
                 format!("{indent}\tgrid.sync();")
             } else {
@@ -149,7 +152,7 @@ impl SingleKernelSchedule<'_> {
                 let strct = self.program.struct_by_name(struct_name).unwrap();
                 let step = strct.step_by_name(step_name).unwrap();
                 func_name = self.step_function_name(strct, step);
-                counters_to_update = step.constructors();
+                counters_to_update = constructors(step);
 
                 if !counters_to_update.contains(&struct_name) {
                     counters_to_update.push(struct_name);

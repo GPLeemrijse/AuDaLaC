@@ -1,3 +1,4 @@
+use crate::analysis::executors;
 use crate::as_type_enum;
 use crate::compiler::utils::*;
 use crate::compiler::CompileComponent;
@@ -264,7 +265,7 @@ impl CompileComponent for StructManagers<'_> {
         struct_names.sort();
 
         let mut max_executor_str = "0".to_string();
-        let executors = self.program.executors();
+        let executors = executors(self.program);
 
         for (idx, struct_name) in struct_names.iter().enumerate() {
             let s_name_lwr = struct_name.to_lowercase();

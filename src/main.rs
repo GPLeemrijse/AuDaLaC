@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate lalrpop_util;
+use crate::analysis::fixpoint_depth;
 use crate::coalesced_compiler::*;
 use crate::compiler::components::*;
 use crate::compiler::fp_strategies::*;
@@ -25,6 +26,7 @@ mod coalesced_compiler;
 mod compiler;
 mod init_file_generator;
 mod parser;
+mod analysis;
 
 /* https://github.com/clap-rs/clap/blob/master/examples/typed-derive.rs */
 fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error + Send + Sync + 'static>>
@@ -119,10 +121,10 @@ fn main() {
                 } else {
                     let fp_strat: Box<dyn FPStrategy> = match (schedule_strat, voting_strat) {
                         ("in-kernel", "naive") => {
-                            Box::new(NaiveFixpoint::new(program.schedule.fixpoint_depth()))
+                            Box::new(NaiveFixpoint::new(fixpoint_depth(&program.schedule)))
                         }
                         ("in-kernel", "naive-alternating") => Box::new(
-                            NaiveAlternatingFixpoint::new(program.schedule.fixpoint_depth()),
+                            NaiveAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
                         _ => panic!(
                             "Voting strategy not found, or combined with wrong schedule strategy."
