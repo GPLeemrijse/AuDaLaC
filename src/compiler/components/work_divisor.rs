@@ -66,12 +66,16 @@ impl<'a> WorkDivisor {
                 int max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
                 int wanted_blocks = (max_nrof_executing_instances + tpb - 1)/tpb;
                 int used_blocks = min(max_blocks, wanted_blocks);
+                int nrof_threads = used_blocks * tpb;
 
                 if (used_blocks == 0) {{
                     fprintf(stderr, \"Could not fit kernel on device!\\n\");
                     exit(1234);
                 }}
-                fprintf(stderr, \"Launching %u/%u blocks of %u threads = %u threads.\\nResulting in max %u instances per thread.\\n\", used_blocks, max_blocks, tpb, used_blocks * tpb, (max_nrof_executing_instances + (used_blocks * tpb) - 1) / (used_blocks * tpb));
+
+                fprintf(stderr, \"A maximum of %u instances will execute.\\n\", max_nrof_executing_instances);
+                fprintf(stderr, \"Launching %u/%u blocks of %u threads = %u threads.\\n\", used_blocks, max_blocks, tpb, nrof_threads);
+                fprintf(stderr, \"Resulting in max %u instances per thread.\\n\", (max_nrof_executing_instances + nrof_threads - 1) / nrof_threads);
 
                 dim3 dimBlock(tpb, 1, 1);
                 dim3 dimGrid(used_blocks, 1, 1);

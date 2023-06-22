@@ -29,11 +29,11 @@ relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,4,9.73836
 relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,6,146.59427
 relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,8,4117.5435
 relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,9,32377.62
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,2,non-zero exitcode (other).
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,4,non-zero exitcode (other).
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,6,non-zero exitcode (other).
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,8,non-zero exitcode (other).
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,9,non-zero exitcode (other).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,2,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,4,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,6,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,8,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,9,non-zero exitcode (kernel did not fit).
 relaxed-naive-alternating-128-0,relaxed,naive-alternating,128,0,SPM,invariantly_inevitably_eat,2,1.0535008
 relaxed-naive-alternating-128-0,relaxed,naive-alternating,128,0,SPM,invariantly_inevitably_eat,4,8.7009325
 relaxed-naive-alternating-128-0,relaxed,naive-alternating,128,0,SPM,invariantly_inevitably_eat,6,140.05508

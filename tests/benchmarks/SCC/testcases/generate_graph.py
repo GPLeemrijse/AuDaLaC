@@ -5,14 +5,13 @@ G = nx.Graph()
 
 
 n = int(sys.argv[1]); # node
-p = float(sys.argv[2]); # probability of edge between nodes
-out_dir = sys.argv[3]; # Output directory
+out_dir = sys.argv[2]; # Output directory
 
-assert 0 < p and p <= 1;
+p = 1.3/n;
 
 m_exp = p*n*n;
 
-cont = input(f"Expected nrof edges is {m_exp:,}, do you wish to continue? [y/n]");
+cont = input(f"Expected nrof edges is {m_exp:,} and n*p = {n*p}, do you wish to continue? [y/n]");
 if cont != "y":
 	exit("Stopped.");
 
@@ -30,7 +29,7 @@ m = graph.number_of_edges();
 print(f"The graph contains {n} nodes and {m} edges.");
 
 # Write input file for sequential to disk
-sequential_in_file = os.path.join(out_dir, f"random_kos_{n}_{m}_{p}.in");
+sequential_in_file = os.path.join(out_dir, f"random_kos_{n}_{m}.in");
 with open(sequential_in_file, "w") as graph_f:
 	graph_f.write(f"{n} {m}\n");
 	for (u, v) in graph.edges:
@@ -38,7 +37,7 @@ with open(sequential_in_file, "w") as graph_f:
 
 
 # Write SCC.adl ADL init file to disk
-adl_init_file = os.path.join(out_dir, f"random_scc_{n}_{m}_{p}.init");
+adl_init_file = os.path.join(out_dir, f"random_scc_{n}_{m}.init");
 with open(adl_init_file, "w") as graph_f:
 	graph_f.write("ADL structures 3\nEdge Node Node\nNode NodeSet Bool Bool\nNodeSet Node Node Node Node Bool NodeSet NodeSet NodeSet\n");
 	graph_f.write(f"Edge instances {m} {m}\n");
@@ -52,7 +51,7 @@ with open(adl_init_file, "w") as graph_f:
 	graph_f.write("NodeSet instances 1 1\n0 0 0 0 0 0 0 0\n");
 
 # Write SCC_MP.adl ADL init file to disk
-adl_init_file = os.path.join(out_dir, f"random_mp_{n}_{m}_{p}.init");
+adl_init_file = os.path.join(out_dir, f"random_mp_{n}_{m}.init");
 with open(adl_init_file, "w") as graph_f:
 	graph_f.write("ADL structures 2\nEdge Node Node\nNode Bool Node Node Bool Bool\n");
 	graph_f.write(f"Edge instances {m} {m}\n");

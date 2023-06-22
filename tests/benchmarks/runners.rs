@@ -85,6 +85,9 @@ fn run_bin(bin: &str, input_file: &str, timeout: Duration) -> Result<String, Str
             } else {
                 "other"
             };
+            if reason == "other" {
+                eprintln!("\nSTDERR: {}", stderr);
+            }
             return Err(format!("non-zero exitcode ({reason})."));
         }
         Ok(stdout)

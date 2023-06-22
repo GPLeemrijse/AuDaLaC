@@ -33,30 +33,11 @@ fn test_benchmark_scc() {
 fn random_scc_set() -> Vec<(&'static str, Vec<&'static str>)> {
     vec![
         (
-            "random_0.005",
+            "random n*p=1.3",
             vec![
-                "tests/benchmarks/SCC/testcases/random_scc_1000_5076_0.005.init",
-                "tests/benchmarks/SCC/testcases/random_scc_2500_30877_0.005.init",
-                "tests/benchmarks/SCC/testcases/random_scc_5000_124845_0.005.init",
-                "tests/benchmarks/SCC/testcases/random_scc_10000_500574_0.005.init",
-            ],
-        ),
-        (
-            "random_0.01",
-            vec![
-                "tests/benchmarks/SCC/testcases/random_scc_1000_9813_0.01.init",
-                "tests/benchmarks/SCC/testcases/random_scc_2500_62582_0.01.init",
-                "tests/benchmarks/SCC/testcases/random_scc_5000_250467_0.01.init",
-                "tests/benchmarks/SCC/testcases/random_scc_10000_999898_0.01.init",
-            ],
-        ),
-        (
-            "random_0.1",
-            vec![
-                "tests/benchmarks/SCC/testcases/random_scc_1000_100095_0.1.init",
-                "tests/benchmarks/SCC/testcases/random_scc_2500_624033_0.1.init",
-                "tests/benchmarks/SCC/testcases/random_scc_5000_2500146_0.1.init",
-                "tests/benchmarks/SCC/testcases/random_scc_10000_10001053_0.1.init",
+                "tests/benchmarks/SCC/testcases/random_scc_50000_65319.init",
+                "tests/benchmarks/SCC/testcases/random_scc_500000_649925.init",
+                "tests/benchmarks/SCC/testcases/random_scc_5000000_6499862.init",
             ],
         ),
     ]
@@ -65,44 +46,31 @@ fn random_scc_set() -> Vec<(&'static str, Vec<&'static str>)> {
 fn random_mp_set() -> Vec<(&'static str, Vec<&'static str>)> {
     vec![
         (
-            "random_0.005",
+            "random n*p=1.3",
             vec![
-                "tests/benchmarks/SCC/testcases/random_mp_1000_5076_0.005.init",
-                "tests/benchmarks/SCC/testcases/random_mp_2500_30877_0.005.init",
-                "tests/benchmarks/SCC/testcases/random_mp_5000_124845_0.005.init",
-                "tests/benchmarks/SCC/testcases/random_mp_10000_500574_0.005.init",
-            ],
-        ),
-        (
-            "random_0.01",
-            vec![
-                "tests/benchmarks/SCC/testcases/random_mp_1000_9813_0.01.init",
-                "tests/benchmarks/SCC/testcases/random_mp_2500_62582_0.01.init",
-                "tests/benchmarks/SCC/testcases/random_mp_5000_250467_0.01.init",
-                "tests/benchmarks/SCC/testcases/random_mp_10000_999898_0.01.init",
-            ],
-        ),
-        (
-            "random_0.1",
-            vec![
-                "tests/benchmarks/SCC/testcases/random_mp_1000_100095_0.1.init",
-                "tests/benchmarks/SCC/testcases/random_mp_2500_624033_0.1.init",
-                "tests/benchmarks/SCC/testcases/random_mp_5000_2500146_0.1.init",
-                "tests/benchmarks/SCC/testcases/random_mp_10000_10001053_0.1.init",
+                "tests/benchmarks/SCC/testcases/random_mp_50000_65319.init",
+                "tests/benchmarks/SCC/testcases/random_mp_500000_649925.init",
+                "tests/benchmarks/SCC/testcases/random_mp_5000000_6499862.init",
             ],
         ),
     ]
 }
 
 fn fname2nrof_edges(in_file: &str) -> String {
-    Regex::new(r"^tests/benchmarks/SCC/testcases/random_\w+_[0-9]+_([0-9]+)_.+\.init$")
+    let capts = Regex::new(r"^tests/benchmarks/SCC/testcases/random_\w+_([0-9]+)_([0-9]+)\.init$")
         .unwrap()
         .captures(in_file)
-        .unwrap()
-        .get(1)
-        .unwrap()
-        .as_str()
-        .to_string()
+        .unwrap();
+
+    let nodes = capts.get(1)
+         .unwrap()
+         .as_str().parse::<i32>().unwrap();
+
+    let edges = capts.get(2)
+         .unwrap()
+         .as_str().parse::<i32>().unwrap();
+
+    (nodes + edges).to_string()
 }
 
 fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
@@ -132,7 +100,7 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
             "tests/benchmarks/SCC",
             Some("SCC"),
             c,
-            vec!["-N".to_string(), "NodeSet=10001".to_string()],
+            vec!["-N".to_string(), "NodeSet=5000000".to_string()],
         )
         .err();
 
@@ -148,7 +116,7 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
             fname2nrof_edges,
             REPS,
             &mut result_file,
-            Duration::from_secs(10)
+            Duration::from_secs(60)
         );
     }
 
@@ -169,7 +137,7 @@ fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
             fname2nrof_edges,
             REPS,
             &mut result_file,
-            Duration::from_secs(10)
+            Duration::from_secs(60)
         );
     }
 }

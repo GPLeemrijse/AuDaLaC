@@ -14,10 +14,71 @@ regex = re.compile(r"([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+(,[0-9]+)*);");
 def edge_inst(u, v, idx):
 	return f"{u} {v} {idx + 2} 1\n";
 
+def edge_inst_opt(u, v, idx):
+	return f"{u} {v} 0 0 0 1\n";
+
+def print_normal_init(output_file_name, nodes, edges, prios):
+	# Print .init file
+	with open(output_file_name, "w") as out_file:
+		nrof_nodes = len(nodes);
+		nrof_edges = len(edges);
+		nrof_measures = nrof_nodes + nrof_edges + 1;
+		out_file.writelines([
+			"ADL structures 3\n",
+			"Edge Node Node Measure Measure\n",
+			"Measure Bool Nat Nat\n",
+			"Node Nat Bool Measure Measure Measure\n",
+			f"Edge instances {nrof_edges} {nrof_edges}\n"
+		]);
+
+		out_file.writelines([edge_inst(u, v, idx) for (idx, (u, v)) in enumerate(edges)]);
+
+		out_file.writelines([
+			f"Measure instances 1 {nrof_measures}\n",
+		]);
+
+		# max
+		out_file.write("0 %s\n" % " ".join(str(p) for (d, p) in enumerate(prios) if d % 2 == 1));
+
+		out_file.writelines([
+			f"Node instances {nrof_nodes} {nrof_nodes}\n",
+		]);
+
+		out_file.writelines([f"{n.prio} {n.owner} {idx+nrof_edges+2} 0 1\n" for (idx, n) in enumerate(nodes)]);
+
+def print_opt_init(output_file_name, nodes, edges, prios):
+	# Print .init file
+	with open(output_file_name, "w") as out_file:
+		nrof_nodes = len(nodes);
+		nrof_edges = len(edges);
+		out_file.writelines([
+			"ADL structures 3\n",
+			"Edge Node Node Bool Nat Nat Measure\n",
+			"Measure Bool Nat Nat\n",
+			"Node Nat Bool Bool Nat Nat Edge Measure\n",
+			f"Edge instances {nrof_edges} {nrof_edges}\n"
+		]);
+
+		out_file.writelines([edge_inst_opt(u, v, idx) for (idx, (u, v)) in enumerate(edges)]);
+
+		# Measures: max
+		out_file.writelines([
+			f"Measure instances 1 1\n",
+			"0 %s\n" % " ".join(str(p) for (d, p) in enumerate(prios) if d % 2 == 1)
+		]);
+
+		out_file.writelines([
+			f"Node instances {nrof_nodes} {nrof_nodes}\n",
+		]);
+
+		out_file.writelines([f"{n.prio} {n.owner} 0 0 0 0 1\n" for (idx, n) in enumerate(nodes)]);
+
 def main():
 	parser = ArgumentParser(prog='pgsolver2adl')
 	parser.add_argument('pg_files', type=FileType('r'), nargs='+', help="The pgsolver input file(s).");
 	parser.add_argument('output_dir', help="The output directory.");
+	parser.add_argument('-o', action='store_true', dest='opt', help="Use optimised SPM alg.");
+
 	args = parser.parse_args()
 
 	for in_file in args.pg_files:
@@ -56,33 +117,10 @@ def main():
 			print(f"Skipping file {file_name}...");
 			continue;
 		
-		# Print .init file
-		with open(output_file_name, "w") as out_file:
-			nrof_nodes = len(nodes);
-			nrof_edges = len(edges);
-			nrof_measures = nrof_nodes + nrof_edges + 1;
-			out_file.writelines([
-				"ADL structures 3\n",
-				"Edge Node Node Measure Measure\n",
-				"Measure Bool Nat Nat\n",
-				"Node Nat Bool Measure Measure Measure\n",
-				f"Edge instances {nrof_edges} {nrof_edges}\n"
-			]);
-
-			out_file.writelines([edge_inst(u, v, idx) for (idx, (u, v)) in enumerate(edges)]);
-
-			out_file.writelines([
-				f"Measure instances 1 {nrof_measures}\n",
-			]);
-
-			# max
-			out_file.write("0 %s\n" % " ".join(str(p) for (d, p) in enumerate(prios) if d % 2 == 1));
-
-			out_file.writelines([
-				f"Node instances {nrof_nodes} {nrof_nodes}\n",
-			]);
-
-			out_file.writelines([f"{n.prio} {n.owner} {idx+nrof_edges+2} 0 1\n" for (idx, n) in enumerate(nodes)]);
+		if args.opt:
+			print_opt_init(output_file_name, nodes, edges, prios);
+		else:
+			print_normal_init(output_file_name, nodes, edges, prios);
 
 if __name__ == '__main__':
 	main()

@@ -19,6 +19,7 @@ enum ValidationErrorType {
     ParameterDefinedTwice(String, Loc),             // parameter name, Loc of earlier decl
     VariableAlreadyDeclared(String, Loc),           // var name, Loc of earlier decl
     UndefinedType(String),                          // attempted type name
+    UndefinedVar(String),                          // attempted var name
     UndefinedField(String, String),                 // parent name, field name
     UndefinedStep,                                  // Step and struct name already in error_context
     InvalidNumberOfArguments(usize, usize),         // Expected number, supplied number
@@ -59,6 +60,7 @@ impl ValidationError {
             InvalidTypesForOperator(..) => "E010",
             NoNullLiteralForType(..) => "E011",
             ReservedKeyword(_) => "E012",
+            UndefinedVar(..) => "E013",
         }
     }
 
@@ -97,6 +99,7 @@ impl ValidationError {
             ParameterDefinedTwice(p, _) => format!("Parameter {} defined twice.", p),
             VariableAlreadyDeclared(v, _) => format!("Variable {} defined twice.", v),
             UndefinedType(t) => format!("Undefined type {}.", t),
+            UndefinedVar(t) => format!("Undefined variable {}.", t),
             UndefinedField(f, t) => format!("Undefined field {} of {}.", t, f),
             UndefinedStep => {
                 if let Some(n) = &self.context.struct_name {
@@ -141,6 +144,7 @@ impl ValidationError {
             ParameterDefinedTwice(..) => "Parameter defined twice.",
             VariableAlreadyDeclared(..) => "Variable defined twice.",
             UndefinedType(..) => "Undefined type.",
+            UndefinedVar(..) => "Undefined variable.",
             UndefinedField(..) => "Undefined field.",
             UndefinedStep => "Undefined step",
             InvalidNumberOfArguments(..) => "Invalid number of arguments supplied.",
@@ -539,7 +543,7 @@ fn get_var_type<'ast>(
 
     if found_type.is_none() {
         context.errors.push(ValidationError {
-            error_type: ValidationErrorType::UndefinedType(parts[0].clone()),
+            error_type: ValidationErrorType::UndefinedVar(parts[0].clone()),
             context: ErrorContext::from_block_context(context),
             loc: *loc,
         });

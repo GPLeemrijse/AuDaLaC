@@ -34,11 +34,11 @@ fn invar_inev_eat_set() -> Vec<(&'static str, Vec<&'static str>)> {
     vec![(
         "invariantly_inevitably_eat",
         vec![
-            "tests/benchmarks/SPM/testcases/dining/dining_2.invariantly_inevitably_eat.init",
-            "tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_inevitably_eat.init",
-            "tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_inevitably_eat.init",
-            "tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_inevitably_eat.init",
-            "tests/benchmarks/SPM/testcases/dining/dining_9.invariantly_inevitably_eat.init",
+            "tests/benchmarks/SPM/testcases/dining/dining_2.invariantly_inevitably_eat_norm.init",
+            "tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_inevitably_eat_norm.init",
+            "tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_inevitably_eat_norm.init",
+            "tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_inevitably_eat_norm.init",
+            "tests/benchmarks/SPM/testcases/dining/dining_9.invariantly_inevitably_eat_norm.init",
         ],
     )]
 }
