@@ -85,6 +85,15 @@ impl Exp {
             _ => panic!(),
         }
     }
+
+    pub fn is_local_var(&self, strct: &ADLStruct) -> bool {
+        match self {
+            Exp::Var(parts, _) => {
+                parts.len() == 1 && strct.parameter_by_name(&parts[0]).is_none()
+            },
+            _ => false
+        }
+    }
 }
 
 impl Display for Exp {
@@ -115,7 +124,7 @@ pub enum Stat {
     InlineCpp(String),
 }
 
-#[derive(Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
+#[derive(Eq, PartialEq, Debug, Clone, Ord, Hash, PartialOrd)]
 pub enum Type {
     Named(String),
     String,

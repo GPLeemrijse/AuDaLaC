@@ -365,6 +365,7 @@ impl StepBodyCompiler<'_> {
 
 #[cfg(test)]
 mod tests {
+    use crate::analysis::racing_parameters;
     use crate::parser::*;
     use crate::StepBodyCompiler;
     use indoc::formatdoc;
@@ -434,7 +435,7 @@ mod tests {
         let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
         let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-        let racing_params = step1.racing_parameters(&program, &s1, &type_info);
+        let racing_params = racing_parameters(step1, &program, &s1, &type_info);
         assert!(racing_params.contains(&(&"S1".to_string(), &"p1".to_string())));
         assert!(racing_params.len() == 1);
 

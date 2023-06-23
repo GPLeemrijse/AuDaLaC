@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::analysis::declarations;
 use crate::analysis::constructors;
 use crate::coalesced_compiler::*;
@@ -502,7 +503,7 @@ impl CoalescedStructManager<'_> {
     ) -> Vec<&'a Type> {
         let mut cur_strct: &ADLStruct = strct;
         let mut p_types: Vec<&Type> = Vec::new();
-        let declarations: Vec<(&String, &Type)> = declarations(step);
+        let declarations: HashSet<(&String, &Type)> = declarations(step);
         let local_par_type: Option<&Type> = declarations
             .iter()
             .find(|(s, _)| **s == parts[0])

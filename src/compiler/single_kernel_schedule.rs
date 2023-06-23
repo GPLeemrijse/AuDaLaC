@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use crate::analysis::earliest_subschedule;
 use crate::analysis::get_step_to_structs;
 use crate::analysis::constructors;
@@ -144,19 +145,17 @@ impl SingleKernelSchedule<'_> {
             let struct_name_lwr = struct_name.to_lowercase();
 
             let func_name;
-            let mut counters_to_update;
+            let mut counters_to_update : HashSet<&String>;
             if step_name == "print" {
                 func_name = format!("{struct_name}_print");
-                counters_to_update = vec![struct_name];
+                counters_to_update = HashSet::from([struct_name]);
             } else {
                 let strct = self.program.struct_by_name(struct_name).unwrap();
                 let step = strct.step_by_name(step_name).unwrap();
                 func_name = self.step_function_name(strct, step);
                 counters_to_update = constructors(step);
 
-                if !counters_to_update.contains(&struct_name) {
-                    counters_to_update.push(struct_name);
-                }
+                counters_to_update.insert(struct_name);
             }
 
             let nrof_instances =
