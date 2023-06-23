@@ -163,25 +163,28 @@ pub fn get_new_label_params<'a>(
     strct: &'a ADLStruct,
     type_info: &'a HashMap<*const Exp, Vec<Type>>,
     step: &'a Step
-) -> HashSet<(&'a String, &'a String)> {
+) -> (HashSet<(&'a String, &'a String)>, HashSet<*const Stat>) {
     use Stat::*;
     use Exp::*;
 
     let mut new_label_params : HashSet<(&String, &String)> = HashSet::new();
     let mut new_label_vars : HashSet<&String> = HashSet::new();
+    let mut new_label_param_assignments : HashSet<*const Stat> = HashSet::new();
 
     visit_step::<
-        (&mut HashSet<&String>, &mut HashSet<(&String, &String)>),
+        (&mut HashSet<&String>, &mut HashSet<(&String, &String)>, &mut HashSet<*const Stat>),
         (&ADLStruct, &'a HashMap<*const Exp, Vec<Type>>),
         ()
     >(
         step,
-        &mut (&mut new_label_vars, &mut new_label_params),
+        &mut (&mut new_label_vars, &mut new_label_params, &mut new_label_param_assignments),
         |stat, pair, args| {
             let strct = args.unwrap().0;
             let info = args.unwrap().1;
             let vars : &mut HashSet<&String> = &mut pair.0;
             let pars : &mut HashSet<(&String, &String)> = &mut pair.1;
+            let par_assignments : &mut HashSet<*const Stat> = &mut pair.2;
+
             match stat {
                 Declaration(_, lhs, rhs, _) => {
                     let rhs_is_new_label = rhs.is_local_var(strct) && vars.contains(&rhs.get_parts()[0]);
@@ -235,6 +238,7 @@ pub fn get_new_label_params<'a>(
                     // If assigning to a parameter
                     else if let Some(lhs_par) = lhs_param {
                         if rhs_is_new_label || rhs_is_constructed {
+                            par_assignments.insert(stat as *const Stat);
                             pars.insert(lhs_par);
                         }
                     } else {
@@ -249,7 +253,7 @@ pub fn get_new_label_params<'a>(
         &None
     );
 
-    return new_label_params;
+    return (new_label_params, new_label_param_assignments);
 }
 
 
@@ -406,11 +410,15 @@ mod tests {
                 }
 
                 step5 {
-                    o := other(Node(null, null));
+                    other new_other := other(Node(null, null));
+                    o := new_other;
+                    o := null;
+                    o := new_other;
                 }
 
                 step6 {
                     o.x.n.o := other(null);
+                    o := null;
                 }
             }
 
@@ -431,22 +439,28 @@ mod tests {
         let step5 = strct.step_by_name(&"step5".to_string()).unwrap();
         let step6 = strct.step_by_name(&"step6".to_string()).unwrap();
 
-        let np = get_new_label_params(strct, &type_info, step1);
+        let (np, np_stores) = get_new_label_params(strct, &type_info, step1);
         assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"n".to_string())]));
+        assert_eq!(np_stores.len(), 1);
 
-        let np = get_new_label_params(strct, &type_info, step2);
+        let (np, np_stores) = get_new_label_params(strct, &type_info, step2);
         assert_eq!(np, HashSet::new());
+        assert_eq!(np_stores.len(), 0);
 
-        let np = get_new_label_params(strct, &type_info, step3);
+        let (np, np_stores) = get_new_label_params(strct, &type_info, step3);
         assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"n".to_string())]));
+        assert_eq!(np_stores.len(), 1);
 
-        let np = get_new_label_params(strct, &type_info, step4);
+        let (np, np_stores) = get_new_label_params(strct, &type_info, step4);
         assert_eq!(np, HashSet::from_iter([(&"other".to_string(), &"x".to_string())]));
+        assert_eq!(np_stores.len(), 1);
 
-        let np = get_new_label_params(strct, &type_info, step5);
+        let (np, np_stores) = get_new_label_params(strct, &type_info, step5);
         assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"o".to_string())]));
+        assert_eq!(np_stores.len(), 2);
 
-        let np = get_new_label_params(strct, &type_info, step6);
+        let (np, np_stores) = get_new_label_params(strct, &type_info, step6);
         assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"o".to_string())]));
+        assert_eq!(np_stores.len(), 1);
     }
 }

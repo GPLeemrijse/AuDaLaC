@@ -132,7 +132,7 @@ fn main() {
                     };
 
                     let step_transpiler =
-                        StepBodyCompiler::new(&type_info, true, print_unstable, weak_ld_st);
+                        StepBodyCompiler::new(&type_info, true, print_unstable, weak_ld_st, &memorder);
 
                     let work_divisor = WorkDivisor::new(
                         threads_per_block, // tpb

@@ -67,38 +67,16 @@ impl StructManagers<'_> {
             claim_instance = "claim_instance()".to_string();
         }
 
-        let header_unfenced = "__device__ RefType create_instance".to_string();
-        let signature_unfenced = format_signature(&header_unfenced, &create_func_parameters, 1);
+        let header = "__device__ RefType create_instance".to_string();
+        let signature = format_signature(&header, &create_func_parameters, 1);
 
-        let mut functions = formatdoc! {"
-            \t{signature_unfenced}
+        formatdoc! {"
+            \t{signature}
             \t\tRefType slot = {claim_instance};
             \t\t{assignments}
             \t\treturn slot;
             \t}}"
-        };
-
-        /* Create a fenced version of the create_instance method to prevent
-           the new label 'leaking' to another struct before the written params
-           become visible, thereby allowing uninitialised memory to be read.*/
-        if self.memorder == &MemOrder::Relaxed {
-            let header_fenced = "__device__ RefType create_instance_fenced".to_string();
-            let signature_fenced = format_signature(&header_fenced, &create_func_parameters, 1);
-            let scope = self.scope.as_cuda_scope();
-
-            let fenced = formatdoc! {"
-
-                \t{signature_fenced}
-                \t\tRefType slot = {claim_instance};
-                \t\t{assignments}
-                \t\tcuda::atomic_thread_fence(cuda::memory_order_release, {scope});
-                \t\treturn slot;
-                \t}}"
-            };
-
-            functions.push_str(&fenced);
         }
-        return functions;
     }
 }
 
@@ -119,12 +97,6 @@ impl CompileComponent for StructManagers<'_> {
             format!("A = V")
         };
 
-        let weak_store_macro = if self.memorder.is_strong() {
-            format!("*((T*)&A) = V")
-        } else {
-            format!("A = V")
-        };
-
         let load_macro = if self.memorder.is_strong() {
             let order = self.memorder.as_cuda_order(Some(MemoryOperation::Load));
             format!("A.load({order})")
@@ -132,13 +104,18 @@ impl CompileComponent for StructManagers<'_> {
             format!("A")
         };
 
+        let acq_order = MemOrder::AcqRel.as_cuda_order(Some(MemoryOperation::Load));
+        let rel_order = MemOrder::AcqRel.as_cuda_order(Some(MemoryOperation::Store));
+
         Some(formatdoc! {"
 			#define ATOMIC(T) cuda::atomic<T, {scope}>
 			#define STORE(A, V) {store_macro}
 			#define LOAD(A) {load_macro}
-
+            
 			#define WLOAD(T, A) *((T*)&A)
-			#define WSTORE(T, A, V) {weak_store_macro}
+            #define ACQLOAD(A) A.load({acq_order})
+			#define WSTORE(T, A, V) *((T*)&A) = V
+            #define RELSTORE(A, V) A.store(V, {rel_order})
 
 		"})
     }
