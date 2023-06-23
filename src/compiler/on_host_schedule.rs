@@ -1,3 +1,4 @@
+use crate::analysis::get_step_to_structs;
 use crate::compiler::compilation_traits::*;
 use crate::compiler::components::WorkDivisor;
 use crate::compiler::StepBodyCompiler;
@@ -24,7 +25,7 @@ impl OnHostSchedule<'_> {
         OnHostSchedule {
             program,
             fp,
-            step_to_structs: program.get_step_to_structs(),
+            step_to_structs: get_step_to_structs(program),
             step_transpiler: step_transpiler,
             work_divisor,
         }

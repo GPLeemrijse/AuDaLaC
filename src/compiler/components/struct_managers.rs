@@ -1,3 +1,4 @@
+use crate::analysis::executors;
 use crate::as_type_enum;
 use crate::compiler::utils::*;
 use crate::compiler::CompileComponent;
@@ -67,14 +68,14 @@ impl StructManagers<'_> {
         }
 
         let header = "__device__ RefType create_instance".to_string();
-        let signature = format_signature(&header, create_func_parameters, 1);
+        let signature = format_signature(&header, &create_func_parameters, 1);
 
         formatdoc! {"
-			\t{signature}
-			\t\tRefType slot = {claim_instance};
-			\t\t{assignments}
-			\t\treturn slot;
-			\t}}"
+            \t{signature}
+            \t\tRefType slot = {claim_instance};
+            \t\t{assignments}
+            \t\treturn slot;
+            \t}}"
         }
     }
 }
@@ -96,12 +97,6 @@ impl CompileComponent for StructManagers<'_> {
             format!("A = V")
         };
 
-        let weak_store_macro = if self.memorder.is_strong() {
-            format!("*((T*)&A) = V")
-        } else {
-            format!("A = V")
-        };
-
         let load_macro = if self.memorder.is_strong() {
             let order = self.memorder.as_cuda_order(Some(MemoryOperation::Load));
             format!("A.load({order})")
@@ -109,13 +104,18 @@ impl CompileComponent for StructManagers<'_> {
             format!("A")
         };
 
+        let acq_order = MemOrder::AcqRel.as_cuda_order(Some(MemoryOperation::Load));
+        let rel_order = MemOrder::AcqRel.as_cuda_order(Some(MemoryOperation::Store));
+
         Some(formatdoc! {"
 			#define ATOMIC(T) cuda::atomic<T, {scope}>
 			#define STORE(A, V) {store_macro}
 			#define LOAD(A) {load_macro}
-
+            
 			#define WLOAD(T, A) *((T*)&A)
-			#define WSTORE(T, A, V) {weak_store_macro}
+            #define ACQLOAD(A) A.load({acq_order})
+			#define WSTORE(T, A, V) *((T*)&A) = V
+            #define RELSTORE(A, V) A.store(V, {rel_order})
 
 		"})
     }
@@ -242,7 +242,7 @@ impl CompileComponent for StructManagers<'_> {
         struct_names.sort();
 
         let mut max_executor_str = "0".to_string();
-        let executors = self.program.executors();
+        let executors = executors(self.program);
 
         for (idx, struct_name) in struct_names.iter().enumerate() {
             let s_name_lwr = struct_name.to_lowercase();

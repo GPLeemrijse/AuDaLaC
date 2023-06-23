@@ -1,3 +1,5 @@
+use crate::analysis::get_new_label_params;
+use crate::analysis::racing_parameters;
 use crate::compiler::utils::*;
 use crate::parser::ast::*;
 use indoc::formatdoc;
@@ -9,6 +11,15 @@ pub struct StepBodyCompiler<'a> {
     use_step_parity: bool,
     print_unstable: bool,
     ld_st_weakly_for_non_racing: bool,
+    memorder: &'a MemOrder
+}
+
+
+struct StepCompilationInfo<'a> {
+    pub owner: &'a ADLStruct,
+    pub racing_params: &'a HashSet<(&'a String, &'a String)>,
+    pub new_label_params: &'a HashSet<(&'a String, &'a String)>,
+    pub new_label_param_assignments: &'a HashSet<*const Stat>
 }
 
 impl StepBodyCompiler<'_> {
@@ -17,44 +28,53 @@ impl StepBodyCompiler<'_> {
         use_step_parity: bool,
         print_unstable: bool,
         ld_st_weakly_for_non_racing: bool,
+        memorder: &'a MemOrder
     ) -> StepBodyCompiler<'a> {
         StepBodyCompiler {
             var_exp_type_info: type_info,
             use_step_parity,
             print_unstable,
             ld_st_weakly_for_non_racing,
+            memorder
         }
     }
 
-    pub fn step_body_as_c(&self, program: &Program, strct: &ADLStruct, step: &Step) -> String {
+    pub fn step_body_as_c(&self, program: &Program, owner: &ADLStruct, step: &Step) -> String {
+        let racing_params = racing_parameters(step, program, owner, self.var_exp_type_info);
+        let (new_label_params, new_label_param_assignments) = get_new_label_params(owner, self.var_exp_type_info, step);
+
+        let info = StepCompilationInfo {
+            owner: owner,
+            racing_params: &racing_params,
+            new_label_params: &new_label_params,
+            new_label_param_assignments: &new_label_param_assignments
+        };
+
+        
         self.statements_as_c(
             &step.statements,
-            strct,
-            step,
             1,
-            &step.racing_parameters(program, strct, self.var_exp_type_info),
+            &info
         )
     }
 
     fn statements_as_c(
         &self,
         statements: &Vec<Stat>,
-        strct: &ADLStruct,
-        step: &Step,
         indent_lvl: usize,
-        racing_params: &HashSet<(&String, &String)>,
+        info: &StepCompilationInfo
     ) -> String {
         let indent = String::from("\t").repeat(indent_lvl);
 
         statements
             .iter()
             .map(|stmt| match stmt {
-                Stat::IfThen(..) => self.if_stmt_as_c(stmt, strct, step, indent_lvl, racing_params),
+                Stat::IfThen(..) => self.if_stmt_as_c(stmt, indent_lvl, info),
                 Stat::Declaration(..) => {
-                    self.decl_as_c(stmt, strct, step, indent_lvl, racing_params)
+                    self.decl_as_c(stmt, indent_lvl, info)
                 }
                 Stat::Assignment(..) => {
-                    self.assignment_as_c(stmt, strct, step, indent_lvl, racing_params)
+                    self.assignment_as_c(stmt, indent_lvl, info)
                 }
                 Stat::InlineCpp(cpp) => format!("{indent}{cpp}"),
             })
@@ -64,18 +84,16 @@ impl StepBodyCompiler<'_> {
     fn if_stmt_as_c(
         &self,
         stmt: &Stat,
-        strct: &ADLStruct,
-        step: &Step,
         indent_lvl: usize,
-        racing_params: &HashSet<(&String, &String)>,
+        info: &StepCompilationInfo
     ) -> String {
         let indent = String::from("\t").repeat(indent_lvl);
         if let Stat::IfThen(e, stmts_true, stmts_false, _) = stmt {
-            let cond = self.expression_as_c(e, strct, step, racing_params);
+            let cond = self.expression_as_c(e, info);
             let body_true =
-                self.statements_as_c(stmts_true, strct, step, indent_lvl + 1, racing_params);
+                self.statements_as_c(stmts_true, indent_lvl + 1, info);
             let body_false =
-                self.statements_as_c(stmts_false, strct, step, indent_lvl + 1, racing_params);
+                self.statements_as_c(stmts_false, indent_lvl + 1, info);
 
             let else_block = if body_false == "" {
                 "".to_string()
@@ -92,15 +110,13 @@ impl StepBodyCompiler<'_> {
     fn decl_as_c(
         &self,
         stmt: &Stat,
-        strct: &ADLStruct,
-        step: &Step,
         indent_lvl: usize,
-        racing_params: &HashSet<(&String, &String)>,
+        info: &StepCompilationInfo
     ) -> String {
         let indent = String::from("\t").repeat(indent_lvl);
         if let Stat::Declaration(t, n, e, _) = stmt {
             let t_as_c = as_c_type(t);
-            let e_as_c = self.expression_as_c(e, strct, step, racing_params);
+            let e_as_c = self.expression_as_c(e, info);
             format!("{indent}{t_as_c} {n} = {e_as_c};")
         } else {
             unreachable!()
@@ -110,15 +126,13 @@ impl StepBodyCompiler<'_> {
     fn assignment_as_c(
         &self,
         stmt: &Stat,
-        strct: &ADLStruct,
-        step: &Step,
         indent_lvl: usize,
-        racing_params: &HashSet<(&String, &String)>,
+        info: &StepCompilationInfo
     ) -> String {
         let indent = String::from("\t").repeat(indent_lvl);
         if let Stat::Assignment(lhs_exp, rhs_exp, _) = stmt {
-            let (lhs_as_c, owner, is_parameter) = self.var_exp_as_c(lhs_exp, strct, racing_params);
-            let rhs_as_c = self.expression_as_c(rhs_exp, strct, step, racing_params);
+            let (lhs_as_c, owner, is_parameter) = self.var_exp_as_c(lhs_exp, info);
+            let rhs_as_c = self.expression_as_c(rhs_exp, info);
 
             if is_parameter {
                 let (owner_exp, owner_type) =
@@ -142,12 +156,17 @@ impl StepBodyCompiler<'_> {
                     "".to_string()
                 };
 
-                let is_racing = racing_params.contains(&(owner_type_name, param));
+                let is_storing_fresh_label = info.new_label_param_assignments.contains(&(stmt as *const Stat));
+                let is_racing = info.racing_params.contains(&(owner_type_name, param));
 
                 let store_op = if !is_racing && self.ld_st_weakly_for_non_racing {
-                    "WSetParam"
+                    "WeakSetParam"
                 } else {
-                    "SetParam"
+                    if is_storing_fresh_label && self.memorder == &MemOrder::Relaxed {
+                        "RelSetParam"
+                    } else {
+                        "SetParam"
+                    }
                 };
 
                 formatdoc! {"
@@ -165,27 +184,25 @@ impl StepBodyCompiler<'_> {
     fn expression_as_c<'a>(
         &self,
         e: &Exp,
-        strct: &ADLStruct,
-        step: &'a Step,
-        racing_params: &HashSet<(&String, &String)>,
+        info: &StepCompilationInfo
     ) -> String {
         use Exp::*;
 
         match e {
             BinOp(e1, c, e2, _) => {
-                let e1_comp = self.expression_as_c(e1, strct, step, racing_params);
-                let e2_comp = self.expression_as_c(e2, strct, step, racing_params);
+                let e1_comp = self.expression_as_c(e1, info);
+                let e2_comp = self.expression_as_c(e2, info);
 
                 format!("({e1_comp} {c} {e2_comp})")
             }
             UnOp(c, e, _) => {
-                let e_comp = self.expression_as_c(e, strct, step, racing_params);
+                let e_comp = self.expression_as_c(e, info);
                 format!("({c}{e_comp})")
             }
             Constructor(n, args, _) => {
                 let mut arg_expressions = args
                     .iter()
-                    .map(|e| self.expression_as_c(e, strct, step, racing_params))
+                    .map(|e| self.expression_as_c(e, info))
                     .collect::<Vec<String>>();
 
                 if self.use_step_parity {
@@ -197,7 +214,7 @@ impl StepBodyCompiler<'_> {
                 format!("{}->create_instance({args})", n.to_lowercase())
             }
             Var(..) => {
-                self.var_exp_as_c(e, strct, racing_params).0 // Not interested in the owner or is_parameter
+                self.var_exp_as_c(e, info).0 // Not interested in the owner or is_parameter
             }
             Lit(l, _) => as_c_literal(l),
         }
@@ -206,8 +223,7 @@ impl StepBodyCompiler<'_> {
     fn var_exp_as_c(
         &self,
         exp: &Exp,
-        strct: &ADLStruct,
-        racing_params: &HashSet<(&String, &String)>,
+        info: &StepCompilationInfo
     ) -> (String, Option<(String, Type)>, bool) {
         use std::iter::zip;
         if let Exp::Var(parts, _) = exp {
@@ -215,7 +231,7 @@ impl StepBodyCompiler<'_> {
                 .var_exp_type_info
                 .get(&(exp as *const Exp))
                 .expect("Could not find var expression in type info.");
-            let is_param_owned_by_self = strct.parameter_by_name(&parts[0]).is_some();
+            let is_param_owned_by_self = info.owner.parameter_by_name(&parts[0]).is_some();
             let is_param_owned_by_local_var = !is_param_owned_by_self && parts.len() > 1;
 
             let (exp_as_c, owner);
@@ -225,13 +241,13 @@ impl StepBodyCompiler<'_> {
                 (exp_as_c, owner) = self.stitch_parts_and_types(
                     zip(
                         ["self".to_string()].iter().chain(parts.iter()),
-                        [Type::Named(strct.name.clone())].iter().chain(types.iter()),
+                        [Type::Named(info.owner.name.clone())].iter().chain(types.iter()),
                     ),
-                    racing_params,
+                    info
                 );
             } else {
                 (exp_as_c, owner) =
-                    self.stitch_parts_and_types(zip(parts.iter(), types.iter()), racing_params);
+                    self.stitch_parts_and_types(zip(parts.iter(), types.iter()), info);
             }
             return (
                 exp_as_c,
@@ -248,7 +264,7 @@ impl StepBodyCompiler<'_> {
     fn stitch_parts_and_types<'a, I>(
         &self,
         mut parts: I,
-        racing_params: &HashSet<(&String, &String)>,
+        info: &StepCompilationInfo
     ) -> (String, Option<(String, Type)>)
     where
         I: Iterator<Item = (&'a String, &'a Type)>,
@@ -273,12 +289,17 @@ impl StepBodyCompiler<'_> {
             }
 
             let prev_struct_name: &String = previous_c_type.name().unwrap();
-            let is_racing = racing_params.contains(&(prev_struct_name, id));
-
+            let is_racing = info.racing_params.contains(&(prev_struct_name, id));
+            let potentially_fresh_label = info.new_label_params.contains(&(prev_struct_name, id));
+            
             let load_op = if !is_racing && self.ld_st_weakly_for_non_racing {
                 format!("WLOAD({}, ", as_c_type(id_type))
             } else {
-                "LOAD(".to_string()
+                if potentially_fresh_label && self.memorder == &MemOrder::Relaxed {
+                    "ACQLOAD(".to_string()
+                } else {
+                    "LOAD(".to_string()
+                }
             };
 
             previous_c_expr = format!(
@@ -292,11 +313,17 @@ impl StepBodyCompiler<'_> {
     }
 
     pub fn functions(&self) -> Vec<String> {
+        let mut result = Vec::new();
+        result.push(self.set_param_function());
+
         if self.ld_st_weakly_for_non_racing {
-            vec![self.set_param_function(), self.weak_set_param_function()]
-        } else {
-            vec![self.set_param_function()]
+            result.push(self.weak_set_param_function());
         }
+
+        if self.memorder == &MemOrder::Relaxed {
+            result.push(self.release_set_param_function());
+        }
+        return result;
     }
 
     fn set_param_function(&self) -> String {
@@ -334,7 +361,7 @@ impl StepBodyCompiler<'_> {
         if self.print_unstable {
             formatdoc!("
                 template<typename T>
-                __device__ void WSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable, const char* par_str) {{
+                __device__ void WeakSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable, const char* par_str) {{
                     if (owner != 0){{
                         T old_val = WLOAD(T, params[owner]);
                         if (old_val != new_val){{
@@ -348,7 +375,7 @@ impl StepBodyCompiler<'_> {
         } else {
             formatdoc!("
                 template<typename T>
-                __device__ void WSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {{
+                __device__ void WeakSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {{
                     if (owner != 0){{
                         T old_val = WLOAD(T, params[owner]);
                         if (old_val != new_val){{
@@ -360,13 +387,46 @@ impl StepBodyCompiler<'_> {
             ")
         }
     }
+
+    fn release_set_param_function(&self) -> String {
+        if self.print_unstable {
+            formatdoc!("
+                template<typename T>
+                __device__ void RelSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable, const char* par_str) {{
+                    if (owner != 0){{
+                        T old_val = ACQLOAD(params[owner]);
+                        if (old_val != new_val){{
+                            RELSTORE(params[owner], new_val);
+                            *stable = false;
+                            printf(\"%s was set (%u).\\n\", par_str, owner);
+                        }}
+                    }}
+                }}
+            ")
+        } else {
+            formatdoc!("
+                template<typename T>
+                __device__ void RelSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {{
+                    if (owner != 0){{
+                        T old_val = ACQLOAD(params[owner]);
+                        if (old_val != new_val){{
+                            RELSTORE(params[owner], new_val);
+                            *stable = false;
+                        }}
+                    }}
+                }}
+            ")
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::analysis::racing_parameters;
     use crate::parser::*;
     use crate::StepBodyCompiler;
     use indoc::formatdoc;
+    use crate::MemOrder;
 
     #[test]
     fn test_local_variable_as_parameter() {
@@ -390,7 +450,7 @@ mod tests {
         let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
         let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-        let step_compiler = StepBodyCompiler::new(&type_info, true, false, false);
+        let step_compiler = StepBodyCompiler::new(&type_info, true, false, false, &MemOrder::Relaxed);
 
         let expected = formatdoc!(
             "
@@ -433,18 +493,18 @@ mod tests {
         let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
         let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-        let racing_params = step1.racing_parameters(&program, &s1, &type_info);
+        let racing_params = racing_parameters(step1, &program, &s1, &type_info);
         assert!(racing_params.contains(&(&"S1".to_string(), &"p1".to_string())));
         assert!(racing_params.len() == 1);
 
-        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true);
+        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed);
 
         let expected = formatdoc!(
             "
 
             \tRefType p2_alias = WLOAD(RefType, s1->p2[self]);
             \t// p2 := p2_alias;
-            \tWSetParam<RefType>(self, s1->p2, p2_alias, stable);
+            \tWeakSetParam<RefType>(self, s1->p2, p2_alias, stable);
             \t// p2_alias.p1 := 12;
             \tSetParam<NatType>(p2_alias, s1->p1, 12, stable);"
         );
@@ -479,7 +539,7 @@ mod tests {
         let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
         let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true);
+        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed);
 
         let expected = formatdoc!(
             "
@@ -518,13 +578,13 @@ mod tests {
         let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
         let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true);
+        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed);
 
         let expected = formatdoc!(
             "
 
             \t// p2 := this;
-            \tWSetParam<RefType>(self, s1->p2, self, stable);"
+            \tWeakSetParam<RefType>(self, s1->p2, self, stable);"
         );
 
         let received = step_compiler.step_body_as_c(&program, &s1, &step1);
@@ -558,7 +618,7 @@ mod tests {
         let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
         let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true);
+        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed);
 
         let expected = formatdoc!(
             "
@@ -566,6 +626,122 @@ mod tests {
             \tRefType new_s1 = s1->create_instance(0, 0, stable);
             \t// p2.p1 := 1;
             \tSetParam<NatType>(WLOAD(RefType, s1->p2[self]), s1->p1, 1, stable);"
+        );
+
+        let received = step_compiler.step_body_as_c(&program, &s1, &step1);
+
+        if expected != received {
+            eprintln!("Expected:\n---\n{expected}");
+            eprintln!("\nReceived:\n---\n{received}");
+        }
+        assert_eq!(expected, received);
+    }
+
+    #[test]
+    fn test_acq_load_with_fresh_label() {
+        let program = ProgramParser::new()
+            .parse(
+                "struct S1(ref: S1) {
+                step1 {
+                    ref := S1(ref);
+                }
+            }
+            step1",
+            )
+            .unwrap();
+
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
+
+        let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
+        let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
+
+        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed);
+
+        let expected = formatdoc!(
+            "
+
+            \t// ref := S1(ref);
+            \tWeakSetParam<RefType>(self, s1->ref, s1->create_instance(WLOAD(RefType, s1->ref[self]), stable), stable);"
+        );
+
+        let received = step_compiler.step_body_as_c(&program, &s1, &step1);
+
+        if expected != received {
+            eprintln!("Expected:\n---\n{expected}");
+            eprintln!("\nReceived:\n---\n{received}");
+        }
+        assert_eq!(expected, received);
+    }
+
+    #[test]
+    fn test_acq_load_with_fresh_label2() {
+        let program = ProgramParser::new()
+            .parse(
+                "struct S1(ref: S1, ref2: S1) {
+                step1 {
+                    S1 old_ref := ref2;
+                    ref2 := S1(ref, null);
+                }
+            }
+            step1",
+            )
+            .unwrap();
+
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
+
+        let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
+        let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
+
+        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed);
+
+        let expected = formatdoc!(
+            "
+
+            \tRefType old_ref = WLOAD(RefType, s1->ref2[self]);
+            \t// ref2 := S1(ref, null);
+            \tWeakSetParam<RefType>(self, s1->ref2, s1->create_instance(WLOAD(RefType, s1->ref[self]), 0, stable), stable);"
+        );
+
+        let received = step_compiler.step_body_as_c(&program, &s1, &step1);
+
+        if expected != received {
+            eprintln!("Expected:\n---\n{expected}");
+            eprintln!("\nReceived:\n---\n{received}");
+        }
+        assert_eq!(expected, received);
+    }
+
+
+    #[test]
+    fn test_acq_load_with_fresh_label3() {
+        let program = ProgramParser::new()
+            .parse(
+                "struct S1(ref: S1, ref2: S1) {
+                step1 {
+                    S1 old_ref := ref;
+                    ref2.ref2 := S1(ref.ref2, null);
+                }
+            }
+            step1",
+            )
+            .unwrap();
+
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
+
+        let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
+        let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
+
+        let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed);
+
+        let expected = formatdoc!(
+            "
+
+            \tRefType old_ref = WLOAD(RefType, s1->ref[self]);
+            \t// ref2.ref2 := S1(ref.ref2, null);
+            \tRelSetParam<RefType>(ACQLOAD(s1->ref2[self]), s1->ref2, s1->create_instance(ACQLOAD(s1->ref2[WLOAD(RefType, s1->ref[self])]), 0, stable), stable);"
         );
 
         let received = step_compiler.step_body_as_c(&program, &s1, &step1);

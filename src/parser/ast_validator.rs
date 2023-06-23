@@ -909,7 +909,7 @@ mod tests {
         assert_eq!(
             validation_errors[0],
             ValidationError {
-                error_type: UndefinedType("c".to_string()),
+                error_type: UndefinedVar("c".to_string()),
                 context: ErrorContext {
                     struct_name: Some("A".to_string()),
                     step_name: Some("init".to_string())

@@ -1,3 +1,7 @@
+use std::collections::HashSet;
+use crate::analysis::earliest_subschedule;
+use crate::analysis::get_step_to_structs;
+use crate::analysis::constructors;
 use crate::compiler::compilation_traits::*;
 use crate::compiler::utils::*;
 use crate::compiler::StepBodyCompiler;
@@ -28,7 +32,7 @@ impl SingleKernelSchedule<'_> {
         SingleKernelSchedule {
             program,
             fp,
-            step_to_structs: program.get_step_to_structs(),
+            step_to_structs: get_step_to_structs(program),
             step_transpiler: step_transpiler,
             work_divisor: work_divisor,
         }
@@ -89,7 +93,7 @@ impl SingleKernelSchedule<'_> {
             let is_stable = self.fp.is_stable(fp_level);
 
             let sync = if self.fp.requires_intra_fixpoint_sync()
-                && s.earliest_subschedule().is_fixpoint()
+                && earliest_subschedule(s).is_fixpoint()
             {
                 format!("{indent}\tgrid.sync();")
             } else {
@@ -141,19 +145,17 @@ impl SingleKernelSchedule<'_> {
             let struct_name_lwr = struct_name.to_lowercase();
 
             let func_name;
-            let mut counters_to_update;
+            let mut counters_to_update : HashSet<&String>;
             if step_name == "print" {
                 func_name = format!("{struct_name}_print");
-                counters_to_update = vec![struct_name];
+                counters_to_update = HashSet::from([struct_name]);
             } else {
                 let strct = self.program.struct_by_name(struct_name).unwrap();
                 let step = strct.step_by_name(step_name).unwrap();
                 func_name = self.step_function_name(strct, step);
-                counters_to_update = step.constructors();
+                counters_to_update = constructors(step);
 
-                if !counters_to_update.contains(&struct_name) {
-                    counters_to_update.push(struct_name);
-                }
+                counters_to_update.insert(struct_name);
             }
 
             let nrof_instances =
@@ -207,7 +209,7 @@ impl SingleKernelSchedule<'_> {
 
         let params = self.kernel_parameters(true);
 
-        let kernel_signature = format_signature(&func_header, params, 0);
+        let kernel_signature = format_signature(&func_header, &params, 0);
 
         let step_body = self
             .step_transpiler
@@ -226,7 +228,7 @@ impl SingleKernelSchedule<'_> {
 
         let params = self.kernel_parameters(true);
 
-        let kernel_signature = format_signature(&func_header, params, 0);
+        let kernel_signature = format_signature(&func_header, &params, 0);
 
         let s_name = &strct.name;
         let s_name_lwr = s_name.to_lowercase();
@@ -320,7 +322,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 
     fn kernels(&self) -> Option<String> {
         let kernel_header = format!("__global__ void {}", SingleKernelSchedule::KERNEL_NAME);
-        let kernel_signature = format_signature(&kernel_header, Vec::new(), 0);
+        let kernel_signature = format_signature(&kernel_header, &Vec::new(), 0);
 
         let kernel_schedule_body = self.kernel_schedule_body();
 

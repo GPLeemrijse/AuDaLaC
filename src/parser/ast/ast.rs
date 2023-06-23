@@ -1,7 +1,5 @@
 pub type Loc = (usize, usize);
 
-use std::collections::HashMap;
-use std::collections::HashSet;
 use std::fmt;
 use std::fmt::Display;
 
@@ -29,38 +27,6 @@ impl Program {
             .iter()
             .any(|strct| strct.step_by_name(step_name).is_some())
     }
-
-    pub fn get_step_to_structs(&self) -> HashMap<&String, Vec<&ADLStruct>> {
-        let mut s2s: HashMap<&String, Vec<&ADLStruct>> = HashMap::new();
-
-        for strct in &self.structs {
-            for step in &strct.steps {
-                s2s.entry(&step.name)
-                    .and_modify(|v| v.push(strct))
-                    .or_insert(vec![strct]);
-            }
-        }
-        return s2s;
-    }
-
-    pub fn executors(&self) -> HashSet<&String> {
-        let s2s = self.get_step_to_structs();
-        let mut calls = Vec::new();
-        self.schedule.step_calls(&mut calls);
-
-        let mut result = HashSet::new();
-        for c in calls {
-            match c {
-                (None, step) => s2s.get(step).unwrap().iter().for_each(|strct| {
-                    result.insert(&strct.name);
-                }),
-                (Some(strct), _) => {
-                    result.insert(strct);
-                }
-            }
-        }
-        result
-    }
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -72,42 +38,8 @@ pub enum Schedule {
 }
 
 impl Schedule {
-    pub fn fixpoint_depth(&self) -> usize {
-        use crate::parser::ast::Schedule::*;
-        match self {
-            Sequential(s1, s2, _) => std::cmp::max(s1.fixpoint_depth(), s2.fixpoint_depth()),
-            Fixpoint(s, _) => s.fixpoint_depth() + 1,
-            _ => 0,
-        }
-    }
-
     pub fn is_fixpoint(&self) -> bool {
         return matches!(self, crate::parser::ast::Schedule::Fixpoint(..));
-    }
-
-    /*  Unfolds Sequential steps and returns the first non-Sequential (sub)schedule.
-        Does return itself if non-Sequential.
-    */
-    pub fn earliest_subschedule(&self) -> &Schedule {
-        use crate::parser::ast::Schedule::*;
-        match self {
-            Sequential(s, _, _) => s.earliest_subschedule(),
-            StepCall(..) | TypedStepCall(..) | Fixpoint(..) => &self,
-        }
-    }
-
-    pub fn step_calls<'a>(&'a self, result: &mut Vec<(Option<&'a String>, &'a String)>) {
-        use crate::parser::ast::Schedule::*;
-
-        match self {
-            StepCall(step, _) => result.push((None, step)),
-            TypedStepCall(strct, step, _) => result.push((Some(strct), step)),
-            Sequential(s1, s2, _) => {
-                s1.step_calls(result);
-                s2.step_calls(result);
-            }
-            Fixpoint(s, _) => s.step_calls(result),
-        }
     }
 }
 
@@ -118,186 +50,6 @@ pub struct Step {
     pub loc: Loc,
 }
 
-fn remove_duplicates<T: Ord>(vec: &mut Vec<T>) {
-    vec.sort();
-    vec.dedup();
-}
-
-impl Step {
-    /* Performs 'f_expr' on all expressions and 'f_stmt' on all statements.
-       Collects all unique results.
-    */
-    pub fn visit<'a, T: 'a + Ord, I1: Copy, I2: Copy>(
-        &'a self,
-        f_stmt: fn(&'a Stat, Option<I1>) -> Vec<T>,
-        i_stmt: Option<I1>,
-        f_exp: fn(&'a Exp, Option<I2>) -> Vec<T>,
-        i_exp: Option<I2>,
-    ) -> Vec<T> {
-        let mut results = self
-            .statements
-            .iter()
-            .map(|s| s.visit(f_stmt, i_stmt, f_exp, i_exp))
-            .flatten()
-            .collect::<Vec<T>>();
-
-        remove_duplicates(&mut results);
-        return results;
-    }
-
-    // Returns a unique vector of possibly constructed struct types
-    pub fn constructors(&self) -> Vec<&String> {
-        use Exp::*;
-        self.visit::<&String, (), ()>(
-            |_, _| Vec::new(),
-            None,
-            |e, _| {
-                if let Constructor(s, _, _) = e {
-                    vec![&s]
-                } else {
-                    Vec::new()
-                }
-            },
-            None,
-        )
-    }
-
-    pub fn declarations(&self) -> Vec<(&String, &Type)> {
-        use Stat::*;
-        self.visit::<(&String, &Type), (), ()>(
-            |stat, _| {
-                if let Declaration(t, s, _, _) = stat {
-                    vec![(&s, &t)]
-                } else {
-                    Vec::new()
-                }
-            },
-            None,
-            |_, _| Vec::new(),
-            None,
-        )
-    }
-
-    pub fn racing_parameters<'a>(
-        &'a self,
-        program: &'a Program,
-        owner_strct: &'a ADLStruct,
-        var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>,
-    ) -> HashSet<(&'a String, &'a String)> {
-        let written_params: HashSet<(&String, &String)> =
-            HashSet::from_iter(self.written_parameters(program, owner_strct, var_exp_type_info));
-        let ext_ref_params: HashSet<(&String, &String)> =
-            HashSet::from_iter(self.externally_referenced_parameters(var_exp_type_info));
-
-        written_params
-            .intersection(&ext_ref_params)
-            .map(|n| *n)
-            .collect()
-    }
-
-    fn written_parameters<'a>(
-        &'a self,
-        program: &'a Program,
-        owner_strct: &'a ADLStruct,
-        var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>,
-    ) -> Vec<(&'a String, &'a String)> {
-        use Exp::*;
-        use Stat::*;
-
-        self.visit::<
-            (&String, &String),
-            (&'a ADLStruct, &'a HashMap<*const Exp, Vec<Type>>),
-            &'a Program
-        >(
-            |stat, args| {
-                let (strct, info) = args.unwrap();
-                if let Assignment(lhs, _, _) = stat {
-                    if let Var(parts, _) = &**lhs {
-                        assert!(!parts.is_empty());
-                        let is_param_owned_by_self = strct.parameter_by_name(&parts[0]).is_some();
-
-                        if parts.len() == 1 && is_param_owned_by_self {
-                            vec![(&strct.name, parts.last().unwrap())]
-                        } else if parts.len() > 1 {
-                            let types = info.get(
-                                    &(&**lhs as *const Exp)
-                                )
-                                .expect("Could not find var expression in type info.");
-
-                            vec![(types[types.len()-2].name().unwrap(), parts.last().unwrap())]
-                        } else {
-                            Vec::new()
-                        }
-                    } else {
-                        unreachable!()
-                    }
-                } else {
-                    Vec::new()
-                }
-            },
-            Some((owner_strct, var_exp_type_info)),
-            |exp, args| {
-                let program = args.unwrap();
-                if let Constructor(cons_type, _, _) = exp {
-                    program.struct_by_name(cons_type)
-                           .unwrap()
-                           .parameters
-                           .iter()
-                           .map(|(p_name, _, _)| (cons_type, p_name))
-                           .collect()
-                } else {
-                    Vec::new()
-                }
-            },
-            Some(program)
-        )
-    }
-
-    fn externally_referenced_parameters<'a>(
-        &'a self,
-        var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>,
-    ) -> Vec<(&'a String, &'a String)> {
-        use Stat::*;
-
-        self.visit::<
-            (&String, &String),
-            &'a HashMap<*const Exp, Vec<Type>>,
-            &'a HashMap<*const Exp, Vec<Type>>
-        >(
-            |stat, args| {
-                if let Assignment(lhs, _, _) = stat {
-                    Self::get_ext_refs_from_exp(lhs, args)
-                } else {
-                    Vec::new()
-                }
-            },
-            Some(var_exp_type_info),
-            Self::get_ext_refs_from_exp,
-            Some(var_exp_type_info),
-        )
-    }
-
-    fn get_ext_refs_from_exp<'a>(
-        exp: &'a Exp,
-        info: Option<&'a HashMap<*const Exp, Vec<Type>>>,
-    ) -> Vec<(&'a String, &'a String)> {
-        if let Exp::Var(parts, _) = exp {
-            /* If of the form a.b or a.b.c etc. then (a, b)
-            and (b, c) are written via a reference.*/
-            if parts.len() > 1 {
-                let types = info
-                    .unwrap()
-                    .get(&(&*exp as *const Exp))
-                    .expect("Could not find var expression in type info.");
-                return vec![(
-                    types[types.len() - 2].name().unwrap(),
-                    parts.last().unwrap(),
-                )];
-            }
-        }
-        return Vec::new();
-    }
-}
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct ADLStruct {
@@ -327,39 +79,22 @@ pub enum Exp {
 }
 
 impl Exp {
-    pub fn visit<'a, T: 'a + Ord, I: Copy>(
-        &'a self,
-        f_exp: fn(&'a Exp, Option<I>) -> Vec<T>,
-        i_exp: Option<I>,
-    ) -> Vec<T> {
-        use Exp::*;
-        let mut result = f_exp(self, i_exp);
-        match self {
-            BinOp(e1, _, e2, _) => {
-                result.append(&mut e1.visit(f_exp, i_exp));
-                result.append(&mut e2.visit(f_exp, i_exp));
-            }
-            UnOp(_, e, _) => {
-                result.append(&mut e.visit(f_exp, i_exp));
-            }
-            Constructor(_, exps, _) => {
-                result.append(
-                    &mut exps
-                        .iter()
-                        .map(|e| e.visit(f_exp, i_exp))
-                        .flatten()
-                        .collect(),
-                );
-            }
-            _ => (),
-        }
-        result
-    }
-
     pub fn get_parts(&self) -> &Vec<String> {
         match self {
             Exp::Var(parts, _) => parts,
             _ => panic!(),
+        }
+    }
+
+    /* Assumes a validated AST, hence if a var expression
+       is not a parameter it must be a local variable
+    */
+    pub fn is_local_var(&self, strct: &ADLStruct) -> bool {
+        match self {
+            Exp::Var(parts, _) => {
+                parts.len() == 1 && strct.parameter_by_name(&parts[0]).is_none()
+            },
+            _ => false
         }
     }
 }
@@ -392,39 +127,7 @@ pub enum Stat {
     InlineCpp(String),
 }
 
-impl Stat {
-    pub fn visit<'a, T: 'a + Ord, I1: Copy, I2: Copy>(
-        &'a self,
-        f_stmt: fn(&'a Stat, Option<I1>) -> Vec<T>,
-        i_stmt: Option<I1>,
-        f_exp: fn(&'a Exp, Option<I2>) -> Vec<T>,
-        i_exp: Option<I2>,
-    ) -> Vec<T> {
-        use Stat::*;
-        let mut result = f_stmt(self, i_stmt);
-
-        match self {
-            IfThen(cond, stmts1, strmts2, _) => {
-                result.append(
-                    &mut stmts1
-                        .iter()
-                        .chain(strmts2.iter())
-                        .map(|s| s.visit(f_stmt, i_stmt, f_exp, i_exp))
-                        .flatten()
-                        .chain(cond.visit(f_exp, i_exp))
-                        .collect::<Vec<T>>(),
-                );
-            }
-            Declaration(_, _, e, _) | Assignment(_, e, _) => {
-                result.append(&mut e.visit(f_exp, i_exp));
-            }
-            _ => (),
-        }
-        result
-    }
-}
-
-#[derive(Eq, PartialEq, Debug, Clone, Ord, PartialOrd)]
+#[derive(Eq, PartialEq, Debug, Clone, Ord, Hash, PartialOrd)]
 pub enum Type {
     Named(String),
     String,
@@ -547,111 +250,6 @@ mod tests {
     use crate::parser::ast::*;
     use crate::parser::*;
     use lalrpop_util::ParseError::User;
-
-    #[test]
-    fn test_written_parameters() {
-        let program = ProgramParser::new()
-            .parse(
-                "struct S1(p1 : Nat, p2: S1, p3 : S2) {
-                step1 {
-                    p1 := 123;
-                }
-
-                step3 {
-                    p2 := this;
-                }
-            }
-            struct S2 (p1 : S1) {
-                step2 {
-                    p1.p2.p3 := this;
-                    p1.p1 := 456;
-                }
-            }
-
-            step1 < step2",
-            )
-            .unwrap();
-
-        let (_, type_info) = validate_ast(&program);
-        let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
-        let s2 = program.struct_by_name(&"S2".to_string()).unwrap();
-        let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
-        let step2 = s2.step_by_name(&"step2".to_string()).unwrap();
-        let step3 = s1.step_by_name(&"step3".to_string()).unwrap();
-
-        assert_eq!(
-            step1.written_parameters(&program, &s1, &type_info),
-            vec![(&"S1".to_string(), &"p1".to_string())]
-        );
-
-        assert_eq!(
-            step2.written_parameters(&program, &s2, &type_info),
-            vec![
-                (&"S1".to_string(), &"p1".to_string()),
-                (&"S1".to_string(), &"p3".to_string())
-            ]
-        );
-
-        assert_eq!(
-            step3.written_parameters(&program, &s1, &type_info),
-            vec![(&"S1".to_string(), &"p2".to_string())]
-        );
-    }
-
-    #[test]
-    fn test_racing_parameters() {
-        let program = ProgramParser::new()
-            .parse(
-                "struct S1(p1 : Nat, p2: S1, p3 : S2) {
-                step1 {
-                    S1 new_s1 := S1(0, null, null);
-                }
-
-                step3 {
-                    S1 new_s1 := S1(0, null, null);
-                    new_s1.p1 := 0;
-                }
-
-                step4 {
-                    S1 p2_alias := p2;
-                    p2 := p2_alias;
-                    p2_alias.p1 := 12;
-                }
-            }
-
-            struct S2 (p1 : S1) {
-                step2 {
-                    p1.p3.p1 := p1;
-                }
-            }
-
-            step1 < step2",
-            )
-            .unwrap();
-
-        let (_, type_info) = validate_ast(&program);
-        let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
-        let s2 = program.struct_by_name(&"S2".to_string()).unwrap();
-        let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
-        let step2 = s2.step_by_name(&"step2".to_string()).unwrap();
-        let step3 = s1.step_by_name(&"step3".to_string()).unwrap();
-        let step4 = s1.step_by_name(&"step4".to_string()).unwrap();
-
-        let racing_parameters = step1.racing_parameters(&program, &s1, &type_info);
-        assert!(racing_parameters.is_empty());
-
-        let racing_parameters = step2.racing_parameters(&program, &s2, &type_info);
-        assert!(racing_parameters.contains(&(&"S2".to_string(), &"p1".to_string())));
-        assert!(racing_parameters.len() == 1);
-
-        let racing_parameters = step3.racing_parameters(&program, &s1, &type_info);
-        assert!(racing_parameters.contains(&(&"S1".to_string(), &"p1".to_string())));
-        assert!(racing_parameters.len() == 1);
-
-        let racing_parameters = step4.racing_parameters(&program, &s1, &type_info);
-        assert!(racing_parameters.contains(&(&"S1".to_string(), &"p1".to_string())));
-        assert!(racing_parameters.len() == 1);
-    }
 
     #[test]
     fn test_precedence_of_sequential() {
