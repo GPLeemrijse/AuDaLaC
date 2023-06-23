@@ -1,12 +1,16 @@
+use std::process::Stdio;
+use std::process::Output;
+use std::io::Read;
+use std::time::Duration;
+use wait_timeout::ChildExt;
 use crate::is_nvcc_installed;
 use crate::Config;
 use regex::Regex;
 use std::io::stderr;
 use std::io::Write;
 use std::process::Command;
-use std::process::ExitStatus;
 
-fn run_compiler<'a, I>(extra_args: I) -> Result<ExitStatus, std::io::Error>
+fn run_compiler<'a, I>(extra_args: I) -> Result<Output, std::io::Error>
 where
     I: IntoIterator<Item = String>,
 {
@@ -14,7 +18,6 @@ where
         .args(["run", "--"])
         .args(extra_args)
         .output()
-        .map(|o| o.status)
 }
 
 fn run_make(dir: &str, variant: Option<&str>) -> Result<bool, std::io::Error> {
@@ -37,27 +40,57 @@ fn run_make(dir: &str, variant: Option<&str>) -> Result<bool, std::io::Error> {
     }
 }
 
-fn run_bin(bin: &str, input_file: &str) -> Result<String, String> {
+
+fn run_bin(bin: &str, input_file: &str, timeout: Duration) -> Result<String, String> {
     if is_nvcc_installed() {
-        let r = Command::new(bin).arg(input_file).output();
-        if r.is_err() {
+        let child = Command::new(bin)
+                                .arg(input_file)
+                                .stdout(Stdio::piped())
+                                .stderr(Stdio::piped())
+                                .spawn();
+        if child.is_err() {
             return Err("Binary would not run.".to_string());
         }
 
-        let out = r.unwrap();
-        if !out.status.success() {
-            let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+        let mut ok_child = child.unwrap();
+        let out_status;
+        let mut stdout = String::new();
+        let mut stderr = String::new();
+        match ok_child.wait_timeout(timeout).unwrap() {
+            Some(status) => {
+                out_status = status;
+                
+                if let Some(mut out) = ok_child.stdout {
+                    out.read_to_string(&mut stdout)
+                       .expect("Could not convert to string");
+                }
 
-            let reason = if stderr.contains("Adjust instances per thread") {
-                "gridsize"
+                if let Some(mut out) = ok_child.stderr {
+                    out.read_to_string(&mut stderr)
+                       .expect("Could not convert to string");
+                }
+            }
+            None => {
+                ok_child.kill().unwrap();
+                ok_child.wait().unwrap();
+                return Err("timeout".to_string())
+            }
+        };
+
+        if !out_status.success() {
+            let reason = if stderr.contains("Could not fit kernel on device!") {
+                "kernel did not fit"
             } else if stderr.contains("slot < capacity") {
                 "capacity"
             } else {
                 "other"
             };
+            if reason == "other" {
+                eprintln!("\nSTDERR: {}", stderr);
+            }
             return Err(format!("non-zero exitcode ({reason})."));
         }
-        Ok(String::from_utf8_lossy(&out.stdout).to_string())
+        Ok(stdout)
     } else {
         Err("skipped".to_string())
     }
@@ -70,11 +103,12 @@ pub fn bench_testcases(
     formatter: fn(&str) -> String,
     reps: usize,
     result_file: &mut dyn Write,
+    timeout: Duration
 ) {
     for (prob_category, files) in testcases {
         eprintln!("\t\t\tTesting {prob_category}...");
         for f in files {
-            let res = bench_file(bin, f, reps);
+            let res = bench_file(bin, f, reps, timeout);
             result_file
                 .write_all(
                     format!("{csv_prefix},{prob_category},{},{res}\n", formatter(f)).as_bytes(),
@@ -127,8 +161,9 @@ fn adl_compile(
 
     if r.is_err() {
         Err("\t\t\tFailed to start ADL compiler.".to_string())
-    } else if !r.unwrap().success() {
-        Err("\t\t\tFailed to compile ADL code.".to_string())
+    } else if !r.as_ref().unwrap().status.success() {
+        let stderr = String::from_utf8_lossy(&r.unwrap().stderr).to_string();
+        Err(format!("\t\t\tFailed to compile ADL code: {}", stderr))
     } else {
         Ok(())
     }
@@ -147,13 +182,13 @@ fn cuda_compile(dir: &str, make_variant: Option<&str>) -> Result<(), String> {
     }
 }
 
-fn bench_file<'a>(bin: &str, f: &str, reps: usize) -> String {
+fn bench_file<'a>(bin: &str, f: &str, reps: usize, timeout: Duration) -> String {
     let mut total_ms = 0.0;
 
     for i in 0..reps {
         eprint!("\r\t\t\t\tStarting input {f} ({}/{reps})", i + 1);
         stderr().flush().unwrap();
-        let r = run_bin(bin, f);
+        let r = run_bin(bin, f, timeout);
 
         if r.is_err() {
             let e = r.unwrap_err();

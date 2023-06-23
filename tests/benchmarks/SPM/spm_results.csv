@@ -1,201 +1,86 @@
-config,memorder,voting-strat,tpb,ipt,weak_read_only,division_strat,algorithm,problem_type,problem_size,runtime
-relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,1,blocksize,SPM,invariantly_inevitably_eat,2,0.7866079
-relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,1,blocksize,SPM,invariantly_inevitably_eat,4,10.888819
-relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,1,blocksize,SPM,invariantly_inevitably_eat,6,125.29077
-relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,1,blocksize,SPM,invariantly_inevitably_eat,8,4326.9097
-relaxed-naive-alternating-256-4,relaxed,naive-alternating,256,4,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,2,2.2611744
-acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,4,45.74794
-acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,6,533.31757
-acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,8,9139.3
-acqrel-naive-alternating-128-4,acqrel,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,2,1.0131456
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,4,12.358103
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,6,190.82484
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,8,4871.6416
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,gridsize,SPM,invariantly_inevitably_eat,2,0.7711136
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,gridsize,SPM,invariantly_inevitably_eat,4,14.670108
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,gridsize,SPM,invariantly_inevitably_eat,6,427.60498
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,gridsize,SPM,invariantly_inevitably_eat,8,6519.171
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,gridsize,SPM,invariantly_inevitably_eat,10,228565.84
-seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,2,2.9210591
-seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,4,40.32233
-seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,6,801.3046
-seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,8,11744.585
-seqcons-naive-alternating-512-4,seqcons,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,gridsize,SPM,invariantly_inevitably_eat,2,0.84836483
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,gridsize,SPM,invariantly_inevitably_eat,4,10.435795
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,gridsize,SPM,invariantly_inevitably_eat,6,143.15152
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,gridsize,SPM,invariantly_inevitably_eat,8,4382.4204
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,gridsize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,2,0.94122237
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,4,16.884727
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,6,182.499
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,8,4920.034
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,1,blocksize,SPM,invariantly_inevitably_eat,2,0.7031776
-relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,1,blocksize,SPM,invariantly_inevitably_eat,4,11.673344
-relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,1,blocksize,SPM,invariantly_inevitably_eat,6,123.57292
-relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,1,blocksize,SPM,invariantly_inevitably_eat,8,4632.6094
-relaxed-naive-alternating-64-4,relaxed,naive-alternating,64,4,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,blocksize,SPM,invariantly_inevitably_eat,2,0.76143354
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,blocksize,SPM,invariantly_inevitably_eat,4,14.628634
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,blocksize,SPM,invariantly_inevitably_eat,6,620.09033
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,blocksize,SPM,invariantly_inevitably_eat,8,7509.6563
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,1,blocksize,SPM,invariantly_inevitably_eat,10,242257.16
-relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,1,blocksize,SPM,invariantly_inevitably_eat,2,0.94985276
-relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,1,blocksize,SPM,invariantly_inevitably_eat,4,9.047399
-relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,1,blocksize,SPM,invariantly_inevitably_eat,6,248.6355
-relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,1,blocksize,SPM,invariantly_inevitably_eat,8,5052.3584
-relaxed-naive-alternating-1024-16,relaxed,naive-alternating,1024,16,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,1,blocksize,SPM,invariantly_inevitably_eat,2,0.697232
-relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,1,blocksize,SPM,invariantly_inevitably_eat,4,20.982496
-relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,1,blocksize,SPM,invariantly_inevitably_eat,6,353.03485
-relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,1,blocksize,SPM,invariantly_inevitably_eat,8,4456.132
-relaxed-naive-alternating-64-16,relaxed,naive-alternating,64,16,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,2,2.8708732
-seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,4,77.37789
-seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,6,4548.3594
-seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,8,58458.914
-seqcons-naive-alternating-128-32,seqcons,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,10,1036502.5
-relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,1,blocksize,SPM,invariantly_inevitably_eat,2,0.83672965
-relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,1,blocksize,SPM,invariantly_inevitably_eat,4,9.738441
-relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,1,blocksize,SPM,invariantly_inevitably_eat,6,329.13068
-relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,1,blocksize,SPM,invariantly_inevitably_eat,8,4359.9307
-relaxed-naive-alternating-512-16,relaxed,naive-alternating,512,16,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,1,blocksize,SPM,invariantly_inevitably_eat,2,0.92844474
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,1,blocksize,SPM,invariantly_inevitably_eat,4,8.809221
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,1,blocksize,SPM,invariantly_inevitably_eat,6,132.86592
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,1,blocksize,SPM,invariantly_inevitably_eat,8,non-zero exitcode (gridsize).
-relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,blocksize,SPM,invariantly_inevitably_eat,2,0.84735364
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,blocksize,SPM,invariantly_inevitably_eat,4,9.861521
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,blocksize,SPM,invariantly_inevitably_eat,6,131.99527
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,blocksize,SPM,invariantly_inevitably_eat,8,4354.492
-relaxed-naive-alternating-512-4,relaxed,naive-alternating,512,4,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,blocksize,SPM,invariantly_inevitably_eat,2,0.8397664
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,blocksize,SPM,invariantly_inevitably_eat,4,9.765232
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,blocksize,SPM,invariantly_inevitably_eat,6,357.49774
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,blocksize,SPM,invariantly_inevitably_eat,8,7558.357
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,1,blocksize,SPM,invariantly_inevitably_eat,2,0.69333124
-relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,1,blocksize,SPM,invariantly_inevitably_eat,4,6.338829
-relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,1,blocksize,SPM,invariantly_inevitably_eat,6,125.36826
-relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,1,blocksize,SPM,invariantly_inevitably_eat,8,non-zero exitcode (gridsize).
-relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-512-32,relaxed,naive,512,32,0,blocksize,SPM,invariantly_inevitably_eat,2,1.19424
-relaxed-naive-512-32,relaxed,naive,512,32,0,blocksize,SPM,invariantly_inevitably_eat,4,14.196874
-relaxed-naive-512-32,relaxed,naive,512,32,0,blocksize,SPM,invariantly_inevitably_eat,6,591.732
-relaxed-naive-512-32,relaxed,naive,512,32,0,blocksize,SPM,invariantly_inevitably_eat,8,12541.648
-relaxed-naive-512-32,relaxed,naive,512,32,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,gridsize,SPM,invariantly_inevitably_eat,2,0.8462016
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,gridsize,SPM,invariantly_inevitably_eat,4,10.031459
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,gridsize,SPM,invariantly_inevitably_eat,6,368.51318
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,gridsize,SPM,invariantly_inevitably_eat,8,6592.486
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,1,gridsize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-128-4,relaxed,naive,128,4,0,blocksize,SPM,invariantly_inevitably_eat,2,1.1312288
-relaxed-naive-128-4,relaxed,naive,128,4,0,blocksize,SPM,invariantly_inevitably_eat,4,18.717016
-relaxed-naive-128-4,relaxed,naive,128,4,0,blocksize,SPM,invariantly_inevitably_eat,6,202.34372
-relaxed-naive-128-4,relaxed,naive,128,4,0,blocksize,SPM,invariantly_inevitably_eat,8,5181.6235
-relaxed-naive-128-4,relaxed,naive,128,4,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,1,blocksize,SPM,invariantly_inevitably_eat,2,0.9563999
-relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,1,blocksize,SPM,invariantly_inevitably_eat,4,9.039641
-relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,1,blocksize,SPM,invariantly_inevitably_eat,6,148.09033
-relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,1,blocksize,SPM,invariantly_inevitably_eat,8,4435.9326
-relaxed-naive-alternating-1024-4,relaxed,naive-alternating,1024,4,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-128-32,relaxed,naive,128,32,0,blocksize,SPM,invariantly_inevitably_eat,2,1.1210752
-relaxed-naive-128-32,relaxed,naive,128,32,0,blocksize,SPM,invariantly_inevitably_eat,4,23.11663
-relaxed-naive-128-32,relaxed,naive,128,32,0,blocksize,SPM,invariantly_inevitably_eat,6,1072.8344
-relaxed-naive-128-32,relaxed,naive,128,32,0,blocksize,SPM,invariantly_inevitably_eat,8,12848.431
-relaxed-naive-128-32,relaxed,naive,128,32,0,blocksize,SPM,invariantly_inevitably_eat,10,300307.63
-relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,1,blocksize,SPM,invariantly_inevitably_eat,2,0.776704
-relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,1,blocksize,SPM,invariantly_inevitably_eat,4,10.830515
-relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,1,blocksize,SPM,invariantly_inevitably_eat,6,588.5602
-relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,1,blocksize,SPM,invariantly_inevitably_eat,8,7526.797
-relaxed-naive-alternating-256-32,relaxed,naive-alternating,256,32,1,blocksize,SPM,invariantly_inevitably_eat,10,235494.5
-relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,1,blocksize,SPM,invariantly_inevitably_eat,2,0.9452096
-relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,1,blocksize,SPM,invariantly_inevitably_eat,4,9.023664
-relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,1,blocksize,SPM,invariantly_inevitably_eat,6,247.70056
-relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,1,blocksize,SPM,invariantly_inevitably_eat,8,8327.248
-relaxed-naive-alternating-1024-32,relaxed,naive-alternating,1024,32,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,1,blocksize,SPM,invariantly_inevitably_eat,2,0.69186246
-relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,1,blocksize,SPM,invariantly_inevitably_eat,4,20.950397
-relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,1,blocksize,SPM,invariantly_inevitably_eat,6,674.2684
-relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,1,blocksize,SPM,invariantly_inevitably_eat,8,7602.335
-relaxed-naive-alternating-64-32,relaxed,naive-alternating,64,32,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,2,1.0211264
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,4,12.314049
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,6,569.03406
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,8,12385.653
-relaxed-naive-alternating-512-32,relaxed,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,2,2.2248096
-acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,4,58.163616
-acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,6,3345.9265
-acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,8,42194.656
-acqrel-naive-alternating-128-32,acqrel,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,10,760064.4
-seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,2,2.8316383
-seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,4,58.926476
-seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,6,697.0255
-seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,8,11550.975
-seqcons-naive-alternating-128-4,seqcons,naive-alternating,128,4,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,2,2.268848
-acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,4,30.251535
-acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,6,1869.5222
-acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,8,44062.023
-acqrel-naive-alternating-512-32,acqrel,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-512-4,relaxed,naive,512,4,0,blocksize,SPM,invariantly_inevitably_eat,2,1.1907425
-relaxed-naive-512-4,relaxed,naive,512,4,0,blocksize,SPM,invariantly_inevitably_eat,4,14.09359
-relaxed-naive-512-4,relaxed,naive,512,4,0,blocksize,SPM,invariantly_inevitably_eat,6,210.54851
-relaxed-naive-512-4,relaxed,naive,512,4,0,blocksize,SPM,invariantly_inevitably_eat,8,5090.558
-relaxed-naive-512-4,relaxed,naive,512,4,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,1,blocksize,SPM,invariantly_inevitably_eat,2,0.7232544
-relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,1,blocksize,SPM,invariantly_inevitably_eat,4,6.8019204
-relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,1,blocksize,SPM,invariantly_inevitably_eat,6,124.18878
-relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,1,blocksize,SPM,invariantly_inevitably_eat,8,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,2,2.265549
-acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,4,30.513983
-acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,6,568.07385
-acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,8,9099.646
-acqrel-naive-alternating-512-4,acqrel,naive-alternating,512,4,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,1,blocksize,SPM,invariantly_inevitably_eat,2,0.74700797
-relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,1,blocksize,SPM,invariantly_inevitably_eat,4,14.566887
-relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,1,blocksize,SPM,invariantly_inevitably_eat,6,358.87173
-relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,1,blocksize,SPM,invariantly_inevitably_eat,8,4463.469
-relaxed-naive-alternating-128-16,relaxed,naive-alternating,128,16,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,1,blocksize,SPM,invariantly_inevitably_eat,2,0.80073917
-relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,1,blocksize,SPM,invariantly_inevitably_eat,4,7.391524
-relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,1,blocksize,SPM,invariantly_inevitably_eat,6,125.1508
-relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,1,blocksize,SPM,invariantly_inevitably_eat,8,non-zero exitcode (gridsize).
-relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,1,blocksize,SPM,invariantly_inevitably_eat,2,0.77186245
-relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,1,blocksize,SPM,invariantly_inevitably_eat,4,10.870888
-relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,1,blocksize,SPM,invariantly_inevitably_eat,6,332.35938
-relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,1,blocksize,SPM,invariantly_inevitably_eat,8,4363.018
-relaxed-naive-alternating-256-16,relaxed,naive-alternating,256,16,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,2,2.903232
-seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,4,39.02036
-seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,6,2681.5295
-seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,8,62933.52
-seqcons-naive-alternating-512-32,seqcons,naive-alternating,512,32,0,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,gridsize,SPM,invariantly_inevitably_eat,2,0.763376
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,gridsize,SPM,invariantly_inevitably_eat,4,10.519533
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,gridsize,SPM,invariantly_inevitably_eat,6,123.665344
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,gridsize,SPM,invariantly_inevitably_eat,8,4388.1626
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,gridsize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,1,blocksize,SPM,invariantly_inevitably_eat,2,0.74453115
-relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,1,blocksize,SPM,invariantly_inevitably_eat,4,6.987245
-relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,1,blocksize,SPM,invariantly_inevitably_eat,6,125.985794
-relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,1,blocksize,SPM,invariantly_inevitably_eat,8,non-zero exitcode (gridsize).
-relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,blocksize,SPM,invariantly_inevitably_eat,2,0.7512032
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,blocksize,SPM,invariantly_inevitably_eat,4,10.984448
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,blocksize,SPM,invariantly_inevitably_eat,6,127.07799
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,blocksize,SPM,invariantly_inevitably_eat,8,4345.1963
-relaxed-naive-alternating-128-4,relaxed,naive-alternating,128,4,1,blocksize,SPM,invariantly_inevitably_eat,10,non-zero exitcode (gridsize).
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,2,0.94584
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,4,21.440283
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,6,1052.6052
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,8,12707.781
-relaxed-naive-alternating-128-32,relaxed,naive-alternating,128,32,0,blocksize,SPM,invariantly_inevitably_eat,10,295392.1
+config,memorder,voting-strat,tpb,weak_non_racing,algorithm,problem_type,problem_size,runtime
+acqrel-naive-alternating-128-0,acqrel,naive-alternating,128,0,SPM,invariantly_inevitably_eat,2,2.3777218
+acqrel-naive-alternating-128-0,acqrel,naive-alternating,128,0,SPM,invariantly_inevitably_eat,4,21.304415
+acqrel-naive-alternating-128-0,acqrel,naive-alternating,128,0,SPM,invariantly_inevitably_eat,6,248.52786
+acqrel-naive-alternating-128-0,acqrel,naive-alternating,128,0,SPM,invariantly_inevitably_eat,8,9638.02
+acqrel-naive-alternating-128-0,acqrel,naive-alternating,128,0,SPM,invariantly_inevitably_eat,9,timeout
+acqrel-naive-alternating-128-1,acqrel,naive-alternating,128,1,SPM,invariantly_inevitably_eat,2,1.5066944
+acqrel-naive-alternating-128-1,acqrel,naive-alternating,128,1,SPM,invariantly_inevitably_eat,4,13.720871
+acqrel-naive-alternating-128-1,acqrel,naive-alternating,128,1,SPM,invariantly_inevitably_eat,6,180.1975
+acqrel-naive-alternating-128-1,acqrel,naive-alternating,128,1,SPM,invariantly_inevitably_eat,8,7375.7695
+acqrel-naive-alternating-128-1,acqrel,naive-alternating,128,1,SPM,invariantly_inevitably_eat,9,42228.27
+acqrel-naive-alternating-512-0,acqrel,naive-alternating,512,0,SPM,invariantly_inevitably_eat,2,2.4306176
+acqrel-naive-alternating-512-0,acqrel,naive-alternating,512,0,SPM,invariantly_inevitably_eat,4,21.673676
+acqrel-naive-alternating-512-0,acqrel,naive-alternating,512,0,SPM,invariantly_inevitably_eat,6,258.24863
+acqrel-naive-alternating-512-0,acqrel,naive-alternating,512,0,SPM,invariantly_inevitably_eat,8,9262.507
+acqrel-naive-alternating-512-0,acqrel,naive-alternating,512,0,SPM,invariantly_inevitably_eat,9,timeout
+acqrel-naive-alternating-512-1,acqrel,naive-alternating,512,1,SPM,invariantly_inevitably_eat,2,1.5616577
+acqrel-naive-alternating-512-1,acqrel,naive-alternating,512,1,SPM,invariantly_inevitably_eat,4,14.191612
+acqrel-naive-alternating-512-1,acqrel,naive-alternating,512,1,SPM,invariantly_inevitably_eat,6,183.55579
+acqrel-naive-alternating-512-1,acqrel,naive-alternating,512,1,SPM,invariantly_inevitably_eat,8,7104.4063
+acqrel-naive-alternating-512-1,acqrel,naive-alternating,512,1,SPM,invariantly_inevitably_eat,9,41199.477
+relaxed-naive-128-1,relaxed,naive,128,1,SPM,invariantly_inevitably_eat,2,1.0402658
+relaxed-naive-128-1,relaxed,naive,128,1,SPM,invariantly_inevitably_eat,4,8.915207
+relaxed-naive-128-1,relaxed,naive,128,1,SPM,invariantly_inevitably_eat,6,146.42793
+relaxed-naive-128-1,relaxed,naive,128,1,SPM,invariantly_inevitably_eat,8,5307.681
+relaxed-naive-128-1,relaxed,naive,128,1,SPM,invariantly_inevitably_eat,9,31629.066
+relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,2,1.1242657
+relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,4,9.738361
+relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,6,146.59427
+relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,8,4117.5435
+relaxed-naive-512-1,relaxed,naive,512,1,SPM,invariantly_inevitably_eat,9,32377.62
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,2,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,4,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,6,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,8,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-1024-1,relaxed,naive-alternating,1024,1,SPM,invariantly_inevitably_eat,9,non-zero exitcode (kernel did not fit).
+relaxed-naive-alternating-128-0,relaxed,naive-alternating,128,0,SPM,invariantly_inevitably_eat,2,1.0535008
+relaxed-naive-alternating-128-0,relaxed,naive-alternating,128,0,SPM,invariantly_inevitably_eat,4,8.7009325
+relaxed-naive-alternating-128-0,relaxed,naive-alternating,128,0,SPM,invariantly_inevitably_eat,6,140.05508
+relaxed-naive-alternating-128-0,relaxed,naive-alternating,128,0,SPM,invariantly_inevitably_eat,8,6486.05
+relaxed-naive-alternating-128-0,relaxed,naive-alternating,128,0,SPM,invariantly_inevitably_eat,9,35918.492
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SPM,invariantly_inevitably_eat,2,0.85757434
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SPM,invariantly_inevitably_eat,4,7.2693887
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SPM,invariantly_inevitably_eat,6,128.20166
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SPM,invariantly_inevitably_eat,8,4942.4316
+relaxed-naive-alternating-128-1,relaxed,naive-alternating,128,1,SPM,invariantly_inevitably_eat,9,30475.895
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SPM,invariantly_inevitably_eat,2,0.8804288
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SPM,invariantly_inevitably_eat,4,7.29223
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SPM,invariantly_inevitably_eat,6,130.17162
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SPM,invariantly_inevitably_eat,8,4897.4385
+relaxed-naive-alternating-256-1,relaxed,naive-alternating,256,1,SPM,invariantly_inevitably_eat,9,30362.979
+relaxed-naive-alternating-512-0,relaxed,naive-alternating,512,0,SPM,invariantly_inevitably_eat,2,1.1153343
+relaxed-naive-alternating-512-0,relaxed,naive-alternating,512,0,SPM,invariantly_inevitably_eat,4,9.506394
+relaxed-naive-alternating-512-0,relaxed,naive-alternating,512,0,SPM,invariantly_inevitably_eat,6,142.64383
+relaxed-naive-alternating-512-0,relaxed,naive-alternating,512,0,SPM,invariantly_inevitably_eat,8,6336.301
+relaxed-naive-alternating-512-0,relaxed,naive-alternating,512,0,SPM,invariantly_inevitably_eat,9,35421.637
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SPM,invariantly_inevitably_eat,2,0.94757444
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SPM,invariantly_inevitably_eat,4,8.003257
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SPM,invariantly_inevitably_eat,6,128.64746
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SPM,invariantly_inevitably_eat,8,3897.3137
+relaxed-naive-alternating-512-1,relaxed,naive-alternating,512,1,SPM,invariantly_inevitably_eat,9,31561.803
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SPM,invariantly_inevitably_eat,2,0.8014432
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SPM,invariantly_inevitably_eat,4,6.6613793
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SPM,invariantly_inevitably_eat,6,129.90463
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SPM,invariantly_inevitably_eat,8,5114.5337
+relaxed-naive-alternating-64-1,relaxed,naive-alternating,64,1,SPM,invariantly_inevitably_eat,9,31122.672
+seqcons-naive-alternating-128-0,seqcons,naive-alternating,128,0,SPM,invariantly_inevitably_eat,2,3.0423744
+seqcons-naive-alternating-128-0,seqcons,naive-alternating,128,0,SPM,invariantly_inevitably_eat,4,27.92741
+seqcons-naive-alternating-128-0,seqcons,naive-alternating,128,0,SPM,invariantly_inevitably_eat,6,309.2591
+seqcons-naive-alternating-128-0,seqcons,naive-alternating,128,0,SPM,invariantly_inevitably_eat,8,11011.175
+seqcons-naive-alternating-128-0,seqcons,naive-alternating,128,0,SPM,invariantly_inevitably_eat,9,timeout
+seqcons-naive-alternating-128-1,seqcons,naive-alternating,128,1,SPM,invariantly_inevitably_eat,2,1.7643423
+seqcons-naive-alternating-128-1,seqcons,naive-alternating,128,1,SPM,invariantly_inevitably_eat,4,16.367998
+seqcons-naive-alternating-128-1,seqcons,naive-alternating,128,1,SPM,invariantly_inevitably_eat,6,197.68706
+seqcons-naive-alternating-128-1,seqcons,naive-alternating,128,1,SPM,invariantly_inevitably_eat,8,7965.6846
+seqcons-naive-alternating-128-1,seqcons,naive-alternating,128,1,SPM,invariantly_inevitably_eat,9,47894.73
+seqcons-naive-alternating-512-0,seqcons,naive-alternating,512,0,SPM,invariantly_inevitably_eat,2,3.1051617
+seqcons-naive-alternating-512-0,seqcons,naive-alternating,512,0,SPM,invariantly_inevitably_eat,4,27.719837
+seqcons-naive-alternating-512-0,seqcons,naive-alternating,512,0,SPM,invariantly_inevitably_eat,6,324.9447
+seqcons-naive-alternating-512-0,seqcons,naive-alternating,512,0,SPM,invariantly_inevitably_eat,8,12653.489
+seqcons-naive-alternating-512-0,seqcons,naive-alternating,512,0,SPM,invariantly_inevitably_eat,9,timeout
+seqcons-naive-alternating-512-1,seqcons,naive-alternating,512,1,SPM,invariantly_inevitably_eat,2,1.806627
+seqcons-naive-alternating-512-1,seqcons,naive-alternating,512,1,SPM,invariantly_inevitably_eat,4,15.87137
+seqcons-naive-alternating-512-1,seqcons,naive-alternating,512,1,SPM,invariantly_inevitably_eat,6,204.51172
+seqcons-naive-alternating-512-1,seqcons,naive-alternating,512,1,SPM,invariantly_inevitably_eat,8,7680.9883
+seqcons-naive-alternating-512-1,seqcons,naive-alternating,512,1,SPM,invariantly_inevitably_eat,9,46427.117

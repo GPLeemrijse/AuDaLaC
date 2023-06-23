@@ -1,3 +1,9 @@
 /target
 *.o
 *.out
+*.init
+*.in
+*.cubin
+*.disasm
+*.ptx
+*.dump

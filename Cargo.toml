@@ -5,13 +5,14 @@ edition = "2021"
 authors = ["G. P. Leemrijse <g.p.leemrijse@student.tue.nl>"]
 
 [build-dependencies]
-lalrpop = "^0.19"
+lalrpop = "~0"
 
 [dependencies]
-lalrpop-util = {version = "^0.19", features = ["lexer"]}
-regex = "1"
-clap = { version = "^3.2.22", features = ["derive"] }
-assert_cmd = "^2.0.4"
-codespan = "^0.11.1"
-codespan-reporting = "^0.11.1"
-indoc = "1.0"
+lalrpop-util = {version = "~0", features = ["lexer"]}
+regex = "~1"
+clap = { version = "~3", features = ["derive"] }
+assert_cmd = "~2"
+codespan = "~0"
+codespan-reporting = "~0"
+indoc = "~1"
+wait-timeout = "~0"
