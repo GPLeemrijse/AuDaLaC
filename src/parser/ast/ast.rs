@@ -86,6 +86,9 @@ impl Exp {
         }
     }
 
+    /* Assumes a validated AST, hence if a var expression
+       is not a parameter it must be a local variable
+    */
     pub fn is_local_var(&self, strct: &ADLStruct) -> bool {
         match self {
             Exp::Var(parts, _) => {

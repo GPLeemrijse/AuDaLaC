@@ -159,41 +159,103 @@ fn get_ext_refs_from_exp<'a>(
     }
 }
 
-// fn get_vars_with_new_label<'a>(strct: &'a ADLStruct, step: &'a Step) -> HashSet<&'a String> {
-//     use Stat::*;
-//     use Exp::*;
+pub fn get_new_label_params<'a>(
+    strct: &'a ADLStruct,
+    type_info: &'a HashMap<*const Exp, Vec<Type>>,
+    step: &'a Step
+) -> HashSet<(&'a String, &'a String)> {
+    use Stat::*;
+    use Exp::*;
 
-//     fixpoint_visit_step::<&String, &ADLStruct>(
-//         step,
-//         |stat, set, strct_opt| {
-//             match stat {
-//                 Declaration(_, lhs, rhs, _) => {
-//                     // If lhs is declared with the value of a new label, lhs is also a new label variable 
-//                     if rhs.is_local_var(strct_opt.unwrap()) {
-//                         if set.contains(&rhs.get_parts()[0]) {
-//                             set.insert(lhs);
-//                         }
-//                     }
-//                 },
-//                 Assignment(lhs, rhs, _) => {
-//                     if lhs.is_local_var(strct_opt.unwrap()) && rhs.is_local_var(strct_opt.unwrap()) {
-//                         if set.contains(&rhs.get_parts()[0]) {
-//                             set.insert(&rhs.get_parts()[0]);
-//                         }
-//                     }
-//                 },
-//                 _ => {}
-//             }
-//         },
-//         &Some(strct),
-//         |_, _, _| (),
-//         &Some(strct)
-//     )
-// }
+    let mut new_label_params : HashSet<(&String, &String)> = HashSet::new();
+    let mut new_label_vars : HashSet<&String> = HashSet::new();
+
+    visit_step::<
+        (&mut HashSet<&String>, &mut HashSet<(&String, &String)>),
+        (&ADLStruct, &'a HashMap<*const Exp, Vec<Type>>),
+        ()
+    >(
+        step,
+        &mut (&mut new_label_vars, &mut new_label_params),
+        |stat, pair, args| {
+            let strct = args.unwrap().0;
+            let info = args.unwrap().1;
+            let vars : &mut HashSet<&String> = &mut pair.0;
+            let pars : &mut HashSet<(&String, &String)> = &mut pair.1;
+            match stat {
+                Declaration(_, lhs, rhs, _) => {
+                    let rhs_is_new_label = rhs.is_local_var(strct) && vars.contains(&rhs.get_parts()[0]);
+                    let rhs_is_constructed = matches!(**rhs, Constructor(..));
+
+                    if rhs_is_new_label || rhs_is_constructed {
+                        vars.insert(lhs);
+                    }
+                },
+                Assignment(lhs, rhs, _) => {
+                    let rhs_is_new_label = rhs.is_local_var(strct) && vars.contains(&rhs.get_parts()[0]);
+                    let rhs_is_constructed = matches!(**rhs, Constructor(..));
+                    let lhs_is_loc_var = lhs.is_local_var(strct);
+                    let lhs_local_variable = if lhs_is_loc_var {
+                        Some(&lhs.get_parts()[0])
+                    } else {
+                        None
+                    };
+                    let lhs_param = if !lhs_is_loc_var {
+                        let types = info
+                            .get(&(&**lhs as *const Exp))
+                            .expect("Could not find var expression in type info.");
+                        let parts = lhs.get_parts();
+                        let par_name = parts.last().unwrap();
+
+                        let strct_name = if parts.len() == 1 {
+                            &strct.name
+                        } else {
+                            types[types.len() - 2].name().unwrap()
+                        };
+
+                        Some((
+                            strct_name,
+                            par_name,
+                        ))
+                    } else {
+                        None
+                    };
+
+                    // If assigning to a local variable
+                    if let Some(lhs_var) = lhs_local_variable {
+                        if rhs_is_new_label || rhs_is_constructed {
+                            vars.insert(lhs_var);
+                        } else {
+                            /*  When overwritten with something else,
+                                the variable is no longer new.
+                            */
+                            vars.remove(lhs_var);
+                        }
+                    }
+                    // If assigning to a parameter
+                    else if let Some(lhs_par) = lhs_param {
+                        if rhs_is_new_label || rhs_is_constructed {
+                            pars.insert(lhs_par);
+                        }
+                    } else {
+                        unreachable!();
+                    }
+                },
+                _ => {}
+            }
+        },
+        &Some((strct, type_info)),
+        |_, _, _| {},
+        &None
+    );
+
+    return new_label_params;
+}
 
 
 #[cfg(test)]
 mod tests {
+    use crate::analysis::get_new_label_params;
     use std::collections::HashSet;
     use crate::analysis::step_analysis::written_parameters;
     use crate::analysis::racing_parameters;
@@ -302,5 +364,89 @@ mod tests {
             written_parameters(step3, &program, &s1, &type_info),
             HashSet::from([(&"S1".to_string(), &"p2".to_string())])
         );
+    }
+
+    #[test]
+    fn test_new_label_pars() {
+        let program = ProgramParser::new()
+            .parse(
+                "struct Node(n: Node, o : other) {
+                step1 {
+                    Node new := Node(null, null);
+                    Node new2 := new;
+                    Node new3 := new2;
+                    n := new3;
+                }
+
+                step2 {
+                    Node new := Node(null, null);
+                    Node new2 := new;
+                    Node new3 := new2;
+                    n := this;
+                }
+
+                step3 {
+                    Node new2 := null;
+                    Node new3 := null;
+                    Node new := Node(null, null);
+                    new2 := new;
+                    new3 := new2;
+                    n := new3;
+                }
+
+                step4 {
+                    Node new2 := null;
+                    Node new3 := null;
+                    Node new := Node(null, null);
+                    new2 := new;
+                    new3 := new2;
+                    new3 := this;
+                    n := new3;
+                    o.x := new2;
+                }
+
+                step5 {
+                    o := other(Node(null, null));
+                }
+
+                step6 {
+                    o.x.n.o := other(null);
+                }
+            }
+
+            struct other(x : Node) {
+
+            }
+
+            step1",
+            )
+            .unwrap();
+
+        let (_, type_info) = validate_ast(&program);
+        let strct = program.struct_by_name(&"Node".to_string()).unwrap();
+        let step1 = strct.step_by_name(&"step1".to_string()).unwrap();
+        let step2 = strct.step_by_name(&"step2".to_string()).unwrap();
+        let step3 = strct.step_by_name(&"step3".to_string()).unwrap();
+        let step4 = strct.step_by_name(&"step4".to_string()).unwrap();
+        let step5 = strct.step_by_name(&"step5".to_string()).unwrap();
+        let step6 = strct.step_by_name(&"step6".to_string()).unwrap();
+
+        let np = get_new_label_params(strct, &type_info, step1);
+        assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"n".to_string())]));
+
+        let np = get_new_label_params(strct, &type_info, step2);
+        assert_eq!(np, HashSet::new());
+
+        let np = get_new_label_params(strct, &type_info, step3);
+        assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"n".to_string())]));
+
+        let np = get_new_label_params(strct, &type_info, step4);
+        assert_eq!(np, HashSet::from_iter([(&"other".to_string(), &"x".to_string())]));
+
+        let np = get_new_label_params(strct, &type_info, step5);
+        assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"o".to_string())]));
+
+        let np = get_new_label_params(strct, &type_info, step6);
+        assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"o".to_string())]));
     }
 }
