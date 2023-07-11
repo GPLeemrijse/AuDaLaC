@@ -115,49 +115,39 @@ fn externally_referenced_parameters<'a>(
     step: &'a Step,
     var_exp_type_info: &'a HashMap<*const Exp, Vec<Type>>,
 ) -> HashSet<(&'a String, &'a String)> {
-    use Stat::*;
 
     let mut result = HashSet::new();
     visit_step::<
         HashSet<(&String, &String)>,
-        &'a HashMap<*const Exp, Vec<Type>>,
+        (),
         &'a HashMap<*const Exp, Vec<Type>>
     >(
         step,
         &mut result,
-        |stat, set, args| {
-            if let Assignment(lhs, _, _) = stat {
-                get_ext_refs_from_exp(lhs, set, args);
+        |_, _, _| {},
+        &None,
+        |exp, set, info| {
+            if let Exp::Var(parts, _) = exp {
+                /* If of the form a.b or a.b.c etc. then (a, b)
+                and (b, c) are written via a reference.*/
+                if parts.len() > 1 {
+                    let types = info
+                        .unwrap()
+                        .get(&(&*exp as *const Exp))
+                        .expect("Could not find var expression in type info.");
+
+                    set.insert((
+                        types[types.len() - 2].name().unwrap(),
+                        parts.last().unwrap(),
+                    ));
+                }
             }
         },
-        &Some(var_exp_type_info),
-        get_ext_refs_from_exp,
         &Some(var_exp_type_info),
     );
     return result;
 }
 
-fn get_ext_refs_from_exp<'a>(
-    exp: &'a Exp,
-    set: &mut HashSet<(&'a String, &'a String)>,
-    info: &Option<&'a HashMap<*const Exp, Vec<Type>>>,
-) {
-    if let Exp::Var(parts, _) = exp {
-        /* If of the form a.b or a.b.c etc. then (a, b)
-        and (b, c) are written via a reference.*/
-        if parts.len() > 1 {
-            let types = info
-                .unwrap()
-                .get(&(&*exp as *const Exp))
-                .expect("Could not find var expression in type info.");
-
-            set.insert((
-                types[types.len() - 2].name().unwrap(),
-                parts.last().unwrap(),
-            ));
-        }
-    }
-}
 
 pub fn get_new_label_params<'a>(
     strct: &'a ADLStruct,
@@ -187,6 +177,9 @@ pub fn get_new_label_params<'a>(
 
             match stat {
                 Declaration(_, lhs, rhs, _) => {
+                    // Remove any information present from an earlier scope
+                    vars.remove(lhs);
+
                     let rhs_is_new_label = rhs.is_local_var(strct) && vars.contains(&rhs.get_parts()[0]);
                     let rhs_is_constructed = matches!(**rhs, Constructor(..));
 
@@ -232,7 +225,8 @@ pub fn get_new_label_params<'a>(
                             /*  When overwritten with something else,
                                 the variable is no longer new.
                             */
-                            vars.remove(lhs_var);
+                            //vars.remove(lhs_var);
+                            // Commented above out as this does not work well with conditionals/scopes
                         }
                     }
                     // If assigning to a parameter
@@ -296,7 +290,8 @@ mod tests {
             )
             .unwrap();
 
-        let (_, type_info) = validate_ast(&program);
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
         let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
         let s2 = program.struct_by_name(&"S2".to_string()).unwrap();
         let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
@@ -344,7 +339,8 @@ mod tests {
             )
             .unwrap();
 
-        let (_, type_info) = validate_ast(&program);
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
         let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
         let s2 = program.struct_by_name(&"S2".to_string()).unwrap();
         let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
@@ -430,7 +426,8 @@ mod tests {
             )
             .unwrap();
 
-        let (_, type_info) = validate_ast(&program);
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
         let strct = program.struct_by_name(&"Node".to_string()).unwrap();
         let step1 = strct.step_by_name(&"step1".to_string()).unwrap();
         let step2 = strct.step_by_name(&"step2".to_string()).unwrap();
@@ -461,6 +458,46 @@ mod tests {
 
         let (np, np_stores) = get_new_label_params(strct, &type_info, step6);
         assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"o".to_string())]));
+        assert_eq!(np_stores.len(), 1);
+    }
+
+    #[test]
+    fn test_new_label_pars_scopes() {
+        let program = ProgramParser::new()
+            .parse(
+                "struct Node(n: Node, o : other) {
+                step1 {
+                    Node new := null;
+                    if n != null then {
+                        new := Node(null, null);
+                    }
+                    n := new;
+                }
+                step2 {
+                    Node new := Node(null, null);
+                    if n != null then {
+                        new := null;
+                    }
+                    n := new;
+                }
+            }
+            struct other(x : Node) {}
+            step1",
+            )
+            .unwrap();
+
+        let (errors, type_info) = validate_ast(&program);
+        assert!(errors.is_empty());
+        let strct = program.struct_by_name(&"Node".to_string()).unwrap();
+        let step1 = strct.step_by_name(&"step1".to_string()).unwrap();
+        let step2 = strct.step_by_name(&"step2".to_string()).unwrap();
+
+        let (np, np_stores) = get_new_label_params(strct, &type_info, step1);
+        assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"n".to_string())]));
+        assert_eq!(np_stores.len(), 1);
+
+        let (np, np_stores) = get_new_label_params(strct, &type_info, step2);
+        assert_eq!(np, HashSet::from_iter([(&"Node".to_string(), &"n".to_string())]));
         assert_eq!(np_stores.len(), 1);
     }
 }

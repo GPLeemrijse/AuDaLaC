@@ -37,7 +37,11 @@ pub fn visit_stat<'a, T, I1, I2>(
                     |s| visit_stat(s, col, f_stmt, i_stmt, f_exp, i_exp)
                   );
         }
-        Declaration(_, _, e, _) | Assignment(_, e, _) => {
+        Assignment(lhs, rhs, _) => {
+            visit_exp(lhs, col, f_exp, i_exp);
+            visit_exp(rhs, col, f_exp, i_exp);
+        }
+        Declaration(_, _, e, _) => {
             visit_exp(e, col, f_exp, i_exp);
         }
         _ => (),
