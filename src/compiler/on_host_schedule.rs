@@ -37,45 +37,22 @@ impl OnHostSchedule<'_> {
 		format!("kernel_{strct}_{step}")
 	}
 
-	fn launch_function_as_c(&self) -> String {
-		formatdoc!(
-			"
-			void launch_kernel(void* kernel, inst_size nrof_instances, int fp_lvl) {{
-				void* args[] = {{
-					&nrof_instances,
-					&fp_lvl
-				}};
-				auto dims = get_launch_dims(nrof_instances, kernel);
-
+	fn copy_counters_from_struct_as_c(&self) -> String {
+		formatdoc!{"
+			__host__ inst_size get_created_instances_from(void* struct_ptr) {{
+				cuda::atomic<inst_size, cuda::thread_scope_device> dest;
 				CHECK(
-					cudaLaunchCooperativeKernel(
-						kernel,
-						std::get<0>(dims),
-						std::get<1>(dims),
-						args
+					cudaMemcpy(
+						&dest,
+						(void*)((size_t)struct_ptr + created_instances_offset),
+						sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>),
+						cudaMemcpyDeviceToHost
 					)
 				);
+				return dest.load(cuda::memory_order_relaxed);
 			}}
-		"
-		)
+		"}
 	}
-
-    fn copy_counters_from_struct_as_c(&self) -> String {
-        formatdoc!{"  
-            __host__ inst_size get_created_instances_from(void* ptr_to_nrof_instances) {{
-                cuda::atomic<inst_size, cuda::thread_scope_device> dest;
-                CHECK(
-                    cudaMemcpy(
-                        &dest,
-                        ptr_to_nrof_instances,
-                        sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>),
-                        cudaMemcpyDeviceToHost
-                    )
-                );
-                return dest.load(cuda::memory_order_relaxed);
-            }}
-        "}
-    }
 
 	fn schedule_as_c(&self, sched : &Schedule, fp_level: usize) -> String {
 		use Schedule::*;
@@ -120,24 +97,26 @@ impl OnHostSchedule<'_> {
 		let indent = "\t".repeat(fp_level + 1);
 
 		if let TypedStepCall(strct_name, step_name, _) = typedstepcall {
-            let step = self.program.step_by_name(strct_name, step_name).unwrap();
+			let step = self.program.step_by_name(strct_name, step_name).unwrap();
 
-            let constructors = constructors(step);
-            let post_launch = if !constructors.is_empty() {
-                constructors.iter()
-                            .map(|strct|
-                                format!("\n{indent}nrof_active_{strct} = get_created_instances_from(nrof_active_{strct}_ptr);")
-                            )
-                            .collect::<Vec<String>>()
-                            .join("\n")
-            } else {
-                String::new()
-            };
+			let constructors = constructors(step);
+			let post_launch = if !constructors.is_empty() {
+				constructors.iter()
+							.map(|strct|
+								format!(
+									"\n{indent}nrof_{strct}s = get_created_instances_from(loc_{});",
+									strct.to_lowercase()
+								)
+							)
+							.collect::<Vec<String>>()
+							.join("\n")
+			} else {
+				String::new()
+			};
 
-			let kernel = self.kernel_name(strct_name, step_name);
 			formatdoc!{"
-				{indent}launch_kernel((void*){kernel}, nrof_active_{strct_name}, {});{post_launch}
-				", (fp_level as i32) - 1
+				{indent}{strct_name}_{step_name}.launch();{post_launch}
+				"
 			}
 		} else {
 			unreachable!();
@@ -168,9 +147,11 @@ impl OnHostSchedule<'_> {
 			let is_stable = self.fp.is_stable(fp_level);
 
 			formatdoc! {"
+				{indent}fp_lvl++;
 				{indent}do{{{pre_iteration}
 				{sched}{post_iteration}
 				{indent}}} while(!{is_stable});
+				{indent}fp_lvl--;
 			"}
 		} else {
 			unreachable!();
@@ -179,7 +160,7 @@ impl OnHostSchedule<'_> {
 
 	fn step_as_kernel(&self, strct: &String, step: &String) -> String {
 		let kernel_name = self.kernel_name(strct, step);
-		let func_header = format!("__global__ void {kernel_name}");
+		let func_header = format!("__global__ __launch_bounds__(THREADS_PER_BLOCK) void {kernel_name}");
 
 		let params = vec!["inst_size nrof_instances".to_string(), "int fp_lvl".to_string()];
 
@@ -213,56 +194,136 @@ impl CompileComponent for OnHostSchedule<'_> {
 	}
 
 	fn typedefs(&self) -> Option<String> {
-		Some("using namespace cooperative_groups;".to_string())
+		let cg = "using namespace cooperative_groups;".to_string();
+		let launch_params = formatdoc!{"
+			class Step {{
+				void* kernel;
+				void* args[2];
+				dim3 gridDim;
+				dim3 blockDim;
+				uint max_blocks;
+				const char* name;
+				inst_size prev_nrof_instances;
+
+				public:
+				Step(const char* name, void* kernel, uint tpb, inst_size* nrof_instances, int* fp_lvl)
+					: kernel(kernel), blockDim(dim3(tpb, 1, 1)), name(name) {{
+					args[0] = (void*)nrof_instances;
+					args[1] = (void*)fp_lvl;
+					prev_nrof_instances = *nrof_instances;
+
+					int numBlocksPerSm = 0;
+					cudaDeviceProp deviceProp;
+					cudaGetDeviceProperties(&deviceProp, 0);
+					cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, blockDim.x, 0);
+					max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
+
+					updateDims();
+				}}
+
+
+				void updateDims(void) {{
+					int wanted_blocks = (*((inst_size*)args[0]) + blockDim.x - 1) / blockDim.x;
+					int used_blocks = min(max_blocks, wanted_blocks);
+
+					gridDim.x = used_blocks;
+					fprintf(stderr, \"Updated %s to %u/%u blocks of %u threads = %u threads.\\n\", name, used_blocks, max_blocks, blockDim.x, used_blocks * blockDim.x);
+				}}
+
+				void launch(void) {{
+					if (*((inst_size*)args[0]) != prev_nrof_instances){{
+						updateDims();
+						prev_nrof_instances = *((inst_size*)args[0]);
+					}}
+
+					CHECK(
+						cudaLaunchCooperativeKernel(
+							kernel,
+							gridDim,
+							blockDim,
+							args
+						)
+					);
+				}}
+			}};
+		"};
+		Some(cg + "\n" + &launch_params)
 	}
 
 	fn globals(&self) -> Option<String> {
 		let mut result = self.program.inline_global_cpp.join("\n");
 		result.push_str("\n");
 		result.push_str(&self.fp.global_decl());
-        result.push_str("size_t created_instances_offset = 0;");
+		result.push_str("size_t created_instances_offset = 0;");
 		Some(result)
 	}
 
 	fn functions(&self) -> Option<String> {
 		let mut functions = self.step_transpiler.functions();
 
-		functions.push(self.launch_function_as_c());
-        functions.push(self.copy_counters_from_struct_as_c());
+		functions.push(self.copy_counters_from_struct_as_c());
 
 		Some(functions.join("\n"))
 	}
 
 	fn kernels(&self) -> Option<String> {
 		Some(
-            self.program
-                .structs
-                .iter()
-                .map(|strct| {
-                    strct
-                        .steps
-                        .iter()
-                        .map(|step| self.step_as_kernel(&strct.name, &step.name))
-                        .chain(std::iter::once(self.step_as_kernel(&strct.name, &"print".to_string())))
-                })
-                .flatten()
-                .collect::<Vec<String>>()
-                .join("\n")
-        )
+			self.program
+				.structs
+				.iter()
+				.map(|strct| {
+					strct
+						.steps
+						.iter()
+						.map(|step| self.step_as_kernel(&strct.name, &step.name))
+						.chain(std::iter::once(self.step_as_kernel(&strct.name, &"print".to_string())))
+				})
+				.flatten()
+				.collect::<Vec<String>>()
+				.join("\n")
+		)
 	}
 
 	fn pre_main(&self) -> Option<String> {
-        let mut struct_names: Vec<&String> = self.program.structs.iter().map(|s| &s.name).collect();
-        struct_names.sort();
-        let mut result = format!("\n\tcreated_instances_offset = host_{}.created_instances_offset();\n", struct_names.first().unwrap());
-        result.push_str(&struct_names.iter()
-                         .enumerate()
-                         .map(|(idx, strct)| formatdoc!("
-                            \tcuda::atomic<inst_size, cuda::thread_scope_device> nrof_active_{strct}(structs[{idx}].nrof_instances + 1);
-                            \tvoid* nrof_active_{strct}_ptr = (void*)((size_t)loc_{} + created_instances_offset);"
-                            , strct.to_lowercase()))
-                         .collect::<Vec<String>>()
-                         .join("\n"));
+		let mut struct_names: Vec<&String> = self.program.structs.iter().map(|s| &s.name).collect();
+		struct_names.sort();
+		let mut result = format!("\n\tcreated_instances_offset = host_{}.created_instances_offset();\n", struct_names.first().unwrap());
+
+		// nrof_instances counters
+		result.push_str(&struct_names.iter()
+						 .enumerate()
+						 .map(|(idx, strct)| formatdoc!("
+							\tinst_size nrof_{strct}s = structs[{idx}].nrof_instances + 1;"
+						 ))
+						 .collect::<Vec<String>>()
+						 .join("\n"));
+
+		// fp_lvl passed to Step instances
+		result.push_str("\n\tint fp_lvl = -1;\n");
+
+		// The Step instances
+		let print = "print".to_string();
+		result.push_str(
+			&self.program
+				.structs
+				.iter()
+				.map(|strct|
+					strct.steps
+						 .iter()
+						 .map(|step| &step.name)
+						 .chain(std::iter::once(&print))
+						 .map(|step_name|
+							format!(
+								"\tStep {strct_n}_{step_name}(\n\t\t\"{strct_n}.{step_name}\",\n\t\t(void*){kernel},\n\t\tTHREADS_PER_BLOCK,\n\t\t&nrof_{strct_n}s,\n\t\t&fp_lvl\n\t);",
+								strct_n = strct.name,
+								kernel = self.kernel_name(&strct.name, &step_name)
+							)
+						 )
+				)
+				.flatten()
+				.collect::<Vec<String>>()
+				.join("\n")
+		);
 
 		Some(result)
 	}

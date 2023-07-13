@@ -38,20 +38,6 @@ impl SingleKernelSchedule<'_> {
         }
     }
 
-    fn kernel_parameters(&self, including_self: bool) -> Vec<String> {
-        // Use this version when passing struct managers as kernel parameters
-        // let mut structs = self._get_struct_manager_parameters();
-        let mut structs = vec!["bool* stable".to_string()];
-
-        if including_self {
-            let mut self_and_structs = vec!["const RefType self".to_string()];
-            self_and_structs.append(&mut structs);
-            self_and_structs
-        } else {
-            structs
-        }
-    }
-
     fn kernel_schedule_body(&self) -> String {
         let ind = "\t";
         let stab_stack = self.fp.top_of_kernel_decl();
@@ -245,9 +231,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
     }
 
     fn functions(&self) -> Option<String> {
-        let mut functions = self.step_transpiler.functions();
-
-        Some(functions.join("\n"))
+        Some(self.step_transpiler.functions().join("\n"))
     }
 
     fn kernels(&self) -> Option<String> {

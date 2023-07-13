@@ -24,7 +24,6 @@ impl FPStrategy for OnHostNaiveFixpoint {
 					}}
 				}}
 				__host__ bool load_fp_stack_from_host(int lvl) {{
-                    CHECK(cudaDeviceSynchronize());
 					cuda::atomic<bool, cuda::thread_scope_device> top_of_stack;
 					CHECK(
 						cudaMemcpyFromSymbol(
@@ -47,7 +46,6 @@ impl FPStrategy for OnHostNaiveFixpoint {
 							sizeof(cuda::atomic<bool, cuda::thread_scope_device>) * lvl
 						)
 					);
-                    CHECK(cudaDeviceSynchronize());
 				}}
 				"
 			}
