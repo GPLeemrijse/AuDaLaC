@@ -15,6 +15,7 @@ pub struct OnHostSchedule<'a> {
 	step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
 	step_transpiler: &'a StepBodyCompiler<'a>,
 	work_divisor: &'a WorkDivisor,
+	dynamic_block_size: bool
 }
 
 impl OnHostSchedule<'_> {
@@ -23,6 +24,7 @@ impl OnHostSchedule<'_> {
 		fp: &'a dyn FPStrategy,
 		step_transpiler: &'a StepBodyCompiler<'_>,
 		work_divisor: &'a WorkDivisor,
+		dynamic_block_size: bool
 	) -> OnHostSchedule<'a> {
 		OnHostSchedule {
 			program,
@@ -30,6 +32,7 @@ impl OnHostSchedule<'_> {
 			step_to_structs: get_step_to_structs(program),
 			step_transpiler: step_transpiler,
 			work_divisor,
+			dynamic_block_size
 		}
 	}
 
@@ -39,14 +42,15 @@ impl OnHostSchedule<'_> {
 
 	fn copy_counters_from_struct_as_c(&self) -> String {
 		formatdoc!{"
-			__host__ inst_size get_created_instances_from(void* struct_ptr) {{
+			__host__ inst_size get_created_instances_from(void* struct_ptr, cudaStream_t stream) {{
 				cuda::atomic<inst_size, cuda::thread_scope_device> dest;
 				CHECK(
-					cudaMemcpy(
+					cudaMemcpyAsync(
 						&dest,
 						(void*)((size_t)struct_ptr + created_instances_offset),
 						sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>),
-						cudaMemcpyDeviceToHost
+						cudaMemcpyDeviceToHost,
+						stream
 					)
 				);
 				return dest.load(cuda::memory_order_relaxed);
@@ -104,7 +108,7 @@ impl OnHostSchedule<'_> {
 				constructors.iter()
 							.map(|strct|
 								format!(
-									"\n{indent}nrof_{strct}s = get_created_instances_from(loc_{});",
+									"\n{indent}nrof_{strct}s = get_created_instances_from(loc_{}, kernel_stream);",
 									strct.to_lowercase()
 								)
 							)
@@ -115,7 +119,7 @@ impl OnHostSchedule<'_> {
 			};
 
 			formatdoc!{"
-				{indent}{strct_name}_{step_name}.launch();{post_launch}
+				{indent}{strct_name}_{step_name}.launch(kernel_stream);{post_launch}
 				"
 			}
 		} else {
@@ -162,15 +166,29 @@ impl OnHostSchedule<'_> {
 		let kernel_name = self.kernel_name(strct, step);
 		let func_header = format!("__global__ __launch_bounds__(THREADS_PER_BLOCK) void {kernel_name}");
 
-		let params = vec!["inst_size nrof_instances".to_string(), "int fp_lvl".to_string()];
+		let params = vec!["inst_size nrof_instances".to_string(), "int fp_lvl".to_string(), "iter_idx_t iter_idx".to_string()];
 
 		let kernel_signature = format_signature(&func_header, &params, 0);
 
-		let execute_step = self.work_divisor
-							   .execute_step(
-									&self.step_transpiler.execute_f_name(strct, step),
-									"nrof_instances".to_string()
-							   );
+		let execute_step = if self.dynamic_block_size {
+			// Dynamic block size makes use of larger grid, hence no need to loop
+			formatdoc!{"
+				\tRefType self = grid.thread_rank();
+				\tif (self >= nrof_instances)
+				\t\treturn;
+				\t{f_name}(self, &stable);",
+				f_name = self.step_transpiler.execute_f_name(strct, step)
+			}
+		} else {
+			/*  Otherwise, nrof threads could be lower than nrof instances,
+				hence we wrap it in a loop.
+			*/
+			self.work_divisor
+				.execute_step(
+					&self.step_transpiler.execute_f_name(strct, step),
+					"nrof_instances".to_string()
+				)
+		};
 		let pre = self.fp.top_of_kernel_decl();
 		let post = self.fp.post_kernel();
 
@@ -178,7 +196,7 @@ impl OnHostSchedule<'_> {
 			{kernel_signature}
 				const grid_group grid = this_grid();
 				const thread_block block = this_thread_block();{pre}
-				{execute_step}{post}
+			{execute_step}{post}
 			}}
 		"}
 	}
@@ -195,65 +213,85 @@ impl CompileComponent for OnHostSchedule<'_> {
 
 	fn typedefs(&self) -> Option<String> {
 		let cg = "using namespace cooperative_groups;".to_string();
+		let fp = self.fp.global_decl();
+
 		let launch_params = formatdoc!{"
 			class Step {{
 				void* kernel;
-				void* args[2];
+				void* args[3];
 				dim3 gridDim;
 				dim3 blockDim;
 				uint max_blocks;
 				const char* name;
 				inst_size prev_nrof_instances;
+				bool dynamic;
 
 				public:
-				Step(const char* name, void* kernel, uint tpb, inst_size* nrof_instances, int* fp_lvl)
-					: kernel(kernel), blockDim(dim3(tpb, 1, 1)), name(name) {{
+				Step(const char* name, void* kernel, uint tpb, inst_size* nrof_instances, int* fp_lvl, iter_idx_t* iter_idx, bool dynamic)
+					: kernel(kernel), name(name), dynamic(dynamic) {{
 					args[0] = (void*)nrof_instances;
 					args[1] = (void*)fp_lvl;
+					args[2] = (void*)iter_idx;
 					prev_nrof_instances = *nrof_instances;
 
-					int numBlocksPerSm = 0;
-					cudaDeviceProp deviceProp;
-					cudaGetDeviceProperties(&deviceProp, 0);
-					cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, blockDim.x, 0);
-					max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
 
-					updateDims();
+					if(dynamic){{
+						int min_grid_size;
+						int dyn_block_size;
+						cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
+						
+						blockDim = dim3(dyn_block_size, 1, 1);
+						max_blocks = UINT_MAX;
+					}} else {{
+						int numBlocksPerSm = 0;
+						cudaDeviceProp deviceProp;
+						cudaGetDeviceProperties(&deviceProp, 0);
+						cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, tpb, 0);
+
+						blockDim = dim3(tpb, 1, 1);
+						max_blocks = deviceProp.multiProcessorCount * numBlocksPerSm;
+					}}
+					update_dims();
 				}}
 
+				void launch(cudaStream_t stream) {{
+					if (*((inst_size*)args[0]) != prev_nrof_instances){{
+						update_dims();
+						prev_nrof_instances = *((inst_size*)args[0]);
+					}}
 
-				void updateDims(void) {{
+					if(dynamic){{
+						CHECK(cudaLaunchKernel(kernel, gridDim, blockDim, args, 0, stream));
+					}} else {{
+						CHECK(
+							cudaLaunchCooperativeKernel(
+								kernel,
+								gridDim,
+								blockDim,
+								args,
+								0,
+								stream
+							)
+						);
+					}}
+				}}
+
+				private:
+				void update_dims(void) {{
 					int wanted_blocks = (*((inst_size*)args[0]) + blockDim.x - 1) / blockDim.x;
 					int used_blocks = min(max_blocks, wanted_blocks);
 
 					gridDim.x = used_blocks;
 					fprintf(stderr, \"Updated %s to %u/%u blocks of %u threads = %u threads.\\n\", name, used_blocks, max_blocks, blockDim.x, used_blocks * blockDim.x);
 				}}
-
-				void launch(void) {{
-					if (*((inst_size*)args[0]) != prev_nrof_instances){{
-						updateDims();
-						prev_nrof_instances = *((inst_size*)args[0]);
-					}}
-
-					CHECK(
-						cudaLaunchCooperativeKernel(
-							kernel,
-							gridDim,
-							blockDim,
-							args
-						)
-					);
-				}}
 			}};
 		"};
-		Some(cg + "\n" + &launch_params)
+		Some(cg + "\n" + &fp + "\n" + &launch_params)
 	}
 
 	fn globals(&self) -> Option<String> {
 		let mut result = self.program.inline_global_cpp.join("\n");
 		result.push_str("\n");
-		result.push_str(&self.fp.global_decl());
 		result.push_str("size_t created_instances_offset = 0;");
 		Some(result)
 	}
@@ -287,7 +325,12 @@ impl CompileComponent for OnHostSchedule<'_> {
 	fn pre_main(&self) -> Option<String> {
 		let mut struct_names: Vec<&String> = self.program.structs.iter().map(|s| &s.name).collect();
 		struct_names.sort();
-		let mut result = format!("\n\tcreated_instances_offset = host_{}.created_instances_offset();\n", struct_names.first().unwrap());
+		let mut result = formatdoc!{"
+			\tcreated_instances_offset = host_{}.created_instances_offset();
+			\tcudaStream_t kernel_stream;
+			\tcudaStreamCreate(&kernel_stream);
+			", struct_names.first().unwrap()
+		};
 
 		// nrof_instances counters
 		result.push_str(&struct_names.iter()
@@ -300,6 +343,7 @@ impl CompileComponent for OnHostSchedule<'_> {
 
 		// fp_lvl passed to Step instances
 		result.push_str("\n\tint fp_lvl = -1;\n");
+		result.push_str(&self.fp.initialise());
 
 		// The Step instances
 		let print = "print".to_string();
@@ -313,11 +357,20 @@ impl CompileComponent for OnHostSchedule<'_> {
 						 .map(|step| &step.name)
 						 .chain(std::iter::once(&print))
 						 .map(|step_name|
-							format!(
-								"\tStep {strct_n}_{step_name}(\n\t\t\"{strct_n}.{step_name}\",\n\t\t(void*){kernel},\n\t\tTHREADS_PER_BLOCK,\n\t\t&nrof_{strct_n}s,\n\t\t&fp_lvl\n\t);",
+							formatdoc!{"
+								\tStep {strct_n}_{step_name}(
+								\t\t\"{strct_n}.{step_name}\",
+								\t\t(void*){kernel},
+								\t\tTHREADS_PER_BLOCK,
+								\t\t&nrof_{strct_n}s,
+								\t\t&fp_lvl,
+								\t\t&iter_idx,
+								\t\t{use_dyn}
+								\t);",
 								strct_n = strct.name,
-								kernel = self.kernel_name(&strct.name, &step_name)
-							)
+								kernel = self.kernel_name(&strct.name, &step_name),
+								use_dyn = self.dynamic_block_size
+							}
 						 )
 				)
 				.flatten()
