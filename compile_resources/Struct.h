@@ -25,6 +25,8 @@ public:
 	// other gets values of this
 	__host__ __device__ bool sync_nrof_instances(Struct* other);
 
+	__host__ size_t created_instances_offset(void);
+
 	// WILL BE DEPRECATED
 	__host__ __device__ inst_size nrof_instances(void);
 

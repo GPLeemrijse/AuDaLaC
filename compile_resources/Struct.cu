@@ -17,6 +17,10 @@ __host__ void Struct::free(void) {
 	}
 }
 
+__host__ size_t Struct::created_instances_offset(void) {
+	return ((size_t)(&this->created_instances) - (size_t)this);
+}
+
 __host__ void* Struct::to_device(void* allocated_ptr) {
 	void* device_ptr;
 	size_t s = child_size();

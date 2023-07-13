@@ -99,4 +99,8 @@ impl FPStrategy for NaiveAlternatingFixpoint {
     fn requires_intra_fixpoint_sync(&self) -> bool {
         true
     }
+
+    fn post_kernel(&self) -> String {
+        String::new()
+    }
 }

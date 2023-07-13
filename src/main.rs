@@ -52,7 +52,7 @@ fn main() {
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
         (@arg schedule_strat: -S --schedule_strat possible_value("in-kernel") possible_value("on-host") default_value("in-kernel") "Which schedule strategy to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("relaxed") "Which memory order to use.")
-        (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
+        (@arg voting: -v --vote_strat possible_value("on-host-naive") possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg weak_ld_st: -w --weak_ld_st possible_value("1") possible_value("0") default_value("1") "Use weak loads and stores for non-racing parameters.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofinstances: -N --nrofinstances +takes_value required(false) multiple(true) value_parser(parse_key_val::<String, usize>) "nrof struct instances memory is allocated for.")
@@ -126,18 +126,22 @@ fn main() {
                         ("in-kernel", "naive-alternating") => Box::new(
                             NaiveAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
+                        ("on-host", "on-host-naive") => Box::new(
+                            OnHostNaiveFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ),
                         _ => panic!(
                             "Voting strategy not found, or combined with wrong schedule strategy."
                         ),
                     };
 
                     let step_transpiler =
-                        StepBodyCompiler::new(&type_info, true, print_unstable, weak_ld_st, &memorder);
+                        StepBodyCompiler::new(&type_info, true, print_unstable, weak_ld_st, &memorder, &program);
 
                     let work_divisor = WorkDivisor::new(
-                        threads_per_block, // tpb
+                        threads_per_block,
                         DivisionStrategy::Dynamic,
                         print_unstable,
+                        schedule_strat == "on-host", // We inline the executeStep function with the on-host schedule
                     );
 
                     let struct_managers = StructManagers::new(
