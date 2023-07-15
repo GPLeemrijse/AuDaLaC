@@ -284,7 +284,7 @@ impl CompileComponent for OnHostSchedule<'_> {
 					int used_blocks = min(max_blocks, wanted_blocks);
 
 					gridDim.x = used_blocks;
-					fprintf(stderr, \"Updated %s to %u/%u blocks of %u threads = %u threads.\\n\", name, used_blocks, max_blocks, blockDim.x, used_blocks * blockDim.x);
+					//fprintf(stderr, \"Updated %s to %u/%u blocks of %u threads = %u threads.\\n\", name, used_blocks, max_blocks, blockDim.x, used_blocks * blockDim.x);
 				}}
 			}};
 		"};
