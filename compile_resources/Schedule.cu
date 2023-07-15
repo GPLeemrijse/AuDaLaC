@@ -5,6 +5,10 @@ void Schedule::add_step(void* kernel, inst_size capacity) {
 	int min_grid_size;
 	int dyn_block_size;
 	cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
+
+	if (capacity == 1) {
+		dyn_block_size = 1;
+	}
 	dim3 blockDim(dyn_block_size);
 	dim3 gridDim((capacity + dyn_block_size - 1) / dyn_block_size);
 

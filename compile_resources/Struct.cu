@@ -105,7 +105,7 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 }
 
 __host__ __device__ inst_size Struct::nrof_instances(void){
-	return active_instances.load(cuda::memory_order_seq_cst);
+	return active_instances.load(cuda::memory_order_relaxed);
 }
 
 __host__ __device__ inst_size Struct::nrof_instances2(bool step_parity){

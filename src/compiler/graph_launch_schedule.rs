@@ -1,3 +1,5 @@
+use crate::analysis::constructors;
+use std::collections::HashSet;
 use crate::analysis::fixpoint_depth;
 use crate::utils::format_signature;
 use crate::analysis::get_step_to_structs;
@@ -75,8 +77,18 @@ impl GraphLaunchSchedule<'_> {
 		if let TypedStepCall(strct_name, step_name, _) = typedstepcall {
 			let kernel = self.kernel_name(strct_name, step_name);
 			let indent = "\t".repeat(fp_lvl + 1);
+			let step = self.program.step_by_name(strct_name, step_name).unwrap();
+			let mut constructors : Vec<String> = constructors(step).into_iter().cloned().collect();
+			let update_kernel = if !constructors.is_empty() {
+				constructors.sort();
+				let kernel = format!("update_nrof_{}", constructors.join("_"));
+				format!("\n{indent}schedule.add_step((void*){kernel}, 1);")
+			} else {
+				String::new()
+			};
+
 			formatdoc!{"
-				{indent}schedule.add_step((void*){kernel}, {strct_name}_capacity);"
+				{indent}schedule.add_step((void*){kernel}, {strct_name}_capacity);{update_kernel}"
 			}
 		} else {
 			unreachable!();
@@ -175,6 +187,67 @@ impl GraphLaunchSchedule<'_> {
 			}}
 		"}
 	}
+
+	fn update_counter_kernels(&self) -> String {
+		let mut unique_updates = HashSet::new();
+		self.unique_updates(&self.program.schedule, &mut unique_updates);
+		unique_updates.iter().map(|u| {
+			let kernel_name = format!("update_nrof_{}", u.join("_"));
+			let func_header = format!("__global__ void {kernel_name}");
+			let params = vec![];
+			let kernel_signature = format_signature(&func_header, &params, 0);
+			let updates = u.iter()
+						   .map(|s| format!("\t{}->set_active_to_created();", s.to_lowercase()))
+						   .collect::<Vec<String>>()
+						   .join("\n");
+			formatdoc!{"
+				{kernel_signature}
+				{updates}
+				}}
+			"}
+		})
+		.collect::<Vec<String>>()
+		.join("\n")
+	}
+
+	fn unique_updates(&self, sched: &Schedule, updates: &mut HashSet<Vec<String>>) {
+		use Schedule::*;
+		match sched {
+			StepCall(step_name, _) => {
+				let mut structs = self.step_to_structs.get(step_name).unwrap().iter();
+
+				let mut combined_sched = TypedStepCall(structs.next()
+															  .expect("Need at least one implementor")
+															  .name
+															  .clone(),
+													   step_name.to_string(),
+													   (0, 0));
+
+				// Transform into sequence of typed step calls
+				for s in structs {
+					combined_sched = Sequential(
+						Box::new(TypedStepCall(s.name.clone(), step_name.to_string(), (0, 0))),
+						Box::new(combined_sched),
+						(0, 0)
+					);
+				}
+				self.unique_updates(&combined_sched, updates);
+			}
+			TypedStepCall(struct_name, step_name, _) => {
+				let step = self.program.step_by_name(struct_name, step_name).unwrap();
+				let mut constructors : Vec<String> = constructors(step).into_iter().cloned().collect();
+				if !constructors.is_empty() {
+					constructors.sort();
+					updates.insert(constructors);
+				}
+			}
+			Sequential(s1, s2, _) => {
+				self.unique_updates(s1, updates);
+				self.unique_updates(s2, updates);
+			},
+			Fixpoint(s, _) => self.unique_updates(s, updates),
+		}
+	}
 }
 
 impl CompileComponent for GraphLaunchSchedule<'_> {
@@ -228,6 +301,7 @@ impl CompileComponent for GraphLaunchSchedule<'_> {
 				.flatten()
 				.chain(std::iter::once(self.relaunch_kernel()))
 				.chain(std::iter::once(self.launch_kernel()))
+				.chain(std::iter::once(self.update_counter_kernels()))
 				.collect::<Vec<String>>()
 				.join("\n")
 		)

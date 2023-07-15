@@ -40,6 +40,10 @@ public:
 		);
 	}
 
+	__host__ __device__ __inline__ void set_active_to_created(void){
+		active_instances.store(created_instances.load(cuda::memory_order_relaxed), cuda::memory_order_relaxed);
+	}
+
 protected:
 	virtual size_t child_size(void) = 0;
 
