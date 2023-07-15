@@ -4,11 +4,15 @@ use std::collections::BTreeSet;
 
 pub struct Timer {
 	active: bool,
+	stream: Option<String>
 }
 
 impl Timer {
-	pub fn new(active: bool) -> Timer {
-		Timer { active }
+	pub fn new(active: bool, stream: Option<String>) -> Timer {
+		Timer {
+			active,
+			stream
+		}
 	}
 }
 
@@ -33,12 +37,13 @@ impl CompileComponent for Timer {
 
 	fn pre_main(&self) -> Option<String> {
 		if self.active {
+			let stream_arg = self.stream.clone().map_or("".to_string(), |s| format!(", {s}"));
 			Some(formatdoc! {"
 
 				\tcudaEvent_t start, stop;
 				\tcudaEventCreate(&start);
 				\tcudaEventCreate(&stop);
-				\tcudaEventRecord(start);
+				\tcudaEventRecord(start{stream_arg});
 			"})
 		} else {
 			None
@@ -50,8 +55,9 @@ impl CompileComponent for Timer {
 	}
 	fn post_main(&self) -> Option<String> {
 		if self.active {
+			let stream_arg = self.stream.clone().map_or("".to_string(), |s| format!(", {s}"));
 			Some(formatdoc! {"
-				\tcudaEventRecord(stop);
+				\tcudaEventRecord(stop{stream_arg});
 				\tcudaEventSynchronize(stop);
 				\tfloat ms = 0;
 				\tcudaEventElapsedTime(&ms, start, stop);

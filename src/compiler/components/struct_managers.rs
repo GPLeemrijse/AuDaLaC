@@ -260,16 +260,19 @@ impl CompileComponent for StructManagers<'_> {
 
 			registers.push_str(&format!{"\tCHECK(cudaHostRegister(&host_{struct_name}, sizeof({struct_name}), cudaHostRegisterDefault));\n"});
 			inits.push_str(
-				&format! {"\thost_{struct_name}.initialise(&structs[{idx}], {n_insts});\n"},
+				&format! {"\tinst_size {struct_name}_capacity = {n_insts};\n"},
+			);
+			inits.push_str(
+				&format! {"\thost_{struct_name}.initialise(&structs[{idx}], {struct_name}_capacity);\n"},
 			);
 			to_device.push_str(&format!{"\t{struct_name} * const loc_{s_name_lwr} = ({struct_name}*)host_{struct_name}.to_device();\n"});
 			memcpy.push_str(&format!{"\tCHECK(cudaMemcpyToSymbol({s_name_lwr}, &loc_{s_name_lwr}, sizeof({struct_name} * const)));\n"});
 
 			if executors.get(struct_name).is_some() {
 				max_executor_str = if max_executor_str == "0".to_string() {
-					n_insts
+					format!("{struct_name}_capacity")
 				} else {
-					format!("max({n_insts}, {max_executor_str})")
+					format!("max({struct_name}_capacity, {max_executor_str})")
 				};
 			}
 		}

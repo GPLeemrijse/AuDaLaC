@@ -164,7 +164,9 @@ impl OnHostSchedule<'_> {
 
 	fn step_as_kernel(&self, strct: &String, step: &String) -> String {
 		let kernel_name = self.kernel_name(strct, step);
-		let func_header = format!("__global__ __launch_bounds__(THREADS_PER_BLOCK) void {kernel_name}");
+		
+		let launch_bounds = if self.dynamic_block_size { "" } else {" __launch_bounds__(THREADS_PER_BLOCK)"};
+		let func_header = format!("__global__{launch_bounds} void {kernel_name}");
 
 		let params = vec!["inst_size nrof_instances".to_string(), "int fp_lvl".to_string(), "iter_idx_t iter_idx".to_string()];
 

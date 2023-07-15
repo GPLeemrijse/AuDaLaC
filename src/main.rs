@@ -51,7 +51,7 @@ fn main() {
         (@arg dynamic_bs: -d --dynamic "Dynamically determine the block size.")
         (@arg time: -t --time "Print timing information.")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
-        (@arg schedule_strat: -S --schedule_strat possible_value("in-kernel") possible_value("on-host") default_value("in-kernel") "Which schedule strategy to use.")
+        (@arg schedule_strat: -S --schedule_strat possible_value("graph-launch") possible_value("in-kernel") possible_value("on-host") default_value("in-kernel") "Which schedule strategy to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("relaxed") "Which memory order to use.")
         (@arg voting: -v --vote_strat possible_value("on-host-alternating") possible_value("on-host-naive") possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg weak_ld_st: -w --weak_ld_st possible_value("1") possible_value("0") default_value("1") "Use weak loads and stores for non-racing parameters.")
@@ -134,6 +134,9 @@ fn main() {
                         ("on-host", "on-host-alternating") => Box::new(
                             OnHostAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
+                        ("graph-launch", _) => Box::new(
+                            OnHostAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ),
                         _ => panic!(
                             "Voting strategy not found, or combined with wrong schedule strategy."
                         ),
@@ -171,6 +174,10 @@ fn main() {
                             &work_divisor,
                             dynamic_block_size
                         )),
+                        "graph-launch" => Box::new(GraphLaunchSchedule::new(
+                            &program,
+                            &step_transpiler,
+                        )),
                         _ => panic!("Schedule strategy not found."),
                     };
 
@@ -180,7 +187,14 @@ fn main() {
                         &work_divisor,
                         &struct_managers,
                         &*schedule,
-                        &Timer::new(time),
+                        &Timer::new(
+                            time,
+                            if schedule_strat == "in-kernel" {
+                                None
+                            } else {
+                                Some("kernel_stream".to_string())
+                            }
+                        ),
                     ]);
 
                     output_writer

@@ -33,6 +33,11 @@ MP: SCC_MP.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
 	nvcc -arch=sm_60 -dc SCC_MP.cu -I../../../compile_resources/ -O3 --ptxas-options=-v
 	nvcc -arch=sm_60 SCC_MP.o ../../../compile_resources/*.o -o SCC_MP.out -O3
 
+MP_dbg: SCC_MP.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
+	nvcc -arch=sm_60 -g -G -dc ../../../compile_resources/*.cu -odir ../../../compile_resources/
+	nvcc -arch=sm_60 -g -G -dc SCC_MP.cu -I../../../compile_resources/ --ptxas-options=-v
+	nvcc -arch=sm_60 -g -G SCC_MP.o ../../../compile_resources/*.o -o SCC_MP.out
+
 
 run_golden: ./SCC_golden.out $(init)
 	./SCC_golden.out $(init)
