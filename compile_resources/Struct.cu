@@ -51,6 +51,7 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 	this->nrof_parameters = info->parameter_data.size();
 
 	for (int p = 0; p < this->nrof_parameters; p++){
+		fprintf(stderr, "Copying parameter %d of %s.\n", p, info->name.c_str());
 		size_t info_param_size = size_of_type(info->parameter_types[p]);
 		size_t actual_param_size = this->param_size(p);
 
@@ -69,18 +70,17 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 				)
 			);
 		} else if (actual_param_size > info_param_size) {
-			fprintf(stderr, "Strided copy for param %d of %s\n", p, info->name.c_str());
-			for(int i = 0; i < info->nrof_instances; i++){
-				// Copy initial instances
-				CHECK(
-					cudaMemcpyAsync(
-						&((uint8_t*)params[p])[actual_param_size * i],
-						&((uint8_t*)info->parameter_data[p])[info_param_size * i],
-						info_param_size,
-						cudaMemcpyHostToDevice
-					)
-				);
-			}
+			CHECK(
+				cudaMemcpy2DAsync(
+					(uint8_t*)params[p],
+					actual_param_size,
+					(uint8_t*)info->parameter_data[p],
+					info_param_size,
+					1,
+					info->nrof_instances,
+					cudaMemcpyHostToDevice
+				)
+			);
 		} else {
 			throw std::bad_alloc();
 		}
