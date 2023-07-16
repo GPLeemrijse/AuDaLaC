@@ -15,6 +15,7 @@ pub struct GraphLaunchSchedule<'a> {
 	program: &'a Program,
 	step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
 	step_transpiler: &'a StepBodyCompiler<'a>,
+	use_smem: bool,
 }
 
 impl GraphLaunchSchedule<'_> {
@@ -26,6 +27,7 @@ impl GraphLaunchSchedule<'_> {
 			program,
 			step_to_structs: get_step_to_structs(program),
 			step_transpiler: step_transpiler,
+			use_smem: true,
 		}
 	}
 
@@ -82,13 +84,15 @@ impl GraphLaunchSchedule<'_> {
 			let update_kernel = if !constructors.is_empty() {
 				constructors.sort();
 				let kernel = format!("update_nrof_{}", constructors.join("_"));
-				format!("\n{indent}schedule.add_step((void*){kernel}, 1);")
+				format!("\n{indent}schedule.add_step((void*){kernel}, 1, 0);")
 			} else {
 				String::new()
 			};
 
+			let smem = if self.use_smem { 6 /* 2*bool + inst_size */ } else {0};
+
 			formatdoc!{"
-				{indent}schedule.add_step((void*){kernel}, {strct_name}_capacity);{update_kernel}"
+				{indent}schedule.add_step((void*){kernel}, {strct_name}_capacity, {smem});{update_kernel}"
 			}
 		} else {
 			unreachable!();
@@ -133,27 +137,57 @@ impl GraphLaunchSchedule<'_> {
 		let params = vec!["int fp_lvl".to_string()];
 
 		let kernel_signature = format_signature(&func_header, &params, 0);
+		if self.use_smem {
+			formatdoc! {"
+				{kernel_signature}
+					const grid_group grid = this_grid();
+					const thread_block block = this_thread_block();
+					__shared__ bool stable;
+					__shared__ bool previously_stable;
+					__shared__ inst_size nrof_instances; 
+					
+					if(block.thread_rank() == 0){{
+						stable = fp_stack[fp_lvl];
+						previously_stable = stable;
+						nrof_instances = {strct_n_lwr}->nrof_instances();
+					}}
+					__syncthreads();
+					
+					RefType self = grid.thread_rank();
+					if (self < nrof_instances){{
+						{f_name}(self, &stable);
+					}}
 
-		let execute_step = formatdoc!{"
-			\tinst_size nrof_instances = {strct_n_lwr}->nrof_instances();
-			\tRefType self = grid.thread_rank();
-			\tif (self >= nrof_instances)
-			\t\treturn;
-			\t{f_name}(self, &stable);",
-			f_name = self.step_transpiler.execute_f_name(strct, step),
-			strct_n_lwr = strct.to_lowercase()
-		};
-
-		formatdoc! {"
-			{kernel_signature}
-				const grid_group grid = this_grid();
-				bool stable = true;
-			{execute_step}
-				if(!stable && fp_lvl >= 0){{
-					clear_stack(fp_lvl);
+					__syncthreads();
+					
+					if(block.thread_rank() == 0 && !stable && previously_stable && fp_lvl >= 0){{
+						clear_stack(fp_lvl);
+					}}
 				}}
-			}}
-		"}
+			",
+				f_name = self.step_transpiler.execute_f_name(strct, step),
+				strct_n_lwr = strct.to_lowercase()
+			}
+		} else {
+			formatdoc! {"
+				{kernel_signature}
+					const grid_group grid = this_grid();
+					inst_size nrof_instances = {strct_n_lwr}->nrof_instances();
+					bool stable = true;
+					RefType self = grid.thread_rank();
+					if (self < nrof_instances){{
+						{f_name}(self, &stable);
+					}}
+					
+					if(!stable && fp_lvl >= 0){{
+						clear_stack(fp_lvl);
+					}}
+				}}
+			",
+				f_name = self.step_transpiler.execute_f_name(strct, step),
+				strct_n_lwr = strct.to_lowercase()
+			}
+		}
 	}
 
 	fn relaunch_kernel(&self) -> String {

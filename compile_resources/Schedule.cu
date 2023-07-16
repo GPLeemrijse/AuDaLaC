@@ -1,7 +1,7 @@
 #include "Schedule.h"
 #include "ADL.h"
 
-void Schedule::add_step(void* kernel, inst_size capacity) {
+void Schedule::add_step(void* kernel, inst_size capacity, size_t smem) {
 	int min_grid_size;
 	int dyn_block_size;
 	cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
@@ -15,7 +15,7 @@ void Schedule::add_step(void* kernel, inst_size capacity) {
 	k_params.func = kernel;
 	k_params.gridDim = gridDim;
 	k_params.blockDim = blockDim;
-	k_params.sharedMemBytes = 0;
+	k_params.sharedMemBytes = smem;
 	void* args[1] = {
 		(void*)&current->lvl
 	};

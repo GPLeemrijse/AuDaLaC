@@ -35,7 +35,7 @@ class Schedule {
 public:
 	Schedule(void* launch_kernel, void* relaunch_fp_kernel);
 
-	void add_step(void* kernel, inst_size capacity);
+	void add_step(void* kernel, inst_size capacity, size_t smem);
 
 	void begin_fixpoint(void);
 	void end_fixpoint(void);
