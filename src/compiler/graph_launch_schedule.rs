@@ -89,7 +89,7 @@ impl GraphLaunchSchedule<'_> {
 				String::new()
 			};
 
-			let smem = if self.use_smem { 6 /* 2*bool + inst_size */ } else {0};
+			let smem = if self.use_smem { 32 * 4 /* 32*bool*/ } else {0};
 
 			formatdoc!{"
 				{indent}schedule.add_step((void*){kernel}, {strct_name}_capacity, {smem});{update_kernel}"
@@ -141,27 +141,29 @@ impl GraphLaunchSchedule<'_> {
 			formatdoc! {"
 				{kernel_signature}
 					const grid_group grid = this_grid();
-					const thread_block block = this_thread_block();
-					__shared__ bool stable;
-					__shared__ bool previously_stable;
-					__shared__ inst_size nrof_instances; 
-					
-					if(block.thread_rank() == 0){{
-						stable = fp_stack[fp_lvl];
-						previously_stable = stable;
-						nrof_instances = {strct_n_lwr}->nrof_instances();
-					}}
-					__syncthreads();
-					
-					RefType self = grid.thread_rank();
-					if (self < nrof_instances){{
-						{f_name}(self, &stable);
+					const uint bl_rank = this_thread_block().thread_rank();
+					inst_size nrof_instances = {strct_n_lwr}->nrof_instances();
+
+					__shared__ uint32_t stable[32];
+					if(bl_rank < 32){{
+						stable[bl_rank] = (uint32_t)true;
 					}}
 
 					__syncthreads();
-					
-					if(block.thread_rank() == 0 && !stable && previously_stable && fp_lvl >= 0){{
-						clear_stack(fp_lvl);
+
+					RefType self = grid.thread_rank();
+					if (self < nrof_instances){{
+						{f_name}(self, (bool*)&stable[bl_rank % 32]);
+					}}
+
+					if(fp_lvl >= 0){{
+						__syncthreads();
+						if(bl_rank < 32){{
+							bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
+							if(bl_rank == 0 && !stable_reduced){{
+								clear_stack(fp_lvl);
+							}}
+						}}
 					}}
 				}}
 			",
@@ -178,7 +180,7 @@ impl GraphLaunchSchedule<'_> {
 					if (self < nrof_instances){{
 						{f_name}(self, &stable);
 					}}
-					
+
 					if(!stable && fp_lvl >= 0){{
 						clear_stack(fp_lvl);
 					}}
