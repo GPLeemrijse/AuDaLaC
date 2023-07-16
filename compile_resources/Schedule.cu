@@ -102,23 +102,24 @@ cudaGraphExec_t Schedule::Subgraph::instantiate(void* launch_kernel, void* relau
 		last_node = new_node;
 	} // Otherwise an unconditional launch suffices
 	else if (next_to_launch != NULL) {
-		k_params.func = launch_kernel;
-		k_params.gridDim = dim3(1, 1, 1);
-		k_params.blockDim = dim3(1, 1, 1);
-		k_params.sharedMemBytes = 0;
-		void* args[1] = {
-			(void*)&next_to_launch
-		};
-		k_params.kernelParams = args;
-		k_params.extra = NULL;
-
-		cudaGraphNode_t new_node;
+		// If we have nothing to execute, we directly execute the next step
 		if (last_node == NULL){
-			CHECK(cudaGraphAddKernelNode(&new_node, graph, NULL, 0, &k_params));
+			graph_exec = next_to_launch;
+			return graph_exec;
 		} else {
+			cudaGraphNode_t new_node;
+			k_params.func = launch_kernel;
+			k_params.gridDim = dim3(1, 1, 1);
+			k_params.blockDim = dim3(1, 1, 1);
+			k_params.sharedMemBytes = 0;
+			void* args[1] = {
+				(void*)&next_to_launch
+			};
+			k_params.kernelParams = args;
+			k_params.extra = NULL;
 			CHECK(cudaGraphAddKernelNode(&new_node, graph, &last_node, 1, &k_params));
+			last_node = new_node;
 		}
-		last_node = new_node;
 	}
 
 	// The graph is now complete, so we instantiate:
@@ -154,8 +155,14 @@ void Schedule::Subgraph::fill_out_fixpoints(cudaStream_t stream, void* relaunch_
 
 		CHECK(cudaGraphExecKernelNodeSetParams(graph_exec, last_node, &k_params));
 	}
-	// Now that our graph is complete, we upload it.
-	CHECK(cudaGraphUpload(graph_exec, stream));
+	/*	Now that our graph is complete, we upload it.
+		We prevent uploading twice if we
+		are directly launching next's graph.
+	*/
+	if(next == NULL || graph_exec != next->graph_exec) {
+		CHECK(cudaGraphUpload(graph_exec, stream));
+	}
+
 	if(next){
 		next->fill_out_fixpoints(stream, relaunch_fp_kernel);
 	}
