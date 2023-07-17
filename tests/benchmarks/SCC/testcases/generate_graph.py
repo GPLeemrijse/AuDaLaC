@@ -59,6 +59,16 @@ with open(adl_init_file, "w") as graph_f:
 	for (u, v) in graph.edges:
 		graph_f.write(f"{u+1} {v+1}\n");
 
-	graph_f.write(f"Node instances {n} {n}\n");
-	for i in range(n):
-		graph_f.write(f"0 {i+1} {i+1} 1 1\n");
+	graph_f.write(f"Node instances 0 {n}\n");
+
+
+# Write SCC_col.adl ADL init file to disk
+adl_init_file = os.path.join(out_dir, f"random_col_{n}_{m}.init");
+with open(adl_init_file, "w") as graph_f:
+	graph_f.write("ADL structures 2\nEdge Node Node Bool\nNode Node Node\n");
+	graph_f.write(f"Edge instances {m} {m}\n");
+
+	for (u, v) in graph.edges:
+		graph_f.write(f"{u+1} {v+1} 0\n");
+
+	graph_f.write(f"Node instances 0 {n}\n");
