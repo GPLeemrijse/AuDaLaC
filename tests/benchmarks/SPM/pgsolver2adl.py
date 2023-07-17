@@ -73,6 +73,28 @@ def print_opt_init(output_file_name, nodes, edges, prios):
 
 		out_file.writelines([f"{n.prio} {n.owner} 0 0 0 0 1\n" for (idx, n) in enumerate(nodes)]);
 
+def print_spm2_init(output_file_name, nodes, edges, prios):
+	# Print .init file
+	with open(output_file_name, "w") as out_file:
+		nrof_nodes = len(nodes);
+		nrof_edges = len(edges);
+		out_file.writelines([
+			"ADL structures 2\n",
+			"Edge Node Node Bool Nat Nat Nat Nat\n",
+			"Node Nat Bool Bool Nat Nat Edge\n",
+			f"Edge instances {nrof_edges} {nrof_edges}\n"
+		]);
+
+		# Edges
+		out_file.writelines([f"{u} {v} 0 0 0 {prios[1]} {prios[3]}\n" for (u, v) in edges]);
+
+		# Nodes
+		out_file.writelines([
+			f"Node instances {nrof_nodes} {nrof_nodes}\n",
+		]);
+		out_file.writelines([f"{n.prio} {n.owner} 0 0 0 0\n" for (idx, n) in enumerate(nodes)]);
+
+
 def read_input_file(in_file):
 	file_name = in_file.name.split("/")[-1];
 	if not file_name.endswith(".gm"):
@@ -111,6 +133,7 @@ def main():
 	parser.add_argument('pg_files', type=FileType('r'), nargs='+', help="The pgsolver input file(s).");
 	parser.add_argument('output_dir', help="The output directory.");
 	parser.add_argument('-o', action='store_true', dest='opt', help="Use optimised SPM alg.");
+	parser.add_argument('-n', action='store_true', dest='new_alg', help="Use new SPM alg.");
 	parser.add_argument('-f', action='store_true', dest='force', help="Do not confirm before generating.");
 
 	args = parser.parse_args()
@@ -128,7 +151,10 @@ def main():
 		if (nodes, edges, prios) == ([], [], []):
 			continue;
 		
-		if args.opt:
+		if args.new_alg:
+			output_file_name = os.path.join(args.output_dir, name[:-3] + "_spm2.init");
+			print_spm2_init(output_file_name, nodes, edges, prios);
+		elif args.opt:
 			output_file_name = os.path.join(args.output_dir, name[:-3] + "_opt.init");
 			print_opt_init(output_file_name, nodes, edges, prios);
 		else:
