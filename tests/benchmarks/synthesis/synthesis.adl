@@ -1,10 +1,5 @@
 struct State(X_m : Bool, X_0 : Bool, X_k : Bool, N : Bool, B : Bool, Y : Bool) {
 
-	init_X_k {
-		// X_k = X
-		X_k := true;
-	}
-
 	init_N {
 		// N_0^k = X_m ∩ X^k
 		N := X_m && X_k;
@@ -49,8 +44,7 @@ struct UncontrollableEvent(x : State, y : State){
 	}
 }
 
-init_X_k
-< Fix(
+Fix(
 	init_N
 	< Fix(
 		compute_nonblocking
