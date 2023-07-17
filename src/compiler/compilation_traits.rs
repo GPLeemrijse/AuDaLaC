@@ -40,6 +40,7 @@ pub trait CompileComponent {
 pub trait FPStrategy {
     fn global_decl(&self) -> String;
     fn top_of_kernel_decl(&self) -> String;
+    fn post_kernel(&self) -> String;
     fn pre_iteration(&self, lvl: usize) -> String;
     fn post_iteration(&self, lvl: usize) -> String;
     fn is_stable(&self, lvl: usize) -> String;

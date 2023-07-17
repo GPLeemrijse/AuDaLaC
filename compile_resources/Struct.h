@@ -25,6 +25,8 @@ public:
 	// other gets values of this
 	__host__ __device__ bool sync_nrof_instances(Struct* other);
 
+	__host__ size_t created_instances_offset(void);
+
 	// WILL BE DEPRECATED
 	__host__ __device__ inst_size nrof_instances(void);
 
@@ -38,13 +40,17 @@ public:
 		);
 	}
 
+	__host__ __device__ __inline__ void set_active_to_created(void){
+		active_instances = created_instances.load(cuda::memory_order_relaxed);
+	}
+
 protected:
 	virtual size_t child_size(void) = 0;
 
 	virtual size_t param_size(uint idx) = 0;
 
 	// Keep sequential in memory  (WILL BE DEPRECATED)
-	cuda::atomic<inst_size, cuda::thread_scope_device> active_instances; // How many are part of the current iteration?
+	inst_size active_instances; // How many are part of the current iteration?
 	cuda::atomic<inst_size, cuda::thread_scope_device> instantiated_instances; // How many have been created in total?
 
 	inst_size capacity; // For how many is space allocated?

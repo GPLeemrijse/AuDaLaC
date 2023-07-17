@@ -1,3 +1,5 @@
+$$__device__ uint nrof_components = 1;
+
 struct NodeSet(pivot_f_b : Node,
 			   pivot_f_nb : Node,
 			   pivot_nf_b : Node,
@@ -18,17 +20,20 @@ struct NodeSet(pivot_f_b : Node,
 			if pivot_nf_nb != null then {
 				f_and_b   := NodeSet(null, null, null, null, true , null, null, null);
 				pivot_f_b := null;
+				$$atomicInc(&nrof_components, 0xffffffff);
 			}
 		}
 
 		if pivot_f_nb != null then {
 			f_and_not_b := NodeSet(null, pivot_f_nb, null, null, false, null, null, null);
 			pivot_f_nb := null;
+			$$atomicInc(&nrof_components, 0xffffffff);
 		}
 
 		if pivot_nf_b != null then {
 			not_f_and_b := NodeSet(null, null, pivot_nf_b, null, false, null, null, null);
 			pivot_nf_b := null;
+			$$atomicInc(&nrof_components, 0xffffffff);
 		}
 	}
 
@@ -54,7 +59,7 @@ struct NodeSet(pivot_f_b : Node,
 
 	print_nrof_sets {
 		if this == null then {
-			$$printf("Number of components: %u\n", max(nodeset->nrof_instances2(true), nodeset->nrof_instances2(false)) - 1);
+			$$printf("Nrof components: %u\n", nrof_components);
 		}
 	}
 }
@@ -127,4 +132,4 @@ Fix(pivots_nominate <
 	divide_into_sets_reset_fwd_bwd <
 	initialise_pivot_fwd_bwd <
 	Fix(compute_fwd_bwd)
-) //< print_nrof_sets
+) < print_nrof_sets

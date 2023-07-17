@@ -38,20 +38,6 @@ impl SingleKernelSchedule<'_> {
         }
     }
 
-    fn kernel_parameters(&self, including_self: bool) -> Vec<String> {
-        // Use this version when passing struct managers as kernel parameters
-        // let mut structs = self._get_struct_manager_parameters();
-        let mut structs = vec!["bool* stable".to_string()];
-
-        if including_self {
-            let mut self_and_structs = vec!["const RefType self".to_string()];
-            self_and_structs.append(&mut structs);
-            self_and_structs
-        } else {
-            structs
-        }
-    }
-
     fn kernel_schedule_body(&self) -> String {
         let ind = "\t";
         let stab_stack = self.fp.top_of_kernel_decl();
@@ -144,17 +130,14 @@ impl SingleKernelSchedule<'_> {
             let indent = "\t".repeat(fp_level + 1);
             let struct_name_lwr = struct_name.to_lowercase();
 
-            let func_name;
+            let func_name = self.step_transpiler.execute_f_name(struct_name, step_name);
             let mut counters_to_update : HashSet<&String>;
             if step_name == "print" {
-                func_name = format!("{struct_name}_print");
                 counters_to_update = HashSet::from([struct_name]);
             } else {
                 let strct = self.program.struct_by_name(struct_name).unwrap();
                 let step = strct.step_by_name(step_name).unwrap();
-                func_name = self.step_function_name(strct, step);
                 counters_to_update = constructors(step);
-
                 counters_to_update.insert(struct_name);
             }
 
@@ -185,78 +168,28 @@ impl SingleKernelSchedule<'_> {
     fn step_call_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
         use crate::parser::ast::Schedule::*;
         if let StepCall(step_name, _) = sched {
-            let structs = self.step_to_structs.get(step_name).unwrap();
-            if structs.len() > 1 {
-                unimplemented!(
-                    "Untyped stepcalls with more than 1 implementor are not implemented yet."
+            let mut structs = self.step_to_structs.get(step_name).unwrap().iter();
+
+            let mut combined_sched = TypedStepCall(structs.next()
+                                                          .expect("Need at least one implementor")
+                                                          .name
+                                                          .clone(),
+                                                   step_name.to_string(),
+                                                   (0, 0));
+
+            // Transform into sequence of typed step calls
+            for s in structs {
+                combined_sched = Sequential(
+                    Box::new(TypedStepCall(s.name.clone(), step_name.to_string(), (0, 0))),
+                    Box::new(combined_sched),
+                    (0, 0)
                 );
             }
 
-            // For now fall back on single-struct steps
-            let strct = structs[0];
-            self.typed_step_call_as_c(
-                &TypedStepCall(strct.name.clone(), step_name.to_string(), (0, 0)),
-                fp_level,
-            )
+            self.schedule_as_c(&combined_sched, fp_level)
         } else {
             unreachable!()
         }
-    }
-
-    fn step_as_c_function(&self, strct: &ADLStruct, step: &Step, fp_level: usize) -> String {
-        let func_name = self.step_function_name(strct, step);
-        let func_header = format!("__device__ void {func_name}");
-
-        let params = self.kernel_parameters(true);
-
-        let kernel_signature = format_signature(&func_header, &params, 0);
-
-        let step_body = self
-            .step_transpiler
-            .step_body_as_c(self.program, strct, step);
-
-        formatdoc! {"
-			{kernel_signature}
-				{step_body}
-			}}
-		"}
-    }
-
-    fn print_as_c_function(&self, strct: &ADLStruct, _fp_level: usize) -> String {
-        let func_name = format!("{}_print", strct.name);
-        let func_header = format!("__device__ void {func_name}");
-
-        let params = self.kernel_parameters(true);
-
-        let kernel_signature = format_signature(&func_header, &params, 0);
-
-        let s_name = &strct.name;
-        let s_name_lwr = s_name.to_lowercase();
-        let params_as_fmt = strct
-            .parameters
-            .iter()
-            .map(|(n, t, _)| format!("{n}={}", as_printf(t)))
-            .reduce(|a, n| a + ", " + &n)
-            .unwrap();
-
-        let params_as_expr = strct
-            .parameters
-            .iter()
-            .map(|(n, _, _)| format!(", LOAD({s_name_lwr}->{n}[self])"))
-            .reduce(|a, n| a + &n)
-            .unwrap();
-
-        formatdoc! {"
-			{kernel_signature}
-				if (self != 0) {{
-					printf(\"{s_name}(%u): {params_as_fmt}\\n\", self{params_as_expr});
-				}}
-			}}
-		"}
-    }
-
-    fn step_function_name(&self, strct: &ADLStruct, step: &Step) -> String {
-        format!("{}_{}", strct.name, step.name)
     }
 }
 
@@ -298,26 +231,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
     }
 
     fn functions(&self) -> Option<String> {
-        let mut functions = self.step_transpiler.functions();
-
-        let mut step_functions = self
-            .program
-            .structs
-            .iter()
-            .map(|strct| {
-                std::iter::once(self.print_as_c_function(strct, 666)).chain(
-                    strct
-                        .steps
-                        .iter()
-                        .map(|step| self.step_as_c_function(strct, step, 666)),
-                )
-            })
-            .flatten()
-            .collect::<Vec<String>>();
-
-        functions.append(&mut step_functions);
-
-        Some(functions.join("\n"))
+        Some(self.step_transpiler.functions().join("\n"))
     }
 
     fn kernels(&self) -> Option<String> {
@@ -335,7 +249,7 @@ impl CompileComponent for SingleKernelSchedule<'_> {
 
     fn pre_main(&self) -> Option<String> {
         let kernel_name = SingleKernelSchedule::KERNEL_NAME;
-        let get_dims = self.work_divisor.get_dims(kernel_name);
+        let get_dims = self.work_divisor.get_dims(kernel_name, true);
 
         let mut result = self.fp.initialise();
         result.push_str(&formatdoc!(

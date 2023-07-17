@@ -69,4 +69,8 @@ impl FPStrategy for NaiveFixpoint {
     fn requires_intra_fixpoint_sync(&self) -> bool {
         false
     }
+
+    fn post_kernel(&self) -> String {
+        String::new()
+    }
 }

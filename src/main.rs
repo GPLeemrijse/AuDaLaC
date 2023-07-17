@@ -48,11 +48,12 @@ fn main() {
         (author: "GPLeemrijse <g.p.leemrijse@student.tue.nl>")
         (about: "Parses \"ADL\" programs")
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
+        (@arg dynamic_bs: -d --dynamic "Dynamically determine the block size.")
         (@arg time: -t --time "Print timing information.")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
-        (@arg schedule_strat: -S --schedule_strat possible_value("in-kernel") possible_value("on-host") default_value("in-kernel") "Which schedule strategy to use.")
+        (@arg schedule_strat: -S --schedule_strat possible_value("graph-launch") possible_value("in-kernel") possible_value("on-host") default_value("in-kernel") "Which schedule strategy to use.")
         (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("relaxed") "Which memory order to use.")
-        (@arg voting: -v --vote_strat possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
+        (@arg voting: -v --vote_strat possible_value("on-host-alternating") possible_value("on-host-naive") possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
         (@arg weak_ld_st: -w --weak_ld_st possible_value("1") possible_value("0") default_value("1") "Use weak loads and stores for non-racing parameters.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofinstances: -N --nrofinstances +takes_value required(false) multiple(true) value_parser(parse_key_val::<String, usize>) "nrof struct instances memory is allocated for.")
@@ -65,6 +66,7 @@ fn main() {
     .get_matches();
 
     let print_ast = args.is_present("print_ast");
+    let dynamic_block_size = args.is_present("dynamic_bs");
     let weak_ld_st = args.value_of("weak_ld_st").unwrap() == "1";
     let time = args.is_present("time");
     let init_file = args.is_present("init_file");
@@ -126,18 +128,28 @@ fn main() {
                         ("in-kernel", "naive-alternating") => Box::new(
                             NaiveAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
+                        ("on-host", "on-host-naive") => Box::new(
+                            OnHostNaiveFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ),
+                        ("on-host", "on-host-alternating") => Box::new(
+                            OnHostAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ),
+                        ("graph-launch", _) => Box::new(
+                            OnHostAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ),
                         _ => panic!(
                             "Voting strategy not found, or combined with wrong schedule strategy."
                         ),
                     };
 
                     let step_transpiler =
-                        StepBodyCompiler::new(&type_info, true, print_unstable, weak_ld_st, &memorder);
+                        StepBodyCompiler::new(&type_info, true, print_unstable, weak_ld_st, &memorder, &program);
 
                     let work_divisor = WorkDivisor::new(
-                        threads_per_block, // tpb
+                        threads_per_block,
                         DivisionStrategy::Dynamic,
                         print_unstable,
+                        schedule_strat == "on-host", // We inline the executeStep function with the on-host schedule
                     );
 
                     let struct_managers = StructManagers::new(
@@ -160,6 +172,11 @@ fn main() {
                             &*fp_strat,
                             &step_transpiler,
                             &work_divisor,
+                            dynamic_block_size
+                        )),
+                        "graph-launch" => Box::new(GraphLaunchSchedule::new(
+                            &program,
+                            &step_transpiler,
                         )),
                         _ => panic!("Schedule strategy not found."),
                     };
@@ -170,7 +187,14 @@ fn main() {
                         &work_divisor,
                         &struct_managers,
                         &*schedule,
-                        &Timer::new(time),
+                        &Timer::new(
+                            time,
+                            if schedule_strat == "in-kernel" {
+                                None
+                            } else {
+                                Some("kernel_stream".to_string())
+                            }
+                        ),
                     ]);
 
                     output_writer

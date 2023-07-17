@@ -51,6 +51,8 @@ namespace InitFile {
 
         uint line_nr = 0;
 
+        fprintf(stderr, "Reading .init file.\n");
+
         std::string line;
         std::getline(infile, line);
         

@@ -17,6 +17,10 @@ __host__ void Struct::free(void) {
 	}
 }
 
+__host__ size_t Struct::created_instances_offset(void) {
+	return ((size_t)(&this->created_instances) - (size_t)this);
+}
+
 __host__ void* Struct::to_device(void* allocated_ptr) {
 	void* device_ptr;
 	size_t s = child_size();
@@ -47,6 +51,7 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 	this->nrof_parameters = info->parameter_data.size();
 
 	for (int p = 0; p < this->nrof_parameters; p++){
+		fprintf(stderr, "Copying parameter %d of %s.\n", p, info->name.c_str());
 		size_t info_param_size = size_of_type(info->parameter_types[p]);
 		size_t actual_param_size = this->param_size(p);
 
@@ -65,18 +70,17 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 				)
 			);
 		} else if (actual_param_size > info_param_size) {
-			fprintf(stderr, "Strided copy for param %d of %s\n", p, info->name.c_str());
-			for(int i = 0; i < info->nrof_instances; i++){
-				// Copy initial instances
-				CHECK(
-					cudaMemcpyAsync(
-						&((uint8_t*)params[p])[actual_param_size * i],
-						&((uint8_t*)info->parameter_data[p])[info_param_size * i],
-						info_param_size,
-						cudaMemcpyHostToDevice
-					)
-				);
-			}
+			CHECK(
+				cudaMemcpy2DAsync(
+					(uint8_t*)params[p],
+					actual_param_size,
+					(uint8_t*)info->parameter_data[p],
+					info_param_size,
+					1,
+					info->nrof_instances,
+					cudaMemcpyHostToDevice
+				)
+			);
 		} else {
 			throw std::bad_alloc();
 		}
@@ -101,7 +105,7 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 }
 
 __host__ __device__ inst_size Struct::nrof_instances(void){
-	return active_instances.load(cuda::memory_order_seq_cst);
+	return active_instances;
 }
 
 __host__ __device__ inst_size Struct::nrof_instances2(bool step_parity){
@@ -109,7 +113,7 @@ __host__ __device__ inst_size Struct::nrof_instances2(bool step_parity){
 }
 
 __host__ __device__ inst_size Struct::difference(void){
-	return instantiated_instances.load(cuda::memory_order_seq_cst) - active_instances.load(cuda::memory_order_seq_cst);
+	return instantiated_instances.load(cuda::memory_order_seq_cst) - active_instances;
 }
 
 /* Sets own active instances to all instantiated instances.
@@ -119,11 +123,11 @@ __host__ __device__ inst_size Struct::difference(void){
 __host__ __device__ bool Struct::sync_nrof_instances(Struct* other) {
 	// First sync own active instances
 	inst_size instantiated_instances = this->instantiated_instances.load(cuda::memory_order_seq_cst);
-	inst_size old_active_instances = this->active_instances.load(cuda::memory_order_seq_cst);
+	inst_size old_active_instances = this->active_instances;
 	bool differ = instantiated_instances != old_active_instances;
 
 	if (differ) {
-		this->active_instances.store(instantiated_instances, cuda::memory_order_seq_cst);
+		this->active_instances = instantiated_instances;
 	}
 
 	#ifdef __CUDA_ARCH__
@@ -131,7 +135,7 @@ __host__ __device__ bool Struct::sync_nrof_instances(Struct* other) {
 		memcpy(
 			&other->active_instances, // dst
 			&this->active_instances,
-			sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>) * 2
+			sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>) + sizeof(inst_size)
 		);
 	#else
 		/*NOTE: Also copies to instantiated_instances, so keep those sequential in memory. */
@@ -139,7 +143,7 @@ __host__ __device__ bool Struct::sync_nrof_instances(Struct* other) {
 			cudaMemcpy(
 				&other->active_instances, // dst
 				&this->active_instances,
-				sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>) * 2,
+				sizeof(cuda::atomic<inst_size, cuda::thread_scope_device>) + sizeof(inst_size),
 				cudaMemcpyHostToDevice
 			)
 		);
