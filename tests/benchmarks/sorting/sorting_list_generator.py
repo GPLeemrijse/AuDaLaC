@@ -17,7 +17,7 @@ def main():
 	for n in args.N:
 		nums = random.sample(range(-1000000, 1000000), n);
 
-		output_file_name = os.path.join(args.output_dir, f"prefix_sum_{n}.init");
+		output_file_name = os.path.join(args.output_dir, f"sorting_{n}.init");
 
 		with open(output_file_name, "w") as out_file:
 			out_file.writelines([
