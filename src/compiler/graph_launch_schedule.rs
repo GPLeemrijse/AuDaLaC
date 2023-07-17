@@ -355,8 +355,9 @@ impl CompileComponent for GraphLaunchSchedule<'_> {
 
 
 		result.push_str(&formatdoc!{"
+
 			\tcudaGraphExec_t graph_exec = schedule.instantiate(kernel_stream);
-			\tschedule.print();"
+			//\tschedule.print();"
 		});
 
 		Some(result)
