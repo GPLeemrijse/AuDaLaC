@@ -6,11 +6,10 @@ $$__device__ uint nrof_odd_wins = 0;
 struct Node(p: Nat, is_odd: Bool, rho_top: Bool, rho_1: Nat, rho_3: Nat, cand: Edge){
 	lift {
 		if cand != null then {
-			Bool copy := (cand.prog_top && !rho_top) ||
-						 (cand.prog_top == rho_top && cand.prog_1 > rho_1) ||
-						 (cand.prog_top == rho_top && cand.prog_1 == rho_1 && cand.prog_3 > rho_3);
-
-			if copy then {
+			// Copy candidate if it is lexicographically larger
+			if (cand.prog_top != rho_top && cand.prog_top) ||
+			   (cand.prog_top == rho_top && cand.prog_1 > rho_1) ||
+			   (cand.prog_top == rho_top && cand.prog_1 == rho_1 && cand.prog_3 > rho_3) then {
 				rho_top := cand.prog_top;
 				rho_1 := cand.prog_1;
 				rho_3 := cand.prog_3;
@@ -20,6 +19,7 @@ struct Node(p: Nat, is_odd: Bool, rho_top: Bool, rho_1: Nat, rho_3: Nat, cand: E
 
 	count_odd {
 		if this != null && rho_top then {
+			$$printf("Node %u won by odd.\n", self);
 			$$atomicInc(&nrof_odd_wins, 0xffffffff);
 		}
 	}
@@ -71,10 +71,10 @@ struct Edge(v: Node, w: Node, prog_top: Bool, prog_1: Nat, prog_3: Nat, max1: Na
 		}
 
 		// If we are w's candidate and we changed, a new vote is in order.
-		if w.cand == this then {
+		if v.cand == this then {
 			Bool changed := m_top != prog_top || prog_1 != m_1 || prog_3 != m_3;
 			if changed then {
-				w.cand := null;
+				v.cand := null;
 			}
 		}
 		prog_top := m_top;
@@ -83,30 +83,30 @@ struct Edge(v: Node, w: Node, prog_top: Bool, prog_1: Nat, prog_3: Nat, max1: Na
 	}
 
 	minmax_top {
-		if w.cand == null || (
-			/*min*/	(!w.is_odd &&  w.cand.prog_top && !prog_top) ||
-			/*max*/	( w.is_odd && !w.cand.prog_top &&  prog_top)
+		if v.cand == null || (
+			/*min*/	(!v.is_odd &&  v.cand.prog_top && !prog_top) ||
+			/*max*/	( v.is_odd && !v.cand.prog_top &&  prog_top)
 			) then {
-			w.cand := this;
+			v.cand := this;
 		}
 	}
 
 	minmax_1 {
-		if w.cand.prog_top == prog_top && (
-			/*min*/	(!w.is_odd && w.cand.prog_1 > prog_1) ||
-			/*max*/	( w.is_odd && w.cand.prog_1 < prog_1)
+		if v.cand.prog_top == prog_top && (
+			/*min*/	(!v.is_odd && v.cand.prog_1 > prog_1) ||
+			/*max*/	( v.is_odd && v.cand.prog_1 < prog_1)
 			) then {
-			w.cand := this;
+			v.cand := this;
 		}
 	}
 
 	minmax_3 {
-		if w.cand.prog_top == prog_top &&
-		   w.cand.prog_1   == prog_1   && (
-			/*min*/	(!w.is_odd && w.cand.prog_3 > prog_3) ||
-			/*max*/	( w.is_odd && w.cand.prog_3 < prog_3)
+		if v.cand.prog_top == prog_top &&
+		   v.cand.prog_1   == prog_1   && (
+			/*min*/	(!v.is_odd && v.cand.prog_3 > prog_3) ||
+			/*max*/	( v.is_odd && v.cand.prog_3 < prog_3)
 			) then {
-			w.cand := this;
+			v.cand := this;
 		}
 	}
 }

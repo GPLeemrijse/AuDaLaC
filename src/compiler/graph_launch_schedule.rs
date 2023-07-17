@@ -79,8 +79,12 @@ impl GraphLaunchSchedule<'_> {
 		if let TypedStepCall(strct_name, step_name, _) = typedstepcall {
 			let kernel = self.kernel_name(strct_name, step_name);
 			let indent = "\t".repeat(fp_lvl + 1);
-			let step = self.program.step_by_name(strct_name, step_name).unwrap();
-			let mut constructors : Vec<String> = constructors(step).into_iter().cloned().collect();
+			let step = self.program.step_by_name(strct_name, step_name);
+			let mut constructors : Vec<String> = if step.is_none() {
+                Vec::new()
+            } else {
+                constructors(step.unwrap()).into_iter().cloned().collect()
+            };
 			let update_kernel = if !constructors.is_empty() {
 				constructors.sort();
 				let kernel = format!("update_nrof_{}", constructors.join("_"));
@@ -137,6 +141,30 @@ impl GraphLaunchSchedule<'_> {
 		let params = vec!["int fp_lvl".to_string()];
 
 		let kernel_signature = format_signature(&func_header, &params, 0);
+
+
+		let clear_fp = if fixpoint_depth(&self.program.schedule) == 0 {
+			String::new()
+		} else if self.use_smem {
+			formatdoc!{"
+				\tif(fp_lvl >= 0){{
+				\t\t__syncthreads();
+				\t\tif(bl_rank < 32){{
+				\t\t\tbool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
+				\t\t\tif(bl_rank == 0 && !stable_reduced){{
+				\t\t\t\tclear_stack(fp_lvl);
+				\t\t\t}}
+				\t\t}}
+				\t}}
+			"}
+		} else {
+			formatdoc!{"
+				\tif(!stable && fp_lvl >= 0){{
+				\t\tclear_stack(fp_lvl);
+				\t}}
+			"}
+		};
+
 		if self.use_smem {
 			formatdoc! {"
 				{kernel_signature}
@@ -156,15 +184,7 @@ impl GraphLaunchSchedule<'_> {
 						{f_name}(self, (bool*)&stable[bl_rank % 32]);
 					}}
 
-					if(fp_lvl >= 0){{
-						__syncthreads();
-						if(bl_rank < 32){{
-							bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-							if(bl_rank == 0 && !stable_reduced){{
-								clear_stack(fp_lvl);
-							}}
-						}}
-					}}
+				{clear_fp}
 				}}
 			",
 				f_name = self.step_transpiler.execute_f_name(strct, step),
@@ -181,9 +201,7 @@ impl GraphLaunchSchedule<'_> {
 						{f_name}(self, &stable);
 					}}
 
-					if(!stable && fp_lvl >= 0){{
-						clear_stack(fp_lvl);
-					}}
+				{clear_fp}
 				}}
 			",
 				f_name = self.step_transpiler.execute_f_name(strct, step),
@@ -270,8 +288,12 @@ impl GraphLaunchSchedule<'_> {
 				self.unique_updates(&combined_sched, updates);
 			}
 			TypedStepCall(struct_name, step_name, _) => {
-				let step = self.program.step_by_name(struct_name, step_name).unwrap();
-				let mut constructors : Vec<String> = constructors(step).into_iter().cloned().collect();
+				let step = self.program.step_by_name(struct_name, step_name);
+				let mut constructors : Vec<String> = if step.is_none() {
+                    Vec::new()
+                } else {
+                    constructors(step.unwrap()).into_iter().cloned().collect()
+                };
 				if !constructors.is_empty() {
 					constructors.sort();
 					updates.insert(constructors);
@@ -303,16 +325,18 @@ impl CompileComponent for GraphLaunchSchedule<'_> {
 
 	fn globals(&self) -> Option<String> {
 		let mut result = self.program.inline_global_cpp.join("\n");
-		result.push_str(&formatdoc!{"
-			
-			__device__ volatile bool fp_stack[FP_DEPTH];
+		if fixpoint_depth(&self.program.schedule) > 0 {
+			result.push_str(&formatdoc!{"
 
-			__device__ void clear_stack(int lvl){{
-				while(lvl >= 0){{
-					fp_stack[lvl--] = false;
+				__device__ volatile bool fp_stack[FP_DEPTH];
+
+				__device__ void clear_stack(int lvl){{
+					while(lvl >= 0){{
+						fp_stack[lvl--] = false;
+					}}
 				}}
-			}}
-		"});
+			"});
+		}
 		Some(result)
 	}
 
@@ -323,31 +347,41 @@ impl CompileComponent for GraphLaunchSchedule<'_> {
 	}
 
 	fn kernels(&self) -> Option<String> {
+		let mut kernels : Vec<String> = self.program
+										.structs
+										.iter()
+										.map(|strct| {
+											strct
+												.steps
+												.iter()
+												.map(|step| self.step_as_kernel(&strct.name, &step.name))
+												.chain(std::iter::once(self.step_as_kernel(&strct.name, &"print".to_string())))
+										})
+										.flatten()
+										.collect();
+
+		if fixpoint_depth(&self.program.schedule) > 0 {
+			kernels.push(self.relaunch_kernel());
+		}
+		kernels.push(self.launch_kernel());
+		kernels.push(self.update_counter_kernels());
+
 		Some(
-			self.program
-				.structs
-				.iter()
-				.map(|strct| {
-					strct
-						.steps
-						.iter()
-						.map(|step| self.step_as_kernel(&strct.name, &step.name))
-						.chain(std::iter::once(self.step_as_kernel(&strct.name, &"print".to_string())))
-				})
-				.flatten()
-				.chain(std::iter::once(self.relaunch_kernel()))
-				.chain(std::iter::once(self.launch_kernel()))
-				.chain(std::iter::once(self.update_counter_kernels()))
-				.collect::<Vec<String>>()
-				.join("\n")
+			kernels.join("\n")
 		)
 	}
 
 	fn pre_main(&self) -> Option<String> {
+		let relaunch_kernel = if fixpoint_depth(&self.program.schedule) > 0 {
+			"(void*)relaunch_fp_kernel"
+		} else {
+			"NULL"
+		};
+
 		let mut result = formatdoc!{"
 			\tcudaStream_t kernel_stream;
 			\tCHECK(cudaStreamCreate(&kernel_stream));
-			\tSchedule schedule((void*)launch_kernel, (void*)relaunch_fp_kernel);
+			\tSchedule schedule((void*)launch_kernel, {relaunch_kernel});
 		
 		"};
 		

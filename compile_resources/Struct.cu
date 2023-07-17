@@ -72,7 +72,7 @@ __host__ void Struct::initialise(InitFile::StructInfo* info, inst_size capacity)
 		} else if (actual_param_size > info_param_size) {
 			CHECK(
 				cudaMemcpy2DAsync(
-					(uint8_t*)params[p],
+					&((uint8_t*)params[p])[actual_param_size],
 					actual_param_size,
 					(uint8_t*)info->parameter_data[p],
 					info_param_size,
