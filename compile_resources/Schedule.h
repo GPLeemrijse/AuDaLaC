@@ -6,12 +6,14 @@ using namespace ADL;
 
 class Schedule {
 	class Subgraph {
+		static int nrof_subgraphs;
 	public:
 		int lvl;
 		Subgraph* next;
 		cudaGraph_t graph;
 		cudaGraphExec_t graph_exec;
 		cudaGraphNode_t last_node;
+		int number;
 		
 		Subgraph* fp_start;
 		
@@ -20,7 +22,9 @@ class Schedule {
 		cudaGraphExec_t instantiate(void* launch_kernel, void* relaunch_fp_kernel);
 		void fill_out_fixpoints(cudaStream_t stream, void* relaunch_fp_kernel);
 
-		void print(uint graph_num);
+		void print_dot(void);
+
+		void print_debug(void);
 
 	};
 
@@ -42,7 +46,9 @@ public:
 
 	cudaGraphExec_t instantiate(cudaStream_t stream);
 
-	void print(void);
+	void print_dot(void);
+
+	void print_debug(void);
 };
 
 #endif

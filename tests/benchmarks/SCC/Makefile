@@ -44,3 +44,14 @@ run_golden: ./SCC_golden.out $(init)
 
 sanitize: ./SCC.out
 	compute-sanitizer SCC.out /tmp/random.init > sanitizer_output
+
+
+COL: SCC_col.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
+	nvcc -arch=sm_60 -dc ../../../compile_resources/*.cu -odir ../../../compile_resources/ -O3
+	nvcc -arch=sm_60 -dc SCC_col.cu -I../../../compile_resources/ --ptxas-options=-v -O3
+	nvcc -arch=sm_60 SCC_col.o ../../../compile_resources/*.o -o SCC_col.out -O3
+
+COL2: SCC_col.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
+	nvcc -arch=sm_60 -dc ../../../compile_resources/*.cu -odir ../../../compile_resources/ -O3
+	nvcc -arch=sm_60 -dc SCC_col2.cu -I../../../compile_resources/ --ptxas-options=-v -O3
+	nvcc -arch=sm_60 SCC_col2.o ../../../compile_resources/*.o -o SCC_col2.out -O3

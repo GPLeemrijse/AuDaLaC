@@ -1,6 +1,8 @@
 #include "Schedule.h"
 #include "ADL.h"
 
+int Schedule::Subgraph::nrof_subgraphs = 0;
+
 void Schedule::add_step(void* kernel, inst_size capacity, size_t smem) {
 	int min_grid_size;
 	int dyn_block_size;
@@ -50,8 +52,12 @@ cudaGraphExec_t Schedule::instantiate(cudaStream_t stream){
 	return result;
 }
 
-void Schedule::print(void){
-	head->print(0);
+void Schedule::print_dot(void){
+	head->print_dot();
+}
+
+void Schedule::print_debug(void){
+	head->print_debug();
 }
 
 Schedule::Schedule(void* launch_kernel, void* relaunch_fp_kernel) :
@@ -62,6 +68,7 @@ Schedule::Schedule(void* launch_kernel, void* relaunch_fp_kernel) :
 
 Schedule::Subgraph::Subgraph(int lvl) : lvl(lvl), next(NULL), last_node(NULL), fp_start(NULL) {
 	CHECK(cudaGraphCreate(&graph, 0));
+	number = ++Subgraph::nrof_subgraphs;
 }
 
 cudaGraphExec_t Schedule::Subgraph::instantiate(void* launch_kernel, void* relaunch_fp_kernel) {
@@ -122,8 +129,12 @@ cudaGraphExec_t Schedule::Subgraph::instantiate(void* launch_kernel, void* relau
 		}
 	}
 
-	// The graph is now complete, so we instantiate:
-	CHECK(cudaGraphInstantiate(&graph_exec, graph, cudaGraphInstantiateFlagDeviceLaunch));
+	// The graph is now complete, so we instantiate (if we have any nodes):
+	if(last_node == NULL){
+		graph_exec = NULL;
+	} else {
+		CHECK(cudaGraphInstantiate(&graph_exec, graph, cudaGraphInstantiateFlagDeviceLaunch));
+	}
 	return graph_exec;
 }
 
@@ -159,7 +170,7 @@ void Schedule::Subgraph::fill_out_fixpoints(cudaStream_t stream, void* relaunch_
 		We prevent uploading twice if we
 		are directly launching next's graph.
 	*/
-	if(next == NULL || graph_exec != next->graph_exec) {
+	if((next == NULL || graph_exec != next->graph_exec) && graph_exec != NULL) {
 		CHECK(cudaGraphUpload(graph_exec, stream));
 	}
 
@@ -168,11 +179,22 @@ void Schedule::Subgraph::fill_out_fixpoints(cudaStream_t stream, void* relaunch_
 	}
 }
 
-void Schedule::Subgraph::print(uint graph_num){
+void Schedule::Subgraph::print_dot(){
 	char dot_file[20];
-	sprintf(dot_file, "graph%u.dot", graph_num);
+	sprintf(dot_file, "graph%u.dot", number);
 	CHECK(cudaGraphDebugDotPrint(graph, dot_file, cudaGraphDebugDotFlagsKernelNodeParams));
 	if(next != NULL) {
-		next->print(graph_num + 1);
+		next->print_dot();
+	}
+}
+
+void Schedule::Subgraph::print_debug(){
+	for (int i = 0; i < lvl + 1; i++){
+		printf("\t");
+	}
+	printf("Subgraph %p(%u): graph=%p, graph_exec=%p, last_node=%p, fp_start=%p, next=%p\n", this, number, graph, graph_exec, last_node, fp_start, next);
+	
+	if(next != NULL) {
+		next->print_debug();
 	}
 }

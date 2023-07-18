@@ -3,8 +3,9 @@ $$__device__ uint nrof_odd_wins = 0;
 
 // V_diamond = even == false
 // V_square = odd == true
-struct Node(p: Nat, is_odd: Bool, rho_top: Bool, rho_1: Nat, rho_3: Nat, cand: Edge){
+struct Node(p: Nat, is_odd: Bool, rho_top: Bool, rho_1: Nat, rho_3: Nat, cand: Edge, dirty: Bool){
 	lift {
+		dirty := false;
 		if cand != null then {
 			// Copy candidate if it is lexicographically larger
 			if (cand.prog_top != rho_top && cand.prog_top) ||
@@ -13,6 +14,7 @@ struct Node(p: Nat, is_odd: Bool, rho_top: Bool, rho_1: Nat, rho_3: Nat, cand: E
 				rho_top := cand.prog_top;
 				rho_1 := cand.prog_1;
 				rho_3 := cand.prog_3;
+				dirty := true;
 			}
 		}
 	}
@@ -32,53 +34,55 @@ struct Node(p: Nat, is_odd: Bool, rho_top: Bool, rho_1: Nat, rho_3: Nat, cand: E
 
 struct Edge(v: Node, w: Node, prog_top: Bool, prog_1: Nat, prog_3: Nat, max1: Nat, max3: Nat) {
 	prog {
-		// Set m s.t. m =_p(v) rho(w)
-		Bool m_top := w.rho_top;
-		Nat m_1 := 0;
-		if v.p >= 1 then {
-			m_1 := w.rho_1;
-		}
-		Nat m_3 := 0;
-		if v.p >= 3 then {
-			m_3 := w.rho_3;
-		}
-		
-		// Increase if v.p is odd
-		if v.p % 2 == 1 then {
-			Bool increased := m_top;// If m = T, then we're done already.
+		if w.dirty then {
+			// Set m s.t. m =_p(v) rho(w)
+			Bool m_top := w.rho_top;
+			Nat m_1 := 0;
+			if v.p >= 1 then {
+				m_1 := w.rho_1;
+			}
+			Nat m_3 := 0;
+			if v.p >= 3 then {
+				m_3 := w.rho_3;
+			}
 			
-			if v.p >= 3 && !increased then {
-				Nat new_3 := 0;
-				if m_3 < max3 then {
-					new_3 := m_3 + 1;
-					increased := true;
+			// Increase if v.p is odd
+			if v.p % 2 == 1 then {
+				Bool increased := m_top;// If m = T, then we're done already.
+				
+				if v.p >= 3 && !increased then {
+					Nat new_3 := 0;
+					if m_3 < max3 then {
+						new_3 := m_3 + 1;
+						increased := true;
+					}
+					m_3 := new_3;
 				}
-				m_3 := new_3;
+
+				if v.p >= 1 && !increased then {
+					Nat new_1 := 0;
+					if m_1 < max1 then {
+						new_1 := m_1 + 1;
+						increased := true;
+					}
+					m_1 := new_1;
+				}
+				if !increased then {
+					m_top := true;
+				}
 			}
 
-			if v.p >= 1 && !increased then {
-				Nat new_1 := 0;
-				if m_1 < max1 then {
-					new_1 := m_1 + 1;
-					increased := true;
+			// If we are w's candidate and we changed, a new vote is in order.
+			if v.cand == this then {
+				Bool changed := m_top != prog_top || prog_1 != m_1 || prog_3 != m_3;
+				if changed then {
+					v.cand := null;
 				}
-				m_1 := new_1;
 			}
-			if !increased then {
-				m_top := true;
-			}
+			prog_top := m_top;
+			prog_1 := m_1;
+			prog_3 := m_3;
 		}
-
-		// If we are w's candidate and we changed, a new vote is in order.
-		if v.cand == this then {
-			Bool changed := m_top != prog_top || prog_1 != m_1 || prog_3 != m_3;
-			if changed then {
-				v.cand := null;
-			}
-		}
-		prog_top := m_top;
-		prog_1 := m_1;
-		prog_3 := m_3;
 	}
 
 	minmax_top {

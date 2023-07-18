@@ -26,7 +26,7 @@ typedef struct {
 	}
 
 	void remove_bad(bool* stable){
-		if(X_k != X_k && !B){
+		if(X_k != (X_k && !B)){
 			X_k = X_k && !B;
 			*stable = false;
 		}
@@ -36,14 +36,15 @@ typedef struct {
 		Y = X_0 && X_k;
 	}
 
-	void print(void){
-		printf("X_m: %s, X_0: %s, X_k: %s, N: %s, B: %s, Y: %s\n",
-			X_m ? "true" : "false",
-			X_0 ? "true" : "false",
-			X_k ? "true" : "false",
-			N ? "true" : "false",
-			B ? "true" : "false",
-			Y ? "true" : "false"
+	void print(int state_num){
+		printf("%04d: X_m: %d, X_0: %d, X_k: %d, N: %d, B: %d, Y: %d\n",
+			state_num,
+			(int)X_m,
+			(int)X_0,
+			(int)X_k,
+			(int)N,
+			(int)B,
+			(int)Y
 		);
 	}
 } state_t;
@@ -58,29 +59,42 @@ int main(int argc, char **argv) {
 	std::vector<state_t> states;
 	int nrof_controllable;
 	std::vector<std::pair<state_t*, state_t*>> controllable;
+	std::vector<std::pair<uint, uint>> controllable_idxs;
 	int nrof_uncontrollable;
 	std::vector<std::pair<state_t*, state_t*>> uncontrollable;
 
 	std::ifstream infile(argv[1]);
 	std::string line;
 	
-	/* Parse until nrof states declaration */
+	/* Parse until nrof states controllable */
 	while(std::getline(infile, line)){
 		if(line.rfind("UncontrollableEvent State State", 0) == 0){
-			int nrof_states1;
-			int nrof_states2;
-			std::string state_str;
-			std::string instances_str;
-			infile >> state_str >> instances_str >> nrof_states1 >> nrof_states2;
-			assert(nrof_states1 == nrof_states2);
-			states.reserve(nrof_states1);
-			nrof_states = nrof_states1;
-			std::getline(infile, line);
 			break;
 		}
 	}
 
+	/* Parse controllable */
+  std::string skip;
+	infile >> skip >> skip >> skip >> nrof_controllable;
+	controllable.reserve(nrof_controllable);
+	controllable_idxs.reserve(nrof_controllable);
+	std::getline(infile, line);
+	for (int c = 0; c < nrof_controllable; c++){
+      std::getline(infile, line);
+      std::stringstream iss(line);
+      uint s_idx;
+      uint t_idx;
+
+      iss >> s_idx
+      		>> t_idx;
+      
+      controllable_idxs.push_back(std::pair(s_idx-1, t_idx-1));
+  }
+
 	/* Parse states */
+	infile >> skip >> skip >> skip >> nrof_states;
+	states.reserve(nrof_states);
+	std::getline(infile, line);
   for (int s = 0; s < nrof_states; s++){
       std::getline(infile, line);
       std::stringstream iss(line);
@@ -94,21 +108,8 @@ int main(int argc, char **argv) {
       		>> states.back().Y;
   }
 
-  /* Parse controllable */
-  std::string skip;
-	infile >> skip >> skip >> skip >> nrof_controllable;
-	controllable.reserve(nrof_controllable);
-	std::getline(infile, line);
-	for (int c = 0; c < nrof_controllable; c++){
-      std::getline(infile, line);
-      std::stringstream iss(line);
-      uint s_idx;
-      uint t_idx;
-
-      iss >> s_idx
-      		>> t_idx;
-      
-      controllable.push_back(std::pair(&states[s_idx-1], &states[t_idx-1]));
+  for(auto &[s, t] : controllable_idxs){
+  	controllable.push_back(std::pair(&states[s], &states[t]));
   }
 
   /* Parse uncontrollable */
@@ -127,6 +128,8 @@ int main(int argc, char **argv) {
       uncontrollable.push_back(std::pair(&states[s_idx-1], &states[t_idx-1]));
   }
 
+  printf("Nrof states: %u, nrof_controllable: %u, nrof_uncontrollable: %u\n", nrof_states, nrof_controllable, nrof_uncontrollable);
+  
 	auto t1 = high_resolution_clock::now();
 	bool X_k_stable = true;
 	do {

@@ -1,3 +1,5 @@
+$$__device__ uint nrof_ys = 0;
+
 struct State(X_m : Bool, X_0 : Bool, X_k : Bool, N : Bool, B : Bool, Y : Bool) {
 
 	init_N {
@@ -19,11 +21,23 @@ struct State(X_m : Bool, X_0 : Bool, X_k : Bool, N : Bool, B : Bool, Y : Bool) {
 		// Y_0 = X_0 ∩ X^k
 		Y := X_0 && X_k;
 	}
+
+	count_if_y {
+		if this != null && Y then {
+			$$atomicInc(&nrof_ys, 0xffffffff);
+		}
+	}
+
+	print_ys {
+		if this == null then {
+			$$printf("Nrof Y's: %u\n", nrof_ys);
+		}
+	}
 }
 
 struct ControllableEvent(x : State, y : State){
 	compute_nonblocking {
-		if x.X_k && y.N then {
+		if x.X_k && y.N && !x.N then {
 			x.N := true;
 		}
 	}
@@ -44,19 +58,18 @@ struct UncontrollableEvent(x : State, y : State){
 	}
 }
 
-Fix(
-	init_N
-	< Fix(
-		compute_nonblocking
-	)
-	< init_B
-	< Fix(
-		compute_bad
-	)
-	<
-	remove_bad
-)
-< init_Y
-< Fix(
-	compute_supervisor
-)
+
+State.print <
+ControllableEvent.print
+// Fix(
+// 	init_N <
+// 	Fix(compute_nonblocking)
+// 	< init_B
+// 	< Fix(compute_bad)
+// 	<
+// 	remove_bad
+// )
+// < init_Y
+// < Fix(compute_supervisor) <
+// count_if_y <
+// print_ys

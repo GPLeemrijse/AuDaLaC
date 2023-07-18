@@ -50,16 +50,16 @@ with open(adl_init_file, "w") as graph_f:
 	graph_f.write(nodes);
 	graph_f.write("NodeSet instances 1 1\n0 0 0 0 0 0 0 0\n");
 
-# Write SCC_MP.adl ADL init file to disk
-adl_init_file = os.path.join(out_dir, f"random_mp_{n}_{m}.init");
-with open(adl_init_file, "w") as graph_f:
-	graph_f.write("ADL structures 2\nEdge Node Node\nNode Bool Node Node Bool Bool\n");
-	graph_f.write(f"Edge instances {m} {m}\n");
+# # Write SCC_MP.adl ADL init file to disk
+# adl_init_file = os.path.join(out_dir, f"random_mp_{n}_{m}.init");
+# with open(adl_init_file, "w") as graph_f:
+# 	graph_f.write("ADL structures 2\nEdge Node Node\nNode Bool Node Node Bool Bool\n");
+# 	graph_f.write(f"Edge instances {m} {m}\n");
 
-	for (u, v) in graph.edges:
-		graph_f.write(f"{u+1} {v+1}\n");
+# 	for (u, v) in graph.edges:
+# 		graph_f.write(f"{u+1} {v+1}\n");
 
-	graph_f.write(f"Node instances 0 {n}\n");
+# 	graph_f.write(f"Node instances 0 {n}\n");
 
 
 # Write SCC_col.adl ADL init file to disk

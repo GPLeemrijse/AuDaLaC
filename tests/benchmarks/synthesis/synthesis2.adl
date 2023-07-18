@@ -1,0 +1,83 @@
+$$__device__ uint nrof_supervisor = 0;
+$$__device__ uint nrof_deleted = 0;
+
+struct State(marked : Bool, initial : Bool, deleted : Bool, m_route : ControllableEvent, supervisor: Bool) {
+
+	init_supervisor {
+		supervisor := initial && !deleted;
+	}
+
+	count_supervisor {
+		if this != null && supervisor then {
+			$$atomicInc(&nrof_supervisor, 0xffffffff);
+		}
+	}
+
+	print_supervisor {
+		if this == null then {
+			$$printf("Nrof supervisor states: %u\n", nrof_supervisor);
+		}
+	}
+
+	count_deleted {
+		if this != null && deleted then {
+			$$atomicInc(&nrof_deleted, 0xffffffff);
+		}
+	}
+
+	print_deleted {
+		if this == null then {
+			$$printf("Nrof deleted states: %u\n", nrof_deleted);
+		}
+	}
+
+	delete_if_cant_reach_marked {
+		if m_route == null && !marked then {
+			deleted := true;
+		}
+	}
+
+	collapse_m_routes {
+		if m_route != null && (m_route.y.deleted || (m_route.y.m_route == null && !m_route.y.marked)) then {
+			m_route := null;
+		}
+	}
+}
+
+struct ControllableEvent(x : State, y : State){
+	expand_m_route {
+		if !x.deleted && !y.deleted then {
+			if x.m_route == null && (y.m_route != null || y.marked) then {
+				x.m_route := this;
+			} 
+		}
+	}
+
+	expand_supervisor {
+		if !x.deleted && !y.deleted then {
+			if x.supervisor then {
+				y.supervisor := true;
+			}
+		}
+	}
+}
+
+struct UncontrollableEvent(x : State, y : State){
+
+	delete_if_del_state_is_reachable_via_uncontrollable {
+		if y.deleted then {
+			x.deleted := true;
+		}
+	}
+}
+
+Fix(
+	Fix(expand_m_route) <
+	delete_if_cant_reach_marked <
+	Fix(delete_if_del_state_is_reachable_via_uncontrollable) <
+	Fix(collapse_m_routes)
+) <
+init_supervisor <
+Fix(expand_supervisor) <
+count_supervisor <
+print_supervisor
