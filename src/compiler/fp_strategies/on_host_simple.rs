@@ -1,17 +1,17 @@
 use crate::compiler::FPStrategy;
 use indoc::formatdoc;
 
-pub struct OnHostNaiveFixpoint {
+pub struct OnHostSimpleFixpoint {
 	fp_depth: usize,
 }
 
-impl OnHostNaiveFixpoint {
-	pub fn new(fp_depth: usize) -> OnHostNaiveFixpoint {
-		OnHostNaiveFixpoint { fp_depth }
+impl OnHostSimpleFixpoint {
+	pub fn new(fp_depth: usize) -> OnHostSimpleFixpoint {
+		OnHostSimpleFixpoint { fp_depth }
 	}
 }
 
-impl FPStrategy for OnHostNaiveFixpoint {
+impl FPStrategy for OnHostSimpleFixpoint {
 	fn global_decl(&self) -> String {
 		let fp_depth = self.fp_depth;
 		let funcs = if fp_depth > 0 {
@@ -61,10 +61,6 @@ impl FPStrategy for OnHostNaiveFixpoint {
 	/* Can only be called from Host */
 	fn is_stable(&self, lvl: usize) -> String {
 		format!{"load_fp_stack_from_host({lvl})"}
-	}
-
-	fn set_unstable(&self, _: usize) -> String {
-		format!("stable = false;")
 	}
 
 	fn top_of_kernel_decl(&self) -> String {

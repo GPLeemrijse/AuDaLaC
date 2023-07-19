@@ -84,10 +84,6 @@ impl FPStrategy for OnHostAlternatingFixpoint {
 		format!{"load_fp_stack_from_host({lvl}, iter_idx, kernel_stream, reset_fp_stream)"}
 	}
 
-	fn set_unstable(&self, _: usize) -> String {
-		format!("stable = false;")
-	}
-
 	fn top_of_kernel_decl(&self) -> String {
 		format!("\n\tbool stable = true;")
 	}
@@ -96,7 +92,7 @@ impl FPStrategy for OnHostAlternatingFixpoint {
 		format! {"\n\tif(!stable && fp_lvl >= 0)\n\t\tclear_stack(fp_lvl, iter_idx);"}
 	}
 
-	fn pre_iteration(&self, lvl: usize) -> String {
+	fn pre_iteration(&self, _: usize) -> String {
 		// let indent = "\t".repeat(lvl + 2);
 		// formatdoc!{"
 		// 	{indent}reset_fp_stack_from_host({lvl}, iter_idx, reset_fp_stream);

@@ -46,3 +46,15 @@ pub fn as_c_literal(l: &Literal) -> String {
         ThisLit => "self".to_string(),
     }
 }
+
+pub fn as_type_enum(t: &Type) -> String {
+    use Type::*;
+    match t {
+        Named(..) => "Ref".to_string(),
+        String => "String".to_string(),
+        Nat => "Nat".to_string(),
+        Int => "Int".to_string(),
+        Bool => "Bool".to_string(),
+        Null => "Ref".to_string(),
+    }
+}

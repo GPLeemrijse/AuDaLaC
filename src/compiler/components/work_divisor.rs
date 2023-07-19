@@ -7,24 +7,18 @@ pub enum DivisionStrategy {
 }
 
 pub struct WorkDivisor {
-	threads_per_block: usize,
 	division_strategy: DivisionStrategy,
-	print_unstable: bool,
-	inline_execute: bool,
+	print_unstable: bool
 }
 
 impl<'a> WorkDivisor {
 	pub fn new(
-		threads_per_block: usize,
 		division_strategy: DivisionStrategy,
-		print_unstable: bool,
-		inline_execute: bool,
+		print_unstable: bool
 	) -> WorkDivisor {
 		WorkDivisor {
-			threads_per_block,
 			division_strategy,
-			print_unstable,
-			inline_execute
+			print_unstable
 		}
 	}
 
@@ -59,17 +53,19 @@ impl<'a> WorkDivisor {
 	fn launch_dims_function(&self) -> String {
 		formatdoc! {"
 			__host__ std::tuple<dim3, dim3> get_launch_dims(inst_size max_nrof_executing_instances, const void* kernel, bool print = false){{
-				int numBlocksPerSm = 0;
-				int tpb = THREADS_PER_BLOCK;
+				int min_grid_size;
+				int dyn_block_size;
+				cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
 
+				int numBlocksPerSm = 0;
 				cudaDeviceProp deviceProp;
 				cudaGetDeviceProperties(&deviceProp, 0);
-				cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, tpb, 0);
+				cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, dyn_block_size, 0);
 			  
 				int max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
-				int wanted_blocks = (max_nrof_executing_instances + tpb - 1)/tpb;
+				int wanted_blocks = (max_nrof_executing_instances + dyn_block_size - 1)/dyn_block_size;
 				int used_blocks = min(max_blocks, wanted_blocks);
-				int nrof_threads = used_blocks * tpb;
+				int nrof_threads = used_blocks * dyn_block_size;
 
 				if (used_blocks == 0) {{
 					fprintf(stderr, \"Could not fit kernel on device!\\n\");
@@ -78,11 +74,11 @@ impl<'a> WorkDivisor {
 
 				if (print) {{
 					fprintf(stderr, \"A maximum of %u instances will execute.\\n\", max_nrof_executing_instances);
-					fprintf(stderr, \"Launching %u/%u blocks of %u threads = %u threads.\\n\", used_blocks, max_blocks, tpb, nrof_threads);
+					fprintf(stderr, \"Launching %u/%u blocks of %u threads = %u threads.\\n\", used_blocks, max_blocks, dyn_block_size, nrof_threads);
 					fprintf(stderr, \"Resulting in max %u instances per thread.\\n\", (max_nrof_executing_instances + nrof_threads - 1) / nrof_threads);
 				}}
 
-				dim3 dimBlock(tpb, 1, 1);
+				dim3 dimBlock(dyn_block_size, 1, 1);
 				dim3 dimGrid(used_blocks, 1, 1);
 				return std::make_tuple(dimGrid, dimBlock);
 			}}
@@ -115,16 +111,10 @@ impl<'a> WorkDivisor {
 			""
 		};
 
-		let inline = if self.inline_execute {
-			"__inline__ "
-		} else {
-			""
-		};
-
 		formatdoc!("
 			typedef void(*step_func)(RefType, bool*);
 			template <step_func Step>
-			{inline}__device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_block block, bool* stable{step_str_par}){{
+			__device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_block block, bool* stable{step_str_par}){{
 			{loop_header}
 
 			{execution}
@@ -142,11 +132,7 @@ impl CompileComponent for WorkDivisor {
 	}
 
 	fn defines(&self) -> Option<String> {
-		let tpb = self.threads_per_block;
-
-		Some(formatdoc! {"
-			#define THREADS_PER_BLOCK {tpb}
-		"})
+		None
 	}
 	fn typedefs(&self) -> Option<String> {
 		None

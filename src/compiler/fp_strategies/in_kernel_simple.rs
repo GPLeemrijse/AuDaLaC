@@ -1,17 +1,17 @@
 use crate::compiler::FPStrategy;
 use indoc::formatdoc;
 
-pub struct NaiveFixpoint {
+pub struct InKernelSimpleFixpoint {
     fp_depth: usize,
 }
 
-impl NaiveFixpoint {
-    pub fn new(fp_depth: usize) -> NaiveFixpoint {
-        NaiveFixpoint { fp_depth }
+impl InKernelSimpleFixpoint {
+    pub fn new(fp_depth: usize) -> InKernelSimpleFixpoint {
+        InKernelSimpleFixpoint { fp_depth }
     }
 }
 
-impl FPStrategy for NaiveFixpoint {
+impl FPStrategy for InKernelSimpleFixpoint {
     fn global_decl(&self) -> String {
         let fp_depth = self.fp_depth;
         let stack_and_clear = if fp_depth > 0 {
@@ -35,10 +35,6 @@ impl FPStrategy for NaiveFixpoint {
 
     fn is_stable(&self, lvl: usize) -> String {
         format!("fp_stack[{lvl}].load(cuda::memory_order_relaxed)")
-    }
-
-    fn set_unstable(&self, _: usize) -> String {
-        format!("stable = false;")
     }
 
     fn top_of_kernel_decl(&self) -> String {

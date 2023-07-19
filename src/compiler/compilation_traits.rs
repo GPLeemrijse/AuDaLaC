@@ -45,8 +45,6 @@ pub trait FPStrategy {
     fn post_iteration(&self, lvl: usize) -> String;
     fn is_stable(&self, lvl: usize) -> String;
 
-    fn set_unstable(&self, lvl: usize) -> String;
-
     fn initialise(&self) -> String;
     fn requires_intra_fixpoint_sync(&self) -> bool;
 }

@@ -13,21 +13,22 @@ use std::collections::HashMap;
 
 pub struct GraphLaunchSchedule<'a> {
 	program: &'a Program,
+	fp: &'a dyn FPStrategy,
 	step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
-	step_transpiler: &'a StepBodyCompiler<'a>,
-	use_smem: bool,
+	step_transpiler: &'a StepBodyCompiler<'a>
 }
 
 impl GraphLaunchSchedule<'_> {
 	pub fn new<'a>(
 		program: &'a Program,
+		fp: &'a dyn FPStrategy,
 		step_transpiler: &'a StepBodyCompiler<'_>,
 	) -> GraphLaunchSchedule<'a> {
 		GraphLaunchSchedule {
 			program,
+			fp,
 			step_to_structs: get_step_to_structs(program),
-			step_transpiler: step_transpiler,
-			use_smem: true,
+			step_transpiler: step_transpiler
 		}
 	}
 
@@ -93,7 +94,7 @@ impl GraphLaunchSchedule<'_> {
 				String::new()
 			};
 
-			let smem = if self.use_smem { 32 * 4 /* 32*bool*/ } else {0};
+			let smem = 32 * 4;// 32 banks of 4 bytes
 
 			formatdoc!{"
 				{indent}schedule.add_step((void*){kernel}, {strct_name}_capacity, {smem});{update_kernel}"
@@ -142,71 +143,22 @@ impl GraphLaunchSchedule<'_> {
 
 		let kernel_signature = format_signature(&func_header, &params, 0);
 
-
-		let clear_fp = if fixpoint_depth(&self.program.schedule) == 0 {
-			String::new()
-		} else if self.use_smem {
-			formatdoc!{"
-				\tif(fp_lvl >= 0){{
-				\t\t__syncthreads();
-				\t\tif(bl_rank < 32){{
-				\t\t\tbool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-				\t\t\tif(bl_rank == 0 && !stable_reduced){{
-				\t\t\t\tclear_stack(fp_lvl);
-				\t\t\t}}
-				\t\t}}
-				\t}}
-			"}
-		} else {
-			formatdoc!{"
-				\tif(!stable && fp_lvl >= 0){{
-				\t\tclear_stack(fp_lvl);
-				\t}}
-			"}
-		};
-
-		if self.use_smem {
-			formatdoc! {"
-				{kernel_signature}
-					const grid_group grid = this_grid();
-					const uint bl_rank = this_thread_block().thread_rank();
-					inst_size nrof_instances = {strct_n_lwr}->nrof_instances();
-
-					__shared__ uint32_t stable[32];
-					if(bl_rank < 32){{
-						stable[bl_rank] = (uint32_t)true;
-					}}
-
-					__syncthreads();
-
-					RefType self = grid.thread_rank();
-					if (self < nrof_instances){{
-						{f_name}(self, (bool*)&stable[bl_rank % 32]);
-					}}
-
-				{clear_fp}
+		formatdoc! {"
+			{kernel_signature}
+				const grid_group grid = this_grid();
+				inst_size nrof_instances = {strct_n_lwr}->nrof_instances();
+				{fp_pre}
+				RefType self = grid.thread_rank();
+				if (self < nrof_instances){{
+					{f_name}(self, stable_ptr);
 				}}
-			",
-				f_name = self.step_transpiler.execute_f_name(strct, step),
-				strct_n_lwr = strct.to_lowercase()
-			}
-		} else {
-			formatdoc! {"
-				{kernel_signature}
-					const grid_group grid = this_grid();
-					inst_size nrof_instances = {strct_n_lwr}->nrof_instances();
-					bool stable = true;
-					RefType self = grid.thread_rank();
-					if (self < nrof_instances){{
-						{f_name}(self, &stable);
-					}}
-
-				{clear_fp}
-				}}
-			",
-				f_name = self.step_transpiler.execute_f_name(strct, step),
-				strct_n_lwr = strct.to_lowercase()
-			}
+				{fp_post}
+			}}
+		",
+			strct_n_lwr = strct.to_lowercase(),
+			fp_pre = self.fp.top_of_kernel_decl(),
+			f_name = self.step_transpiler.execute_f_name(strct, step),
+			fp_post = self.fp.post_kernel(),
 		}
 	}
 
@@ -215,11 +167,12 @@ impl GraphLaunchSchedule<'_> {
 		let func_header = format!("__global__ void {kernel_name}");
 		let params = vec!["int fp_lvl".to_string(), "cudaGraphExec_t restart".to_string(), "cudaGraphExec_t exit".to_string()];
 		let kernel_signature = format_signature(&func_header, &params, 0);
+		let is_stable = self.fp.is_stable(0);
 
 		formatdoc! {"
 			{kernel_signature}
-			\tif(!fp_stack[fp_lvl]){{
-			\t\tfp_stack[fp_lvl] = true;
+			\tif(!{is_stable}){{
+			\t\t{is_stable} = true;
 			\t\tCHECK(cudaGraphLaunch(restart, cudaStreamGraphTailLaunch));
 			\t}}
 			\telse if (exit != NULL){{
@@ -325,18 +278,7 @@ impl CompileComponent for GraphLaunchSchedule<'_> {
 
 	fn globals(&self) -> Option<String> {
 		let mut result = self.program.inline_global_cpp.join("\n");
-		if fixpoint_depth(&self.program.schedule) > 0 {
-			result.push_str(&formatdoc!{"
-
-				__device__ volatile bool fp_stack[FP_DEPTH];
-
-				__device__ void clear_stack(int lvl){{
-					while(lvl >= 0){{
-						fp_stack[lvl--] = false;
-					}}
-				}}
-			"});
-		}
+		result.push_str(&format!("\n{}", self.fp.global_decl()));
 		Some(result)
 	}
 

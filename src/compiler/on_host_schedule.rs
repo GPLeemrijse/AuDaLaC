@@ -2,7 +2,6 @@ use crate::analysis::constructors;
 use crate::utils::format_signature;
 use crate::analysis::get_step_to_structs;
 use crate::compiler::compilation_traits::*;
-use crate::compiler::components::WorkDivisor;
 use crate::compiler::StepBodyCompiler;
 use crate::parser::ast::*;
 use indoc::formatdoc;
@@ -13,26 +12,20 @@ pub struct OnHostSchedule<'a> {
 	program: &'a Program,
 	fp: &'a dyn FPStrategy,
 	step_to_structs: HashMap<&'a String, Vec<&'a ADLStruct>>,
-	step_transpiler: &'a StepBodyCompiler<'a>,
-	work_divisor: &'a WorkDivisor,
-	dynamic_block_size: bool
+	step_transpiler: &'a StepBodyCompiler<'a>
 }
 
 impl OnHostSchedule<'_> {
 	pub fn new<'a>(
 		program: &'a Program,
 		fp: &'a dyn FPStrategy,
-		step_transpiler: &'a StepBodyCompiler<'_>,
-		work_divisor: &'a WorkDivisor,
-		dynamic_block_size: bool
+		step_transpiler: &'a StepBodyCompiler<'_>
 	) -> OnHostSchedule<'a> {
 		OnHostSchedule {
 			program,
 			fp,
 			step_to_structs: get_step_to_structs(program),
-			step_transpiler: step_transpiler,
-			work_divisor,
-			dynamic_block_size
+			step_transpiler: step_transpiler
 		}
 	}
 
@@ -164,33 +157,16 @@ impl OnHostSchedule<'_> {
 
 	fn step_as_kernel(&self, strct: &String, step: &String) -> String {
 		let kernel_name = self.kernel_name(strct, step);
+		let func_header = format!("__global__ void {kernel_name}");
 		
-		let launch_bounds = if self.dynamic_block_size { "" } else {" __launch_bounds__(THREADS_PER_BLOCK)"};
-		let func_header = format!("__global__{launch_bounds} void {kernel_name}");
-
-		let params = vec!["inst_size nrof_instances".to_string(), "int fp_lvl".to_string(), "iter_idx_t iter_idx".to_string()];
-
+		let mut params = vec!["inst_size nrof_instances".to_string(), "int fp_lvl".to_string()];
+		
+		let alternating = self.fp.is_stable(0).contains("iter_idx"); // Hacky...
+		if alternating {
+			params.push("iter_idx_t iter_idx".to_string());
+		}
 		let kernel_signature = format_signature(&func_header, &params, 0);
 
-		let execute_step = if self.dynamic_block_size {
-			// Dynamic block size makes use of larger grid, hence no need to loop
-			formatdoc!{"
-				\tRefType self = grid.thread_rank();
-				\tif (self >= nrof_instances)
-				\t\treturn;
-				\t{f_name}(self, &stable);",
-				f_name = self.step_transpiler.execute_f_name(strct, step)
-			}
-		} else {
-			/*  Otherwise, nrof threads could be lower than nrof instances,
-				hence we wrap it in a loop.
-			*/
-			self.work_divisor
-				.execute_step(
-					&self.step_transpiler.execute_f_name(strct, step),
-					"nrof_instances".to_string()
-				)
-		};
 		let pre = self.fp.top_of_kernel_decl();
 		let post = self.fp.post_kernel();
 
@@ -198,9 +174,13 @@ impl OnHostSchedule<'_> {
 			{kernel_signature}
 				const grid_group grid = this_grid();
 				const thread_block block = this_thread_block();{pre}
-			{execute_step}{post}
-			}}
-		"}
+				RefType self = grid.thread_rank();
+				if (self < nrof_instances) {{
+					{f_name}(self, &stable);
+				}}{post}
+			}}",
+			f_name = self.step_transpiler.execute_f_name(strct, step)
+		}
 	}
 }
 
@@ -215,44 +195,36 @@ impl CompileComponent for OnHostSchedule<'_> {
 
 	fn typedefs(&self) -> Option<String> {
 		let cg = "using namespace cooperative_groups;".to_string();
+		let alternating = self.fp.is_stable(0).contains("iter_idx"); // Hacky...
+
 		let fp = self.fp.global_decl();
+		
+		let num_args = if alternating { 3 } else { 2 };
+		let extra_arg = if alternating {"args[2] = (void*)iter_idx;\n"} else {""};
+		let iter_idx_param = if alternating {", iter_idx_t* iter_idx"} else {""};
 
 		let launch_params = formatdoc!{"
 			class Step {{
 				void* kernel;
-				void* args[3];
+				void* args[{num_args}];
 				dim3 gridDim;
 				dim3 blockDim;
-				uint max_blocks;
 				const char* name;
 				inst_size prev_nrof_instances;
-				bool dynamic;
 
 				public:
-				Step(const char* name, void* kernel, uint tpb, inst_size* nrof_instances, int* fp_lvl, iter_idx_t* iter_idx, bool dynamic)
-					: kernel(kernel), name(name), dynamic(dynamic) {{
+				Step(const char* name, void* kernel, inst_size* nrof_instances, int* fp_lvl{iter_idx_param})
+					: kernel(kernel), name(name) {{
 					args[0] = (void*)nrof_instances;
 					args[1] = (void*)fp_lvl;
-					args[2] = (void*)iter_idx;
+					{extra_arg}
 					prev_nrof_instances = *nrof_instances;
-
-
-					if(dynamic){{
-						int min_grid_size;
-						int dyn_block_size;
-						cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
-						
-						blockDim = dim3(dyn_block_size, 1, 1);
-						max_blocks = UINT_MAX;
-					}} else {{
-						int numBlocksPerSm = 0;
-						cudaDeviceProp deviceProp;
-						cudaGetDeviceProperties(&deviceProp, 0);
-						cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, tpb, 0);
-
-						blockDim = dim3(tpb, 1, 1);
-						max_blocks = deviceProp.multiProcessorCount * numBlocksPerSm;
-					}}
+					int min_grid_size;
+					int dyn_block_size;
+					cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
+					
+					blockDim = dim3(dyn_block_size, 1, 1);
+					
 					update_dims();
 				}}
 
@@ -262,27 +234,12 @@ impl CompileComponent for OnHostSchedule<'_> {
 						prev_nrof_instances = *((inst_size*)args[0]);
 					}}
 
-					if(dynamic){{
-						CHECK(cudaLaunchKernel(kernel, gridDim, blockDim, args, 0, stream));
-					}} else {{
-						CHECK(
-							cudaLaunchCooperativeKernel(
-								kernel,
-								gridDim,
-								blockDim,
-								args,
-								0,
-								stream
-							)
-						);
-					}}
+					CHECK(cudaLaunchKernel(kernel, gridDim, blockDim, args, 128, stream));
 				}}
 
 				private:
 				void update_dims(void) {{
-					int wanted_blocks = (*((inst_size*)args[0]) + blockDim.x - 1) / blockDim.x;
-					int used_blocks = min(max_blocks, wanted_blocks);
-
+					int used_blocks = (*((inst_size*)args[0]) + blockDim.x - 1) / blockDim.x;
 					gridDim.x = used_blocks;
 					//fprintf(stderr, \"Updated %s to %u/%u blocks of %u threads = %u threads.\\n\", name, used_blocks, max_blocks, blockDim.x, used_blocks * blockDim.x);
 				}}
@@ -348,6 +305,7 @@ impl CompileComponent for OnHostSchedule<'_> {
 		result.push_str(&self.fp.initialise());
 
 		// The Step instances
+		let alternating = self.fp.is_stable(0).contains("iter_idx"); // Hacky...
 		let print = "print".to_string();
 		result.push_str(
 			&self.program
@@ -359,19 +317,17 @@ impl CompileComponent for OnHostSchedule<'_> {
 						 .map(|step| &step.name)
 						 .chain(std::iter::once(&print))
 						 .map(|step_name|
+						 	
 							formatdoc!{"
 								\tStep {strct_n}_{step_name}(
 								\t\t\"{strct_n}.{step_name}\",
 								\t\t(void*){kernel},
-								\t\tTHREADS_PER_BLOCK,
 								\t\t&nrof_{strct_n}s,
-								\t\t&fp_lvl,
-								\t\t&iter_idx,
-								\t\t{use_dyn}
+								\t\t&fp_lvl{iter_idx_arg}
 								\t);",
 								strct_n = strct.name,
 								kernel = self.kernel_name(&strct.name, &step_name),
-								use_dyn = self.dynamic_block_size
+								iter_idx_arg = if alternating {",\n\t\t&iter_idx"} else {""},
 							}
 						 )
 				)

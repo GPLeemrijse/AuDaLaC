@@ -10,7 +10,7 @@ pub mod components;
 pub mod fp_strategies;
 
 pub use compilation_traits::*;
-pub use compile::{compile, compile2};
+pub use compile::compile;
 pub use on_host_schedule::OnHostSchedule;
 pub use single_kernel_schedule::SingleKernelSchedule;
 pub use step_body_compiler::StepBodyCompiler;

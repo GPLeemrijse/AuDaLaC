@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate lalrpop_util;
 use crate::analysis::fixpoint_depth;
-use crate::coalesced_compiler::*;
 use crate::compiler::components::*;
 use crate::compiler::fp_strategies::*;
 use crate::compiler::utils::{MemOrder, Scope};
@@ -22,13 +21,12 @@ use std::io::BufWriter;
 use std::io::Write;
 
 use clap::clap_app;
-mod coalesced_compiler;
 mod compiler;
 mod init_file_generator;
+#[allow(dead_code)]
 mod parser;
 mod analysis;
 
-/* https://github.com/clap-rs/clap/blob/master/examples/typed-derive.rs */
 fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error + Send + Sync + 'static>>
 where
     T: std::str::FromStr,
@@ -48,16 +46,39 @@ fn main() {
         (author: "GPLeemrijse <g.p.leemrijse@student.tue.nl>")
         (about: "Parses \"ADL\" programs")
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
-        (@arg dynamic_bs: -d --dynamic "Dynamically determine the block size.")
         (@arg time: -t --time "Print timing information.")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
-        (@arg schedule_strat: -S --schedule_strat possible_value("graph-launch") possible_value("in-kernel") possible_value("on-host") default_value("in-kernel") "Which schedule strategy to use.")
-        (@arg memorder: -m --memorder possible_value("weak") possible_value("relaxed") possible_value("acqrel") possible_value("seqcons") default_value("relaxed") "Which memory order to use.")
-        (@arg voting: -v --vote_strat possible_value("on-host-alternating") possible_value("on-host-naive") possible_value("naive") possible_value("naive-alternating") default_value("naive-alternating") "Which fixpoint stability voting strategy to use.")
-        (@arg weak_ld_st: -w --weak_ld_st possible_value("1") possible_value("0") default_value("1") "Use weak loads and stores for non-racing parameters.")
+        (@arg schedule_strat: -S --schedule_strat
+            possible_value("graph")
+            possible_value("in-kernel")
+            possible_value("on-host")
+            default_value("graph")
+            "Which schedule strategy to use.")
+        (@arg memorder: -m --memorder
+            possible_value("weak")
+            possible_value("relaxed")
+            possible_value("acqrel")
+            possible_value("seqcons")
+            default_value("relaxed")
+            "Which memory order to use.")
+        (@arg voting: -v --vote_strat
+            possible_value("graph-simple")
+            possible_value("graph-shared")
+            possible_value("graph-shared-banks")
+            possible_value("graph-shared-opportunistic")
+            possible_value("on-host-alternating")
+            possible_value("on-host-simple")
+            possible_value("in-kernel-simple")
+            possible_value("in-kernel-alternating")
+            default_value("graph-shared-opportunistic")
+            "Which fixpoint stability voting strategy to use.")
+        (@arg weak_ld_st: -w --weak_ld_st
+            possible_value("1")
+            possible_value("0")
+            default_value("1")
+            "Use weak loads and stores for non-racing parameters.")
         (@arg scope: -s --scope possible_value("system") possible_value("device") default_value("device") "Which scope for atomics to use.")
         (@arg nrofinstances: -N --nrofinstances +takes_value required(false) multiple(true) value_parser(parse_key_val::<String, usize>) "nrof struct instances memory is allocated for.")
-        (@arg threads_per_block: -T --threadsperblock +takes_value default_value("256") value_parser(clap::value_parser!(usize)) "Number of threads per block.")
         (@arg buffersize: -b --buffersize +takes_value default_value("1024") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
         (@arg printunstable: -u --printunstable "Print which step changed the stability stack.")
         (@arg output: -o --output +takes_value "Output file")
@@ -66,7 +87,6 @@ fn main() {
     .get_matches();
 
     let print_ast = args.is_present("print_ast");
-    let dynamic_block_size = args.is_present("dynamic_bs");
     let weak_ld_st = args.value_of("weak_ld_st").unwrap() == "1";
     let time = args.is_present("time");
     let init_file = args.is_present("init_file");
@@ -77,7 +97,6 @@ fn main() {
         .map(|(s, n)| (s.clone(), *n))
         .collect();
     let buffer_size: usize = *args.get_one("buffersize").unwrap();
-    let threads_per_block: usize = *args.get_one("threads_per_block").unwrap();
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output");
     let schedule_strat: &str = args.value_of("schedule_strat").unwrap();
@@ -122,20 +141,29 @@ fn main() {
                     );
                 } else {
                     let fp_strat: Box<dyn FPStrategy> = match (schedule_strat, voting_strat) {
-                        ("in-kernel", "naive") => {
-                            Box::new(NaiveFixpoint::new(fixpoint_depth(&program.schedule)))
+                        ("in-kernel", "in-kernel-simple") => {
+                            Box::new(InKernelSimpleFixpoint::new(fixpoint_depth(&program.schedule)))
                         }
-                        ("in-kernel", "naive-alternating") => Box::new(
-                            NaiveAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ("in-kernel", "in-kernel-alternating") => Box::new(
+                            InKernelAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
-                        ("on-host", "on-host-naive") => Box::new(
-                            OnHostNaiveFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ("on-host", "on-host-simple") => Box::new(
+                            OnHostSimpleFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
                         ("on-host", "on-host-alternating") => Box::new(
                             OnHostAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
-                        ("graph-launch", _) => Box::new(
-                            OnHostAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ("graph", "graph-shared") => Box::new(
+                            GraphSharedFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ),
+                        ("graph", "graph-shared-banks") => Box::new(
+                            GraphSharedBanksFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ),
+                        ("graph", "graph-shared-opportunistic") => Box::new(
+                            GraphSharedBanksOpportunisticFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ),
+                        ("graph", "graph-simple") => Box::new(
+                            GraphSimpleFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
                         _ => panic!(
                             "Voting strategy not found, or combined with wrong schedule strategy."
@@ -146,10 +174,8 @@ fn main() {
                         StepBodyCompiler::new(&type_info, true, print_unstable, weak_ld_st, &memorder, &program);
 
                     let work_divisor = WorkDivisor::new(
-                        threads_per_block,
                         DivisionStrategy::Dynamic,
-                        print_unstable,
-                        schedule_strat == "on-host", // We inline the executeStep function with the on-host schedule
+                        print_unstable
                     );
 
                     let struct_managers = StructManagers::new(
@@ -170,18 +196,17 @@ fn main() {
                         "on-host" => Box::new(OnHostSchedule::new(
                             &program,
                             &*fp_strat,
-                            &step_transpiler,
-                            &work_divisor,
-                            dynamic_block_size
+                            &step_transpiler
                         )),
-                        "graph-launch" => Box::new(GraphLaunchSchedule::new(
+                        "graph" => Box::new(GraphLaunchSchedule::new(
                             &program,
+                            &*fp_strat,
                             &step_transpiler,
                         )),
                         _ => panic!("Schedule strategy not found."),
                     };
 
-                    let result = compiler::compile2(vec![
+                    let result = compiler::compile(vec![
                         &InitFileReader {},
                         &PrintbufferSizeAdjuster::new(buffer_size),
                         &work_divisor,
@@ -222,11 +247,14 @@ fn main() {
         }
     }
 
-    let file = SimpleFile::new(adl_file_loc, adl_program_text);
-    let writer = StandardStream::stderr(ColorChoice::Always);
-    let config = codespan_reporting::term::Config::default();
+    if !errors.is_empty() {
+        let file = SimpleFile::new(adl_file_loc, adl_program_text);
+        let writer = StandardStream::stderr(ColorChoice::Always);
+        let config = codespan_reporting::term::Config::default();
 
-    for e in errors {
-        let _term_result = term::emit(&mut writer.lock(), &config, &file, &e);
+        for e in errors {
+            let _term_result = term::emit(&mut writer.lock(), &config, &file, &e);
+        }
+        std::process::exit(1);
     }
 }

@@ -37,25 +37,6 @@ pub fn constructors<'a>(step: &'a Step) -> HashSet<&'a String> {
     result
 }
 
-// Returns all declared variable names and their type
-pub fn declarations<'a>(step: &'a Step) -> HashSet<(&'a String, &'a Type)> {
-    use Stat::*;
-    let mut result = HashSet::new();
-    visit_step::<HashSet<(&String, &Type)>, (), ()>(
-        step,
-        &mut result,
-        |stat, set, _| {
-            if let Declaration(t, s, _, _) = stat {
-                set.insert((&s, &t));
-            }
-        },
-        &None,
-        |_, _, _| {},
-        &None,
-    );
-    result
-}
-
 
 fn written_parameters<'a>(
     step: &'a Step,
