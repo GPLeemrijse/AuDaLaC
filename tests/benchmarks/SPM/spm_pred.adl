@@ -1,5 +1,5 @@
 $$__device__ uint nrof_odd_wins = 0;
-
+//transformer -mm ~/repos/ModelChecking2/tests/testcases/dining/dining_9.invariantly_inevitably_eat.gm | pgsolver -global smallprog -dsd -dgo -dsg -dlo | grep "Chosen"
 
 // V_diamond = even == false
 // V_square = odd == true

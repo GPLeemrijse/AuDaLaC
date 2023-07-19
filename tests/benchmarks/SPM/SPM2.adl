@@ -71,7 +71,9 @@ struct Edge(v: Node, w: Node, prog_top: Bool, prog_1: Nat, prog_3: Nat, max1: Na
 
 		// If we are w's candidate and we changed, a new vote is in order.
 		if v.cand == this then {
-			Bool changed := m_top != prog_top || prog_1 != m_1 || prog_3 != m_3;
+			Bool changed := m_top != prog_top ||
+							prog_1 != m_1 ||
+							prog_3 != m_3;
 			if changed then {
 				v.cand := null;
 			}
@@ -108,15 +110,8 @@ struct Edge(v: Node, w: Node, prog_top: Bool, prog_1: Nat, prog_3: Nat, max1: Na
 			v.cand := this;
 		}
 	}
-
-	self_loops_to_top {
-		if v == w && v.is_odd && v.p % 2 == 1 then {
-			v.rho_top := true;
-		}
-	}
 }
 
-self_loops_to_top <
 Fix(
 	prog <
 	Fix(minmax_top) <
