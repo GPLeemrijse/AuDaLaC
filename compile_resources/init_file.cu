@@ -129,7 +129,12 @@ namespace InitFile {
                 line_nr++;
                 std::istringstream iss(line);
                 int64_t par_value;
-                for (int p = 0; p < nrof_params; p++){
+                int p = 0;
+                while(!iss.eof()){
+                    if(p >= nrof_params){
+                        fprintf(stderr, "Line nr: %u\n", line_nr);
+                        throw std::invalid_argument("Supplied more parameters than declared.\n");
+                    }
                     iss >> par_value;
 
                     if (s_info->parameter_types[p] == ADL::Int){
@@ -148,6 +153,7 @@ namespace InitFile {
                         uint32_t* par_array = (uint32_t*)s_info->parameter_data[p];
                         par_array[inst] = par_value; // Refs as indices
                     }
+                    p++;
                 }
             } 
         }
