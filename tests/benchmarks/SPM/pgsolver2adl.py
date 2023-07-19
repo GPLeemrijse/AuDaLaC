@@ -11,110 +11,26 @@ class Node:
 regex = re.compile(r"([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+(,[0-9]+)*);");
 
 
-def edge_inst(u, v, idx):
-	return f"{u} {v} {idx + 2} 1\n";
-
-def edge_inst_opt(u, v, idx):
-	return f"{u} {v} 0 0 0 1\n";
-
-def print_normal_init(output_file_name, nodes, edges, prios):
-	# Print .init file
-	with open(output_file_name, "w") as out_file:
-		nrof_nodes = len(nodes);
-		nrof_edges = len(edges);
-		nrof_measures = nrof_nodes + nrof_edges + 1;
-		out_file.writelines([
-			"ADL structures 3\n",
-			"Edge Node Node Measure Measure\n",
-			"Measure Bool Nat Nat\n",
-			"Node Nat Bool Measure Measure Measure\n",
-			f"Edge instances {nrof_edges} {nrof_edges}\n"
-		]);
-
-		out_file.writelines([edge_inst(u, v, idx) for (idx, (u, v)) in enumerate(edges)]);
-
-		out_file.writelines([
-			f"Measure instances 1 {nrof_measures}\n",
-		]);
-
-		# max
-		out_file.write("0 %s\n" % " ".join(str(p) for (d, p) in enumerate(prios) if d % 2 == 1));
-
-		out_file.writelines([
-			f"Node instances {nrof_nodes} {nrof_nodes}\n",
-		]);
-
-		out_file.writelines([f"{n.prio} {n.owner} {idx+nrof_edges+2} 0 1\n" for (idx, n) in enumerate(nodes)]);
-
-def print_opt_init(output_file_name, nodes, edges, prios):
-	# Print .init file
-	with open(output_file_name, "w") as out_file:
-		nrof_nodes = len(nodes);
-		nrof_edges = len(edges);
-		out_file.writelines([
-			"ADL structures 3\n",
-			"Edge Node Node Bool Nat Nat Measure\n",
-			"Measure Bool Nat Nat\n",
-			"Node Nat Bool Bool Nat Nat Edge Measure\n",
-			f"Edge instances {nrof_edges} {nrof_edges}\n"
-		]);
-
-		out_file.writelines([edge_inst_opt(u, v, idx) for (idx, (u, v)) in enumerate(edges)]);
-
-		# Measures: max
-		out_file.writelines([
-			f"Measure instances 1 1\n",
-			"0 %s\n" % " ".join(str(p) for (d, p) in enumerate(prios) if d % 2 == 1)
-		]);
-
-		out_file.writelines([
-			f"Node instances {nrof_nodes} {nrof_nodes}\n",
-		]);
-
-		out_file.writelines([f"{n.prio} {n.owner} 0 0 0 0 1\n" for (idx, n) in enumerate(nodes)]);
-
-def print_spm2_init(output_file_name, nodes, edges, prios):
+def print_init(output_file_name, nodes, edges, prios):
 	# Print .init file
 	with open(output_file_name, "w") as out_file:
 		nrof_nodes = len(nodes);
 		nrof_edges = len(edges);
 		out_file.writelines([
 			"ADL structures 2\n",
-			"Edge Node Node Bool Nat Nat Nat Nat\n",
-			"Node Nat Bool Bool Nat Nat Edge\n",
+			"Edge Node Node Nat Nat Bool Nat Nat\n",
+			"Node Nat Bool Bool Bool Nat Nat Edge\n",
 			f"Edge instances {nrof_edges} {nrof_edges}\n"
 		]);
 
 		# Edges
-		out_file.writelines([f"{u} {v} 0 0 0 {prios[1]} {prios[3]}\n" for (u, v) in edges]);
+		out_file.writelines([f"{u} {v} {prios[1]} {prios[3]}\n" for (u, v) in edges]);
 
 		# Nodes
 		out_file.writelines([
 			f"Node instances {nrof_nodes} {nrof_nodes}\n",
 		]);
-		out_file.writelines([f"{n.prio} {n.owner} 0 0 0 0\n" for (idx, n) in enumerate(nodes)]);
-
-
-def print_spm2_pred_init(output_file_name, nodes, edges, prios):
-	# Print .init file
-	with open(output_file_name, "w") as out_file:
-		nrof_nodes = len(nodes);
-		nrof_edges = len(edges);
-		out_file.writelines([
-			"ADL structures 2\n",
-			"Edge Node Node Bool Nat Nat Nat Nat\n",
-			"Node Nat Bool Bool Nat Nat Edge Bool\n",
-			f"Edge instances {nrof_edges} {nrof_edges}\n"
-		]);
-
-		# Edges
-		out_file.writelines([f"{u} {v} 0 0 0 {prios[1]} {prios[3]}\n" for (u, v) in edges]);
-
-		# Nodes
-		out_file.writelines([
-			f"Node instances {nrof_nodes} {nrof_nodes}\n",
-		]);
-		out_file.writelines([f"{n.prio} {n.owner} 0 0 0 0 1\n" for (idx, n) in enumerate(nodes)]);
+		out_file.writelines([f"{n.prio} {n.owner} 1\n" for (idx, n) in enumerate(nodes)]);
 
 
 def read_input_file(in_file):
@@ -154,9 +70,6 @@ def main():
 	parser = ArgumentParser(prog='pgsolver2adl')
 	parser.add_argument('pg_files', type=FileType('r'), nargs='+', help="The pgsolver input file(s).");
 	parser.add_argument('output_dir', help="The output directory.");
-	parser.add_argument('-o', action='store_true', dest='opt', help="Use optimised SPM alg.");
-	parser.add_argument('-n', action='store_true', dest='new_alg', help="Use new SPM alg.");
-	parser.add_argument('-p', action='store_true', dest='pred_alg', help="Use predecessor SPM alg.");
 	parser.add_argument('-f', action='store_true', dest='force', help="Do not confirm before generating.");
 
 
@@ -175,18 +88,8 @@ def main():
 		if (nodes, edges, prios) == ([], [], []):
 			continue;
 		
-		if args.pred_alg:
-			output_file_name = os.path.join(args.output_dir, name[:-3] + "_pred.init");
-			print_spm2_pred_init(output_file_name, nodes, edges, prios);
-		if args.new_alg:
-			output_file_name = os.path.join(args.output_dir, name[:-3] + "_spm2.init");
-			print_spm2_init(output_file_name, nodes, edges, prios);
-		elif args.opt:
-			output_file_name = os.path.join(args.output_dir, name[:-3] + "_opt.init");
-			print_opt_init(output_file_name, nodes, edges, prios);
-		else:
-			output_file_name = os.path.join(args.output_dir, name[:-3] + "_norm.init");
-			print_normal_init(output_file_name, nodes, edges, prios);
+		output_file_name = os.path.join(args.output_dir, name[:-3] + ".init");
+		print_init(output_file_name, nodes, edges, prios);
 
 		print(f"Sucessfully generated {output_file_name}");
 
