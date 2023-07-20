@@ -7,3 +7,4 @@
 *.disasm
 *.ptx
 *.dump
+/tests/benchmarks/**/*.cu
