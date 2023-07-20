@@ -28,7 +28,7 @@ def main():
 				f"ListElem instances {n} {n}\n"
 			]);
 
-			out_file.writelines([f"{val} {idx} 0 0\n" for (idx, val) in enumerate(nums)]);
+			out_file.writelines([f"{val} {idx}\n" for (idx, val) in enumerate(nums)]);
 
 		solution_file_name = os.path.join(args.output_dir, f"prefix_sum_{n}.sol");
 		with open(solution_file_name, "w") as out_file:
