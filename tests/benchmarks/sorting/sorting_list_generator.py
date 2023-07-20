@@ -15,7 +15,7 @@ def main():
 	args = parser.parse_args()
 
 	for n in args.N:
-		nums = random.sample(range(-1000000, 1000000), n);
+		nums = random.sample(range(-10000000, 10000000), n);
 
 		output_file_name = os.path.join(args.output_dir, f"sorting_{n}.init");
 
@@ -27,7 +27,7 @@ def main():
 				f"ListElem instances {n} {n}\n"
 			]);
 
-			out_file.writelines([f"{val} {idx+2 if idx != n - 1 else 0} 0 1 0\n" for (idx, val) in enumerate(nums)]);
+			out_file.writelines([f"{val} {idx+2 if idx != n - 1 else 0} 1\n" for (idx, val) in enumerate(nums)]);
 
 			out_file.writelines(["Printer instances 0 0\n"]);
 

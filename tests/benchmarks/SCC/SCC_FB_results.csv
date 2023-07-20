@@ -1,0 +1,3 @@
+memorder,schedule,voting-strat,weak_non_racing,algorithm,problem_type,problem_size,runtime
+relaxed,graph,graph-simple,1,SCC_FB,Random Graph (p=1.3/n),114814,558.02057
+relaxed,graph,graph-simple,1,SCC_FB,Random Graph (p=1.3/n),1149534,27957.11

@@ -1,17 +1,19 @@
-#define THREADS_PER_BLOCK 256
 #define ATOMIC(T) cuda::atomic<T, cuda::thread_scope_device>
-#define STORE(A, V) A.store(V, cuda::memory_order_relaxed)
-#define LOAD(A) A.load(cuda::memory_order_relaxed)
+#define STORE(A, V) A.store(V, cuda::memory_order_release)
+#define LOAD(A) A.load(cuda::memory_order_acquire)
 
 #define WLOAD(T, A) *((T*)&A)
 #define ACQLOAD(A) A.load(cuda::memory_order_acquire)
 #define WSTORE(T, A, V) *((T*)&A) = V
 #define RELSTORE(A, V) A.store(V, cuda::memory_order_release)
 
-#define FP_DEPTH 2
+#define Node_MASK (((uint16_t)1) << 0)
+#define Edge_MASK (((uint16_t)1) << 1)
+#define STEP_PARITY(STRUCT) ((bool)(struct_step_parity & STRUCT ## _MASK))
+#define TOGGLE_STEP_PARITY(STRUCT) {struct_step_parity ^= STRUCT ## _MASK;}
+
 
 #include "ADL.h"
-#include "Schedule.h"
 #include "Struct.h"
 #include "init_file.h"
 #include <cooperative_groups.h>
@@ -155,7 +157,6 @@ public:
 
 using namespace cooperative_groups;
 
-
 Edge host_Edge = Edge();
 Node host_Node = Node();
 
@@ -166,14 +167,14 @@ __device__ Edge* __restrict__ edge;
 __device__ Node* __restrict__ node;
 
 __device__ uint nrof_odd_wins = 0;
-__device__ volatile bool fp_stack[FP_DEPTH];
+#define FP_DEPTH 2
+__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH];
 
-__device__ void clear_stack(int lvl){
+__device__ void clear_stack(int lvl) {
 	while(lvl >= 0){
-		fp_stack[lvl--] = false;
+		fp_stack[lvl--].store(false, cuda::memory_order_relaxed);
 	}
 }
-
 
 typedef void(*step_func)(RefType, bool*);
 template <step_func Step>
@@ -185,17 +186,19 @@ __device__ void executeStep(inst_size nrof_instances, grid_group grid, thread_bl
 }
 
 __host__ std::tuple<dim3, dim3> get_launch_dims(inst_size max_nrof_executing_instances, const void* kernel, bool print = false){
-	int numBlocksPerSm = 0;
-	int tpb = THREADS_PER_BLOCK;
+	int min_grid_size;
+	int dyn_block_size;
+	cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
 
+	int numBlocksPerSm = 0;
 	cudaDeviceProp deviceProp;
 	cudaGetDeviceProperties(&deviceProp, 0);
-	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, tpb, 0);
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, kernel, dyn_block_size, 0);
   
 	int max_blocks = deviceProp.multiProcessorCount*numBlocksPerSm;
-	int wanted_blocks = (max_nrof_executing_instances + tpb - 1)/tpb;
+	int wanted_blocks = (max_nrof_executing_instances + dyn_block_size - 1)/dyn_block_size;
 	int used_blocks = min(max_blocks, wanted_blocks);
-	int nrof_threads = used_blocks * tpb;
+	int nrof_threads = used_blocks * dyn_block_size;
 
 	if (used_blocks == 0) {
 		fprintf(stderr, "Could not fit kernel on device!\n");
@@ -204,11 +207,11 @@ __host__ std::tuple<dim3, dim3> get_launch_dims(inst_size max_nrof_executing_ins
 
 	if (print) {
 		fprintf(stderr, "A maximum of %u instances will execute.\n", max_nrof_executing_instances);
-		fprintf(stderr, "Launching %u/%u blocks of %u threads = %u threads.\n", used_blocks, max_blocks, tpb, nrof_threads);
+		fprintf(stderr, "Launching %u/%u blocks of %u threads = %u threads.\n", used_blocks, max_blocks, dyn_block_size, nrof_threads);
 		fprintf(stderr, "Resulting in max %u instances per thread.\n", (max_nrof_executing_instances + nrof_threads - 1) / nrof_threads);
 	}
 
-	dim3 dimBlock(tpb, 1, 1);
+	dim3 dimBlock(dyn_block_size, 1, 1);
 	dim3 dimGrid(used_blocks, 1, 1);
 	return std::make_tuple(dimGrid, dimBlock);
 }
@@ -224,43 +227,21 @@ __device__ void SetParam(const RefType owner, ATOMIC(T) * const params, const T 
 	}
 }
 
-template<typename T>
-__device__ void WeakSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {
-	if (owner != 0){
-		T old_val = WLOAD(T, params[owner]);
-		if (old_val != new_val){
-			WSTORE(T, params[owner], new_val);
-			*stable = false;
-		}
-	}
-}
-
-template<typename T>
-__device__ void RelSetParam(const RefType owner, ATOMIC(T) * const params, const T new_val, bool* stable) {
-	if (owner != 0){
-		T old_val = ACQLOAD(params[owner]);
-		if (old_val != new_val){
-			RELSTORE(params[owner], new_val);
-			*stable = false;
-		}
-	}
-}
-
 __device__ void execute_Node_lift(RefType self,
 								  bool* stable){
 	
 	// dirty := false;
-	WeakSetParam<BoolType>(self, node->dirty, false, stable);
-	if ((WLOAD(RefType, node->cand[self]) != 0)) {
-		if (((((WLOAD(BoolType, edge->prog_top[WLOAD(RefType, node->cand[self])]) != WLOAD(BoolType, node->rho_top[self])) && WLOAD(BoolType, edge->prog_top[WLOAD(RefType, node->cand[self])])) || ((WLOAD(BoolType, edge->prog_top[WLOAD(RefType, node->cand[self])]) == WLOAD(BoolType, node->rho_top[self])) && (WLOAD(NatType, edge->prog_1[WLOAD(RefType, node->cand[self])]) > WLOAD(NatType, node->rho_1[self])))) || (((WLOAD(BoolType, edge->prog_top[WLOAD(RefType, node->cand[self])]) == WLOAD(BoolType, node->rho_top[self])) && (WLOAD(NatType, edge->prog_1[WLOAD(RefType, node->cand[self])]) == WLOAD(NatType, node->rho_1[self]))) && (WLOAD(NatType, edge->prog_3[WLOAD(RefType, node->cand[self])]) > WLOAD(NatType, node->rho_3[self]))))) {
+	SetParam<BoolType>(self, node->dirty, false, stable);
+	if ((LOAD(node->cand[self]) != 0)) {
+		if (((((LOAD(edge->prog_top[LOAD(node->cand[self])]) != LOAD(node->rho_top[self])) && LOAD(edge->prog_top[LOAD(node->cand[self])])) || ((LOAD(edge->prog_top[LOAD(node->cand[self])]) == LOAD(node->rho_top[self])) && (LOAD(edge->prog_1[LOAD(node->cand[self])]) > LOAD(node->rho_1[self])))) || (((LOAD(edge->prog_top[LOAD(node->cand[self])]) == LOAD(node->rho_top[self])) && (LOAD(edge->prog_1[LOAD(node->cand[self])]) == LOAD(node->rho_1[self]))) && (LOAD(edge->prog_3[LOAD(node->cand[self])]) > LOAD(node->rho_3[self]))))) {
 			// rho_top := cand.prog_top;
-			WeakSetParam<BoolType>(self, node->rho_top, WLOAD(BoolType, edge->prog_top[WLOAD(RefType, node->cand[self])]), stable);
+			SetParam<BoolType>(self, node->rho_top, LOAD(edge->prog_top[LOAD(node->cand[self])]), stable);
 			// rho_1 := cand.prog_1;
-			WeakSetParam<NatType>(self, node->rho_1, WLOAD(NatType, edge->prog_1[WLOAD(RefType, node->cand[self])]), stable);
+			SetParam<NatType>(self, node->rho_1, LOAD(edge->prog_1[LOAD(node->cand[self])]), stable);
 			// rho_3 := cand.prog_3;
-			WeakSetParam<NatType>(self, node->rho_3, WLOAD(NatType, edge->prog_3[WLOAD(RefType, node->cand[self])]), stable);
+			SetParam<NatType>(self, node->rho_3, LOAD(edge->prog_3[LOAD(node->cand[self])]), stable);
 			// dirty := true;
-			WeakSetParam<BoolType>(self, node->dirty, true, stable);
+			SetParam<BoolType>(self, node->dirty, true, stable);
 		}
 	}
 }
@@ -268,7 +249,7 @@ __device__ void execute_Node_lift(RefType self,
 __device__ void execute_Node_count_odd(RefType self,
 									   bool* stable){
 	
-	if (((self != 0) && WLOAD(BoolType, node->rho_top[self]))) {
+	if (((self != 0) && LOAD(node->rho_top[self]))) {
 		atomicInc(&nrof_odd_wins, 0xffffffff);
 	}
 }
@@ -292,29 +273,29 @@ __device__ void execute_Node_print(RefType self,
 __device__ void execute_Edge_prog(RefType self,
 								  bool* stable){
 	
-	if (WLOAD(BoolType, node->dirty[WLOAD(RefType, edge->w[self])])) {
-		BoolType m_top = WLOAD(BoolType, node->rho_top[WLOAD(RefType, edge->w[self])]);
+	if (LOAD(node->dirty[LOAD(edge->w[self])])) {
+		BoolType m_top = LOAD(node->rho_top[LOAD(edge->w[self])]);
 		NatType m_1 = 0;
-		if ((WLOAD(NatType, node->p[WLOAD(RefType, edge->v[self])]) >= 1)) {
-			m_1 = WLOAD(NatType, node->rho_1[WLOAD(RefType, edge->w[self])]);
+		if ((LOAD(node->p[LOAD(edge->v[self])]) >= 1)) {
+			m_1 = LOAD(node->rho_1[LOAD(edge->w[self])]);
 		}
 		NatType m_3 = 0;
-		if ((WLOAD(NatType, node->p[WLOAD(RefType, edge->v[self])]) >= 3)) {
-			m_3 = WLOAD(NatType, node->rho_3[WLOAD(RefType, edge->w[self])]);
+		if ((LOAD(node->p[LOAD(edge->v[self])]) >= 3)) {
+			m_3 = LOAD(node->rho_3[LOAD(edge->w[self])]);
 		}
-		if (((WLOAD(NatType, node->p[WLOAD(RefType, edge->v[self])]) % 2) == 1)) {
+		if (((LOAD(node->p[LOAD(edge->v[self])]) % 2) == 1)) {
 			BoolType increased = m_top;
-			if (((WLOAD(NatType, node->p[WLOAD(RefType, edge->v[self])]) >= 3) && (!increased))) {
+			if (((LOAD(node->p[LOAD(edge->v[self])]) >= 3) && (!increased))) {
 				NatType new_3 = 0;
-				if ((m_3 < WLOAD(NatType, edge->max3[self]))) {
+				if ((m_3 < LOAD(edge->max3[self]))) {
 					new_3 = (m_3 + 1);
 					increased = true;
 				}
 				m_3 = new_3;
 			}
-			if (((WLOAD(NatType, node->p[WLOAD(RefType, edge->v[self])]) >= 1) && (!increased))) {
+			if (((LOAD(node->p[LOAD(edge->v[self])]) >= 1) && (!increased))) {
 				NatType new_1 = 0;
-				if ((m_1 < WLOAD(NatType, edge->max1[self]))) {
+				if ((m_1 < LOAD(edge->max1[self]))) {
 					new_1 = (m_1 + 1);
 					increased = true;
 				}
@@ -324,55 +305,55 @@ __device__ void execute_Edge_prog(RefType self,
 				m_top = true;
 			}
 		}
-		if ((LOAD(node->cand[WLOAD(RefType, edge->v[self])]) == self)) {
-			BoolType changed = (((m_top != WLOAD(BoolType, edge->prog_top[self])) || (WLOAD(NatType, edge->prog_1[self]) != m_1)) || (WLOAD(NatType, edge->prog_3[self]) != m_3));
+		if ((LOAD(node->cand[LOAD(edge->v[self])]) == self)) {
+			BoolType changed = (((m_top != LOAD(edge->prog_top[self])) || (LOAD(edge->prog_1[self]) != m_1)) || (LOAD(edge->prog_3[self]) != m_3));
 			if (changed) {
 				// v.cand := null;
-				SetParam<RefType>(WLOAD(RefType, edge->v[self]), node->cand, 0, stable);
+				SetParam<RefType>(LOAD(edge->v[self]), node->cand, 0, stable);
 			}
 		}
 		// prog_top := m_top;
-		WeakSetParam<BoolType>(self, edge->prog_top, m_top, stable);
+		SetParam<BoolType>(self, edge->prog_top, m_top, stable);
 		// prog_1 := m_1;
-		WeakSetParam<NatType>(self, edge->prog_1, m_1, stable);
+		SetParam<NatType>(self, edge->prog_1, m_1, stable);
 		// prog_3 := m_3;
-		WeakSetParam<NatType>(self, edge->prog_3, m_3, stable);
+		SetParam<NatType>(self, edge->prog_3, m_3, stable);
 	}
 }
 
 __device__ void execute_Edge_minmax_top(RefType self,
 										bool* stable){
 	
-	if (((LOAD(node->cand[WLOAD(RefType, edge->v[self])]) == 0) || ((((!WLOAD(BoolType, node->is_odd[WLOAD(RefType, edge->v[self])])) && WLOAD(BoolType, edge->prog_top[LOAD(node->cand[WLOAD(RefType, edge->v[self])])])) && (!WLOAD(BoolType, edge->prog_top[self]))) || ((WLOAD(BoolType, node->is_odd[WLOAD(RefType, edge->v[self])]) && (!WLOAD(BoolType, edge->prog_top[LOAD(node->cand[WLOAD(RefType, edge->v[self])])]))) && WLOAD(BoolType, edge->prog_top[self]))))) {
+	if (((LOAD(node->cand[LOAD(edge->v[self])]) == 0) || ((((!LOAD(node->is_odd[LOAD(edge->v[self])])) && LOAD(edge->prog_top[LOAD(node->cand[LOAD(edge->v[self])])])) && (!LOAD(edge->prog_top[self]))) || ((LOAD(node->is_odd[LOAD(edge->v[self])]) && (!LOAD(edge->prog_top[LOAD(node->cand[LOAD(edge->v[self])])]))) && LOAD(edge->prog_top[self]))))) {
 		// v.cand := this;
-		SetParam<RefType>(WLOAD(RefType, edge->v[self]), node->cand, self, stable);
+		SetParam<RefType>(LOAD(edge->v[self]), node->cand, self, stable);
 	}
 }
 
 __device__ void execute_Edge_minmax_1(RefType self,
 									  bool* stable){
 	
-	if (((WLOAD(BoolType, edge->prog_top[LOAD(node->cand[WLOAD(RefType, edge->v[self])])]) == WLOAD(BoolType, edge->prog_top[self])) && (((!WLOAD(BoolType, node->is_odd[WLOAD(RefType, edge->v[self])])) && (WLOAD(NatType, edge->prog_1[LOAD(node->cand[WLOAD(RefType, edge->v[self])])]) > WLOAD(NatType, edge->prog_1[self]))) || (WLOAD(BoolType, node->is_odd[WLOAD(RefType, edge->v[self])]) && (WLOAD(NatType, edge->prog_1[LOAD(node->cand[WLOAD(RefType, edge->v[self])])]) < WLOAD(NatType, edge->prog_1[self])))))) {
+	if (((LOAD(edge->prog_top[LOAD(node->cand[LOAD(edge->v[self])])]) == LOAD(edge->prog_top[self])) && (((!LOAD(node->is_odd[LOAD(edge->v[self])])) && (LOAD(edge->prog_1[LOAD(node->cand[LOAD(edge->v[self])])]) > LOAD(edge->prog_1[self]))) || (LOAD(node->is_odd[LOAD(edge->v[self])]) && (LOAD(edge->prog_1[LOAD(node->cand[LOAD(edge->v[self])])]) < LOAD(edge->prog_1[self])))))) {
 		// v.cand := this;
-		SetParam<RefType>(WLOAD(RefType, edge->v[self]), node->cand, self, stable);
+		SetParam<RefType>(LOAD(edge->v[self]), node->cand, self, stable);
 	}
 }
 
 __device__ void execute_Edge_minmax_3(RefType self,
 									  bool* stable){
 	
-	if ((((WLOAD(BoolType, edge->prog_top[LOAD(node->cand[WLOAD(RefType, edge->v[self])])]) == WLOAD(BoolType, edge->prog_top[self])) && (WLOAD(NatType, edge->prog_1[LOAD(node->cand[WLOAD(RefType, edge->v[self])])]) == WLOAD(NatType, edge->prog_1[self]))) && (((!WLOAD(BoolType, node->is_odd[WLOAD(RefType, edge->v[self])])) && (WLOAD(NatType, edge->prog_3[LOAD(node->cand[WLOAD(RefType, edge->v[self])])]) > WLOAD(NatType, edge->prog_3[self]))) || (WLOAD(BoolType, node->is_odd[WLOAD(RefType, edge->v[self])]) && (WLOAD(NatType, edge->prog_3[LOAD(node->cand[WLOAD(RefType, edge->v[self])])]) < WLOAD(NatType, edge->prog_3[self])))))) {
+	if ((((LOAD(edge->prog_top[LOAD(node->cand[LOAD(edge->v[self])])]) == LOAD(edge->prog_top[self])) && (LOAD(edge->prog_1[LOAD(node->cand[LOAD(edge->v[self])])]) == LOAD(edge->prog_1[self]))) && (((!LOAD(node->is_odd[LOAD(edge->v[self])])) && (LOAD(edge->prog_3[LOAD(node->cand[LOAD(edge->v[self])])]) > LOAD(edge->prog_3[self]))) || (LOAD(node->is_odd[LOAD(edge->v[self])]) && (LOAD(edge->prog_3[LOAD(node->cand[LOAD(edge->v[self])])]) < LOAD(edge->prog_3[self])))))) {
 		// v.cand := this;
-		SetParam<RefType>(WLOAD(RefType, edge->v[self]), node->cand, self, stable);
+		SetParam<RefType>(LOAD(edge->v[self]), node->cand, self, stable);
 	}
 }
 
 __device__ void execute_Edge_self_loops_to_top(RefType self,
 											   bool* stable){
 	
-	if ((((WLOAD(RefType, edge->v[self]) == WLOAD(RefType, edge->w[self])) && WLOAD(BoolType, node->is_odd[WLOAD(RefType, edge->v[self])])) && ((WLOAD(NatType, node->p[WLOAD(RefType, edge->v[self])]) % 2) == 1))) {
+	if ((((LOAD(edge->v[self]) == LOAD(edge->w[self])) && LOAD(node->is_odd[LOAD(edge->v[self])])) && ((LOAD(node->p[LOAD(edge->v[self])]) % 2) == 1))) {
 		// v.rho_top := true;
-		SetParam<BoolType>(WLOAD(RefType, edge->v[self]), node->rho_top, true, stable);
+		SetParam<BoolType>(LOAD(edge->v[self]), node->rho_top, true, stable);
 	}
 }
 
@@ -385,312 +366,103 @@ __device__ void execute_Edge_print(RefType self,
 }
 
 
-__global__ void kernel_Node_lift(int fp_lvl){
+__global__ void schedule_kernel(){
 	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = node->nrof_instances();
+	const thread_block block = this_thread_block();
+	uint16_t struct_step_parity = 0; // bitmask
+	bool stable = true; // Only used to compile steps outside fixpoints
 
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
 
-	__syncthreads();
+	TOGGLE_STEP_PARITY(Edge);
+	executeStep<execute_Edge_self_loops_to_top>(edge->nrof_instances2(STEP_PARITY(Edge)), grid, block, &stable);
+	edge->update_counters(!STEP_PARITY(Edge));
 
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Node_lift(self, (bool*)&stable[bl_rank % 32]);
-	}
+	grid.sync();
 
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
+	do{
+		bool stable = true;
+		grid.sync();
+		if (grid.thread_rank() == 0)
+			fp_stack[0].store(true, cuda::memory_order_relaxed);
+		grid.sync();
 
+
+		TOGGLE_STEP_PARITY(Edge);
+		executeStep<execute_Edge_prog>(edge->nrof_instances2(STEP_PARITY(Edge)), grid, block, &stable);
+		edge->update_counters(!STEP_PARITY(Edge));
+
+		grid.sync();
+
+		do{
+			bool stable = true;
+			grid.sync();
+			if (grid.thread_rank() == 0)
+				fp_stack[1].store(true, cuda::memory_order_relaxed);
+			grid.sync();
+
+
+			TOGGLE_STEP_PARITY(Edge);
+			executeStep<execute_Edge_minmax_top>(edge->nrof_instances2(STEP_PARITY(Edge)), grid, block, &stable);
+			edge->update_counters(!STEP_PARITY(Edge));
+			if(!stable)
+				clear_stack(1);
+			grid.sync();
+		} while(!fp_stack[1].load(cuda::memory_order_relaxed));
+
+
+		do{
+			bool stable = true;
+			grid.sync();
+			if (grid.thread_rank() == 0)
+				fp_stack[1].store(true, cuda::memory_order_relaxed);
+			grid.sync();
+
+
+			TOGGLE_STEP_PARITY(Edge);
+			executeStep<execute_Edge_minmax_1>(edge->nrof_instances2(STEP_PARITY(Edge)), grid, block, &stable);
+			edge->update_counters(!STEP_PARITY(Edge));
+			if(!stable)
+				clear_stack(1);
+			grid.sync();
+		} while(!fp_stack[1].load(cuda::memory_order_relaxed));
+
+
+		do{
+			bool stable = true;
+			grid.sync();
+			if (grid.thread_rank() == 0)
+				fp_stack[1].store(true, cuda::memory_order_relaxed);
+			grid.sync();
+
+
+			TOGGLE_STEP_PARITY(Edge);
+			executeStep<execute_Edge_minmax_3>(edge->nrof_instances2(STEP_PARITY(Edge)), grid, block, &stable);
+			edge->update_counters(!STEP_PARITY(Edge));
+			if(!stable)
+				clear_stack(1);
+			grid.sync();
+		} while(!fp_stack[1].load(cuda::memory_order_relaxed));
+
+
+		TOGGLE_STEP_PARITY(Node);
+		executeStep<execute_Node_lift>(node->nrof_instances2(STEP_PARITY(Node)), grid, block, &stable);
+		node->update_counters(!STEP_PARITY(Node));
+		if(!stable)
+			clear_stack(0);
+		grid.sync();
+	} while(!fp_stack[0].load(cuda::memory_order_relaxed));
+
+
+	TOGGLE_STEP_PARITY(Node);
+	executeStep<execute_Node_count_odd>(node->nrof_instances2(STEP_PARITY(Node)), grid, block, &stable);
+	node->update_counters(!STEP_PARITY(Node));
+
+	grid.sync();
+
+	TOGGLE_STEP_PARITY(Node);
+	executeStep<execute_Node_print_odd>(node->nrof_instances2(STEP_PARITY(Node)), grid, block, &stable);
+	node->update_counters(!STEP_PARITY(Node));
 }
-
-__global__ void kernel_Node_count_odd(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = node->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Node_count_odd(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void kernel_Node_print_odd(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = node->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Node_print_odd(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void kernel_Node_print(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = node->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Node_print(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void kernel_Edge_prog(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = edge->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Edge_prog(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void kernel_Edge_minmax_top(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = edge->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Edge_minmax_top(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void kernel_Edge_minmax_1(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = edge->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Edge_minmax_1(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void kernel_Edge_minmax_3(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = edge->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Edge_minmax_3(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void kernel_Edge_self_loops_to_top(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = edge->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Edge_self_loops_to_top(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void kernel_Edge_print(int fp_lvl){
-	const grid_group grid = this_grid();
-	const uint bl_rank = this_thread_block().thread_rank();
-	inst_size nrof_instances = edge->nrof_instances();
-
-	__shared__ uint32_t stable[32];
-	if(bl_rank < 32){
-		stable[bl_rank] = (uint32_t)true;
-	}
-
-	__syncthreads();
-
-	RefType self = grid.thread_rank();
-	if (self < nrof_instances){
-		execute_Edge_print(self, (bool*)&stable[bl_rank % 32]);
-	}
-
-	if(fp_lvl >= 0){
-		__syncthreads();
-		if(bl_rank < 32){
-			bool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
-			if(bl_rank == 0 && !stable_reduced){
-				clear_stack(fp_lvl);
-			}
-		}
-	}
-
-}
-
-__global__ void relaunch_fp_kernel(int fp_lvl,
-								   cudaGraphExec_t restart,
-								   cudaGraphExec_t exit){
-	if(!fp_stack[fp_lvl]){
-		fp_stack[fp_lvl] = true;
-		CHECK(cudaGraphLaunch(restart, cudaStreamGraphTailLaunch));
-	}
-	else if (exit != NULL){
-		CHECK(cudaGraphLaunch(exit, cudaStreamGraphTailLaunch));
-	}
-}
-
-__global__ void launch_kernel(cudaGraphExec_t graph){
-	CHECK(cudaGraphLaunch(graph, cudaStreamGraphTailLaunch));
-}
-
 
 
 int main(int argc, char **argv) {
@@ -718,40 +490,27 @@ int main(int argc, char **argv) {
 	CHECK(cudaMemcpyToSymbol(edge, &loc_edge, sizeof(Edge * const)));
 	CHECK(cudaMemcpyToSymbol(node, &loc_node, sizeof(Node * const)));
 
-	cudaStream_t kernel_stream;
-	CHECK(cudaStreamCreate(&kernel_stream));
-	Schedule schedule((void*)launch_kernel, (void*)relaunch_fp_kernel);
 
-	schedule.add_step((void*)kernel_Edge_self_loops_to_top, Edge_capacity, 128);
-	schedule.begin_fixpoint();
-		schedule.add_step((void*)kernel_Edge_prog, Edge_capacity, 128);
-		schedule.begin_fixpoint();
-			schedule.add_step((void*)kernel_Edge_minmax_top, Edge_capacity, 128);
-		schedule.end_fixpoint();
+	void* schedule_kernel_args[] = {};
+	auto dims = get_launch_dims(max_nrof_executing_instances, (void*)schedule_kernel, true);
 
-		schedule.begin_fixpoint();
-			schedule.add_step((void*)kernel_Edge_minmax_1, Edge_capacity, 128);
-		schedule.end_fixpoint();
-
-		schedule.begin_fixpoint();
-			schedule.add_step((void*)kernel_Edge_minmax_3, Edge_capacity, 128);
-		schedule.end_fixpoint();
-
-		schedule.add_step((void*)kernel_Node_lift, Node_capacity, 128);
-	schedule.end_fixpoint();
-
-	schedule.add_step((void*)kernel_Node_count_odd, Node_capacity, 128);
-	schedule.add_step((void*)kernel_Node_print_odd, Node_capacity, 128);	cudaGraphExec_t graph_exec = schedule.instantiate(kernel_stream);
-//	schedule.print_dot();
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
-	cudaEventRecord(start, kernel_stream);
+	cudaEventRecord(start);
 
 
-	CHECK(cudaGraphLaunch(graph_exec, kernel_stream));
+	CHECK(
+		cudaLaunchCooperativeKernel(
+			(void*)schedule_kernel,
+			std::get<0>(dims),
+			std::get<1>(dims),
+			schedule_kernel_args
+		)
+	);
 
-	cudaEventRecord(stop, kernel_stream);
+
+	cudaEventRecord(stop);
 	cudaEventSynchronize(stop);
 	float ms = 0;
 	cudaEventElapsedTime(&ms, start, stop);

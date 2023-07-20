@@ -1,0 +1,135 @@
+$$__device__ uint nrof_components = 1;
+
+struct NodeSet(pivot_f_b : Node,
+			   pivot_f_nb : Node,
+			   pivot_nf_b : Node,
+			   pivot_nf_nb : Node,
+			   scc : Bool,
+			   f_and_b : NodeSet,
+			   not_f_and_b : NodeSet,
+			   f_and_not_b : NodeSet){ // All nodes that are not forward and not backward remain in this set
+
+	allocate_sets {
+		if pivot_f_b != null then {
+			// In case no non forward non backward nodes are present we use this set instead.
+			if pivot_nf_nb == null then {
+				f_and_b := this; // Self referential
+				scc := true;
+				pivot_f_b := null;
+			}
+			if pivot_nf_nb != null then {
+				f_and_b   := NodeSet(null, null, null, null, true , null, null, null);
+				pivot_f_b := null;
+				$$atomicInc(&nrof_components, 0xffffffff);
+			}
+		}
+
+		if pivot_f_nb != null then {
+			f_and_not_b := NodeSet(null, pivot_f_nb, null, null, false, null, null, null);
+			pivot_f_nb := null;
+			$$atomicInc(&nrof_components, 0xffffffff);
+		}
+
+		if pivot_nf_b != null then {
+			not_f_and_b := NodeSet(null, null, pivot_nf_b, null, false, null, null, null);
+			pivot_nf_b := null;
+			$$atomicInc(&nrof_components, 0xffffffff);
+		}
+	}
+
+	initialise_pivot_fwd_bwd {
+		if !scc then {
+			pivot_f_b.fwd := true;
+			pivot_f_b.bwd := true;
+			pivot_f_b := null;
+
+			pivot_f_nb.fwd := true;
+			pivot_f_nb.bwd := true;
+			pivot_f_nb := null;
+
+			pivot_nf_b.fwd := true;
+			pivot_nf_b.bwd := true;
+			pivot_nf_b := null;
+
+			pivot_nf_nb.fwd := true;
+			pivot_nf_nb.bwd := true;
+			pivot_nf_nb := null;
+		}
+	}
+
+	print_nrof_sets {
+		if this == null then {
+			$$printf("Nrof components: %u\n", nrof_components);
+		}
+	}
+}
+
+struct Node(set : NodeSet,
+			fwd : Bool,
+			bwd : Bool
+			){
+
+	pivots_nominate {
+		if !set.scc then {
+			Bool f := fwd;
+			Bool b := bwd;
+
+			if f && b then {
+				set.pivot_f_b := this; 
+			}
+
+			if f && !b then {
+				set.pivot_f_nb := this;
+			}
+			
+			if !f && b then {
+				set.pivot_nf_b := this;
+			}
+
+			if !f && !b then {
+				set.pivot_nf_nb := this;
+			}
+		}
+	}
+
+	divide_into_sets_reset_fwd_bwd {
+		Bool f := fwd;
+		Bool b := bwd;
+
+		if f && b then {
+			set := set.f_and_b;
+		}
+
+		if !f && b then {
+			set := set.not_f_and_b;
+		}
+
+		if f && !b then {
+			set := set.f_and_not_b;
+		}
+
+		fwd := false;
+		bwd := false;
+	}
+}
+
+struct Edge(s : Node, t : Node){
+	compute_fwd_bwd {
+		if t.set == s.set then {
+			if s.fwd then {
+				t.fwd := true;
+			}
+			
+			if t.bwd then {
+				s.bwd := true;
+			}
+		}
+	}
+}
+
+Fix(pivots_nominate <
+	allocate_sets <
+	divide_into_sets_reset_fwd_bwd <
+	initialise_pivot_fwd_bwd <
+	Fix(compute_fwd_bwd)
+) < print_nrof_sets

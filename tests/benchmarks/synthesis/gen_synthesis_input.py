@@ -59,29 +59,6 @@ def main():
 		with open(adl_init_file, "w") as graph_f:
 			graph_f.write("ADL structures 3\n"
 				"ControllableEvent State State\n"
-				"State Bool Bool Bool Bool Bool Bool\n"
-				"UncontrollableEvent State State\n");
-
-			# Print ControllableEvent
-			graph_f.write(f"ControllableEvent instances {nrof_controllable} {nrof_controllable}\n");
-			for (u, v) in permuted_edges[:nrof_controllable]:
-				graph_f.write(f"{u+1} {v+1}\n");
-
-			# Print nodes
-			graph_f.write(f"State instances {n} {n}\n");
-			for i in range(n):
-				graph_f.write(f"{int(is_marked[i])} {int(is_init[i])} 1 0 0 0\n");
-
-			# Print UncontrollableEvent
-			graph_f.write(f"UncontrollableEvent instances {n - nrof_controllable} {n - nrof_controllable}\n");
-			for (u, v) in permuted_edges[nrof_controllable:]:
-				graph_f.write(f"{u+1} {v+1}\n");
-
-		# Write synthesis2.adl init file to disk
-		adl_init_file = os.path.join(args.output_dir, f"synthesis2_{n}_{m}.init");
-		with open(adl_init_file, "w") as graph_f:
-			graph_f.write("ADL structures 3\n"
-				"ControllableEvent State State\n"
 				"State Bool Bool Bool ControllableEvent Bool\n"
 				"UncontrollableEvent State State\n");
 
@@ -93,7 +70,7 @@ def main():
 			# Print nodes
 			graph_f.write(f"State instances {n} {n}\n");
 			for i in range(n):
-				graph_f.write(f"{int(is_marked[i])} {int(is_init[i])} 0 0 0\n");
+				graph_f.write(f"{int(is_marked[i])} {int(is_init[i])}\n");
 
 			# Print UncontrollableEvent
 			graph_f.write(f"UncontrollableEvent instances {n - nrof_controllable} {n - nrof_controllable}\n");

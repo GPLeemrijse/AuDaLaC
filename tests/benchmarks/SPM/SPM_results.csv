@@ -1,0 +1,4 @@
+memorder,schedule,voting-strat,weak_non_racing,algorithm,problem_type,problem_size,runtime
+acqrel,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,794,19.793295
+acqrel,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,11014,237.94138
+acqrel,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,149262,10684.902

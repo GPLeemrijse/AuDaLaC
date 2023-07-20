@@ -101,11 +101,12 @@ int main(int argc, char **argv) {
       states.push_back({0});
       
       iss >> states.back().X_m
-      		>> states.back().X_0
-      		>> states.back().X_k
-      		>> states.back().N
-      		>> states.back().B
-      		>> states.back().Y;
+      		>> states.back().X_0;
+
+      states.back().X_k = true;
+      states.back().N = false;
+      states.back().B = false;
+      states.back().Y = false;
   }
 
   for(auto &[s, t] : controllable_idxs){
