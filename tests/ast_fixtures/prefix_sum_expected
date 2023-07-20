@@ -1,5 +1,5 @@
-@@@@@@@@@@@@@@@@@@ AST @@@@@@@@@@@@@@@@@@
 Program {
+    inline_global_cpp: [],
     structs: [
         ADLStruct {
             name: "Node",
@@ -7,11 +7,19 @@ Program {
                 (
                     "val",
                     Int,
+                    (
+                        14,
+                        23,
+                    ),
                 ),
                 (
                     "prev",
                     Named(
                         "Node",
+                    ),
+                    (
+                        26,
+                        37,
                     ),
                 ),
                 (
@@ -19,10 +27,18 @@ Program {
                     Named(
                         "Node",
                     ),
+                    (
+                        40,
+                        54,
+                    ),
                 ),
                 (
                     "auxval",
                     Int,
+                    (
+                        57,
+                        69,
+                    ),
                 ),
             ],
             steps: [
@@ -30,78 +46,178 @@ Program {
                     name: "prefixOne",
                     statements: [
                         Assignment(
-                            [
-                                "auxval",
-                            ],
+                            Var(
+                                [
+                                    "auxval",
+                                ],
+                                (
+                                    87,
+                                    93,
+                                ),
+                            ),
                             Var(
                                 [
                                     "prev",
                                     "val",
                                 ],
+                                (
+                                    97,
+                                    105,
+                                ),
+                            ),
+                            (
+                                87,
+                                106,
                             ),
                         ),
                         Assignment(
-                            [
-                                "auxprev",
-                            ],
+                            Var(
+                                [
+                                    "auxprev",
+                                ],
+                                (
+                                    109,
+                                    116,
+                                ),
+                            ),
                             Var(
                                 [
                                     "prev",
                                     "prev",
                                 ],
+                                (
+                                    120,
+                                    129,
+                                ),
+                            ),
+                            (
+                                109,
+                                130,
                             ),
                         ),
                     ],
+                    loc: (
+                        73,
+                        133,
+                    ),
                 },
                 Step {
                     name: "prefixTwo",
                     statements: [
                         Assignment(
-                            [
-                                "val",
-                            ],
+                            Var(
+                                [
+                                    "val",
+                                ],
+                                (
+                                    150,
+                                    153,
+                                ),
+                            ),
                             BinOp(
                                 Var(
                                     [
                                         "val",
                                     ],
+                                    (
+                                        157,
+                                        160,
+                                    ),
                                 ),
                                 Plus,
                                 Var(
                                     [
                                         "auxval",
                                     ],
+                                    (
+                                        163,
+                                        169,
+                                    ),
                                 ),
+                                (
+                                    157,
+                                    169,
+                                ),
+                            ),
+                            (
+                                150,
+                                170,
                             ),
                         ),
                         Assignment(
-                            [
-                                "prev",
-                            ],
+                            Var(
+                                [
+                                    "prev",
+                                ],
+                                (
+                                    173,
+                                    177,
+                                ),
+                            ),
                             Var(
                                 [
                                     "auxprev",
                                 ],
+                                (
+                                    181,
+                                    188,
+                                ),
+                            ),
+                            (
+                                173,
+                                189,
                             ),
                         ),
                     ],
+                    loc: (
+                        136,
+                        192,
+                    ),
                 },
             ],
+            loc: (
+                0,
+                194,
+            ),
         },
     ],
     schedule: Sequential(
         StepCall(
             "init",
+            (
+                196,
+                200,
+            ),
         ),
         Fixpoint(
             Sequential(
                 StepCall(
                     "prefixOne",
+                    (
+                        207,
+                        216,
+                    ),
                 ),
                 StepCall(
                     "prefixTwo",
+                    (
+                        219,
+                        228,
+                    ),
+                ),
+                (
+                    207,
+                    228,
                 ),
             ),
+            (
+                203,
+                229,
+            ),
+        ),
+        (
+            196,
+            229,
         ),
     ),
 }
