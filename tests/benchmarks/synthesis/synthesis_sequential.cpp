@@ -9,45 +9,89 @@
 using namespace std::chrono;
 
 
-typedef struct {
-	bool X_m;
-	bool X_0;
-	bool X_k;
+class State {
+public:
+	bool marked;
+	bool initial;
+	bool deleted;
 	bool N;
 	bool B;
 	bool Y;
 
-	void init_N(void){
-		N = X_m && X_k;
+	std::vector<State*> c_pred;
+	std::vector<State*> c_succ;
+	std::vector<State*> u_pred;
+
+	State(bool marked, bool initial) : 
+		marked(marked), initial(initial),
+		deleted(false), N(false), B(false), Y(false) {}
+
+
+	void init_nonblocking(void){
+		N = !deleted && marked;
 	}
 
-	void init_B(void){
-		B = X_k && !N;
+	void start_nonblocking(void){
+		if(N) {
+			propagate_nonblocking();
+		}
 	}
 
-	void remove_bad(bool* stable){
-		if(X_k != (X_k && !B)){
-			X_k = X_k && !B;
+	void propagate_nonblocking(void){
+		N = true;
+		for(State* cp : c_pred){
+			if(!cp->N && !cp->deleted){
+				cp->propagate_nonblocking();
+			}
+		}
+	}
+
+	void init_bad(void){
+		B = !deleted && !N;
+	}
+
+	void start_bad(void){
+		if(B) {
+			propagate_bad();
+		}
+	}
+
+	void propagate_bad(void){
+		B = true;
+		for(State* cp : u_pred){
+			if(!cp->B && !cp->deleted){
+				cp->propagate_bad();
+			}
+		}
+	}
+
+	void init_supervisor(void){
+		Y = !deleted && initial;
+	}
+
+	void start_supervisor(void){
+		if(Y) {
+			propagate_supervisor();
+		}
+	}
+
+	void propagate_supervisor(void){
+		Y = true;
+		for(State* cp : c_succ){
+			if(!cp->Y && !cp->deleted){
+				cp->propagate_supervisor();
+			}
+		}
+	}
+
+	void delete_bad(bool* stable){
+		if(B && !deleted) {
+			deleted = true;
 			*stable = false;
 		}
 	}
 
-	void init_Y(void){
-		Y = X_0 && X_k;
-	}
-
-	void print(int state_num){
-		printf("%04d: X_m: %d, X_0: %d, X_k: %d, N: %d, B: %d, Y: %d\n",
-			state_num,
-			(int)X_m,
-			(int)X_0,
-			(int)X_k,
-			(int)N,
-			(int)B,
-			(int)Y
-		);
-	}
-} state_t;
+};
 
 int main(int argc, char **argv) {
 	if (argc != 2) {
@@ -56,12 +100,11 @@ int main(int argc, char **argv) {
 	}
 
 	int nrof_states;
-	std::vector<state_t> states;
+	std::vector<State> states;
 	int nrof_controllable;
-	std::vector<std::pair<state_t*, state_t*>> controllable;
-	std::vector<std::pair<uint, uint>> controllable_idxs;
+	std::vector<std::pair<uint, uint>> controllable;
 	int nrof_uncontrollable;
-	std::vector<std::pair<state_t*, state_t*>> uncontrollable;
+	std::vector<std::pair<uint, uint>> uncontrollable;
 
 	std::ifstream infile(argv[1]);
 	std::string line;
@@ -77,7 +120,6 @@ int main(int argc, char **argv) {
   std::string skip;
 	infile >> skip >> skip >> skip >> nrof_controllable;
 	controllable.reserve(nrof_controllable);
-	controllable_idxs.reserve(nrof_controllable);
 	std::getline(infile, line);
 	for (int c = 0; c < nrof_controllable; c++){
       std::getline(infile, line);
@@ -88,7 +130,7 @@ int main(int argc, char **argv) {
       iss >> s_idx
       		>> t_idx;
       
-      controllable_idxs.push_back(std::pair(s_idx-1, t_idx-1));
+      controllable.push_back(std::pair(s_idx-1, t_idx-1));
   }
 
 	/* Parse states */
@@ -98,19 +140,13 @@ int main(int argc, char **argv) {
   for (int s = 0; s < nrof_states; s++){
       std::getline(infile, line);
       std::stringstream iss(line);
-      states.push_back({0});
-      
-      iss >> states.back().X_m
-      		>> states.back().X_0;
+      bool marked;
+      bool initial;
 
-      states.back().X_k = true;
-      states.back().N = false;
-      states.back().B = false;
-      states.back().Y = false;
-  }
+      iss >> marked
+      		>> initial;
 
-  for(auto &[s, t] : controllable_idxs){
-  	controllable.push_back(std::pair(&states[s], &states[t]));
+      states.push_back(State(marked, initial));
   }
 
   /* Parse uncontrollable */
@@ -126,70 +162,40 @@ int main(int argc, char **argv) {
       iss >> s_idx
       		>> t_idx;
       
-      uncontrollable.push_back(std::pair(&states[s_idx-1], &states[t_idx-1]));
+      uncontrollable.push_back(std::pair(s_idx-1, t_idx-1));
+  }
+
+  for(auto &[s, t] : controllable){
+  	states[s].c_succ.push_back(&states[t]);
+  	states[t].c_pred.push_back(&states[s]);
+  }
+
+  for(auto &[s, t] : uncontrollable){
+  	states[t].u_pred.push_back(&states[s]);
   }
 
   printf("Nrof states: %u, nrof_controllable: %u, nrof_uncontrollable: %u\n", nrof_states, nrof_controllable, nrof_uncontrollable);
   
 	auto t1 = high_resolution_clock::now();
-	bool X_k_stable = true;
+	bool no_deletions = true;
 	do {
-		X_k_stable = true;
-
-		// init_N
-		for(auto &s : states) {s.init_N();}
+		no_deletions = true;
 		
-		// Fix(compute_nonblocking)
-		bool N_k_stable = true;
-		do {
-			N_k_stable = true;
+		// Computes non-blocking
+		for(auto &s : states) {s.init_nonblocking();}
+		for(auto &s : states) {s.start_nonblocking();}
 
-			// compute_nonblocking
-			for (auto &[x, y] : controllable) {
-				if(x->X_k && y->N && !x->N){
-					x->N = true;
-					N_k_stable = false;
-				}
-			}
-		} while(!N_k_stable);
-
-		// init_B
-		for(auto &s : states) {s.init_B();}
-
-		// Fix(compute_bad)
-		bool B_k_stable = true;
-		do {
-			B_k_stable = true;
-
-			// compute_bad
-			for (auto &[x, y] : uncontrollable) {
-				if(x->X_k && y->B && !x->B){
-					x->B = true;
-					B_k_stable = false;
-				}
-			}
-		} while(!B_k_stable);
-
+		// Computes bad
+		for(auto &s : states) {s.init_bad();}
+		for(auto &s : states) {s.start_bad();}
+		
 		// Remove bad
-		for(auto &s : states) {s.remove_bad(&X_k_stable);}
-	} while(!X_k_stable);
+		for(auto &s : states) {s.delete_bad(&no_deletions);}
+	} while(!no_deletions);
 	
-	// init Y
-	for(auto &s : states) {s.init_Y();}
-
-	// Fix(compute_supervisor)
-	bool Y_stable = true;
-	do {
-		Y_stable = true;
-
-		// compute_supervisor
-		for (auto &[x, y] : controllable) {
-			if(y->X_k && x->Y && !y->Y){
-				y->Y = true;
-				Y_stable = false;
-			}
-		}
-	} while(!Y_stable);
+	// Computes supervisor
+	for(auto &s : states) {s.init_supervisor();}
+	for(auto &s : states) {s.start_supervisor();}
 
 	auto t2 = high_resolution_clock::now();
 
