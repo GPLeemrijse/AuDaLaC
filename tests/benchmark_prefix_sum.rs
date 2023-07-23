@@ -30,13 +30,13 @@ fn prefix_sum_files() -> Vec<TestCase<'static>> {
         (
             "Random",
             vec![
-                // ("tests/benchmarks/prefix_sum/testcases/prefix_sum_10000.init", Vec::new(),   10000),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_10000.init", Vec::new(),   10000),
                 ("tests/benchmarks/prefix_sum/testcases/prefix_sum_55000.init", Vec::new(),   55000),
-                // ("tests/benchmarks/prefix_sum/testcases/prefix_sum_100000.init", Vec::new(),  100000),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_100000.init", Vec::new(),  100000),
                 ("tests/benchmarks/prefix_sum/testcases/prefix_sum_550000.init", Vec::new(),   550000),
-                // ("tests/benchmarks/prefix_sum/testcases/prefix_sum_1000000.init", Vec::new(), 1000000),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_1000000.init", Vec::new(), 1000000),
                 ("tests/benchmarks/prefix_sum/testcases/prefix_sum_5500000.init", Vec::new(),   5500000),
-                // ("tests/benchmarks/prefix_sum/testcases/prefix_sum_10000000.init", Vec::new(),10000000),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_10000000.init", Vec::new(),10000000),
             ],
         )
     ]

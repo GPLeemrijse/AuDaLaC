@@ -89,7 +89,7 @@ pub fn voting_impact_configs() -> Vec<Config<'static>> {
         ("on-host", "on-host-alternating"),
         ("graph", "graph-shared"),
         ("graph", "graph-shared-banks"),
-        ("graph", "graph-shared-opportunistic"),
+        //("graph", "graph-shared-opportunistic"),
         ("graph", "graph-simple")
     ];
     let w = ["1"];
@@ -138,7 +138,7 @@ impl<'a> Config<'_> {
             self.memorder,
             "-S",
             self.schedule,
-            "-v",
+            "-f",
             self.voting,
             "-w",
             self.weak_non_racing,

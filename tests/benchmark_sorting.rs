@@ -30,13 +30,13 @@ fn sorting_files() -> Vec<TestCase<'static>> {
         (
             "Random",
             vec![
-                // ("tests/benchmarks/sorting/testcases/sorting_10000.init", Vec::new(),   10000),
+                ("tests/benchmarks/sorting/testcases/sorting_10000.init", Vec::new(),   10000),
                 ("tests/benchmarks/sorting/testcases/sorting_55000.init", Vec::new(),   55000),
-                // ("tests/benchmarks/sorting/testcases/sorting_100000.init", Vec::new(),  100000),
+                ("tests/benchmarks/sorting/testcases/sorting_100000.init", Vec::new(),  100000),
                 ("tests/benchmarks/sorting/testcases/sorting_550000.init", Vec::new(),   550000),
-                // ("tests/benchmarks/sorting/testcases/sorting_1000000.init", Vec::new(), 1000000),
+                ("tests/benchmarks/sorting/testcases/sorting_1000000.init", Vec::new(), 1000000),
                 ("tests/benchmarks/sorting/testcases/sorting_5500000.init", Vec::new(),   5500000),
-                // ("tests/benchmarks/sorting/testcases/sorting_10000000.init", Vec::new(),10000000),
+                ("tests/benchmarks/sorting/testcases/sorting_10000000.init", Vec::new(),10000000),
             ],
         )
     ]

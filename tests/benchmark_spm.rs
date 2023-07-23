@@ -30,25 +30,25 @@ fn parity_games() -> Vec<TestCase<'static>> {
         (
             "Invariantly Inevitably Eat",
             vec![
-                // ("tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_inevitably_eat.init", Vec::new(), 239 + 555),
+                ("tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_inevitably_eat.init", Vec::new(), 239 + 555),
                 ("tests/benchmarks/SPM/testcases/dining/dining_5.invariantly_inevitably_eat.init", Vec::new(), 787 + 2177),
-                // ("tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_inevitably_eat.init", Vec::new(), 2597 + 8417),
+                ("tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_inevitably_eat.init", Vec::new(), 2597 + 8417),
                 ("tests/benchmarks/SPM/testcases/dining/dining_7.invariantly_inevitably_eat.init", Vec::new(), 8575 + 32102),
-                // ("tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_inevitably_eat.init", Vec::new(), 28319 + 120943),
+                ("tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_inevitably_eat.init", Vec::new(), 28319 + 120943),
                 ("tests/benchmarks/SPM/testcases/dining/dining_9.invariantly_inevitably_eat.init", Vec::new(), 93529 + 450679),
-                // ("tests/benchmarks/SPM/testcases/dining/dining_10.invariantly_inevitably_eat.init", Vec::new(), 1663133 + 308903),
+                ("tests/benchmarks/SPM/testcases/dining/dining_10.invariantly_inevitably_eat.init", Vec::new(), 1663133 + 308903),
             ],
         ),
         (
             "Invariantly Plato Starves",
             vec![
-                // ("tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_plato_starves.init", Vec::new(), 504 + 174),
+                ("tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_plato_starves.init", Vec::new(), 504 + 174),
                 ("tests/benchmarks/SPM/testcases/dining/dining_5.invariantly_plato_starves.init", Vec::new(), 570 + 2018),
-                // ("tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_plato_starves.init", Vec::new(), 1878 + 7854),
+                ("tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_plato_starves.init", Vec::new(), 1878 + 7854),
                 ("tests/benchmarks/SPM/testcases/dining/dining_7.invariantly_plato_starves.init", Vec::new(), 6198 + 29888),
-                // ("tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_plato_starves.init", Vec::new(), 20466 + 111774),
+                ("tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_plato_starves.init", Vec::new(), 20466 + 111774),
                 ("tests/benchmarks/SPM/testcases/dining/dining_9.invariantly_plato_starves.init", Vec::new(), 67590 + 412322),
-                // ("tests/benchmarks/SPM/testcases/dining/dining_10.invariantly_plato_starves.init", Vec::new(), 1504368 + 223230),
+                ("tests/benchmarks/SPM/testcases/dining/dining_10.invariantly_plato_starves.init", Vec::new(), 1504368 + 223230),
             ],
         ),
         // (
