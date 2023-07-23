@@ -61,7 +61,7 @@ fn main() {
             possible_value("seqcons")
             default_value("relaxed")
             "Which memory order to use.")
-        (@arg voting: -v --vote_strat
+        (@arg fpstrat: -f --fp_strat
             possible_value("graph-simple")
             possible_value("graph-shared")
             possible_value("graph-shared-banks")
@@ -71,7 +71,7 @@ fn main() {
             possible_value("in-kernel-simple")
             possible_value("in-kernel-alternating")
             default_value("graph-shared-opportunistic")
-            "Which fixpoint stability voting strategy to use.")
+            "Which fixpoint stability synchronisation strategy to use.")
         (@arg weak_ld_st: -w --weak_ld_st
             possible_value("1")
             possible_value("0")
@@ -100,7 +100,7 @@ fn main() {
     let adl_file_loc = args.value_of("file").unwrap();
     let output_file = args.value_of("output");
     let schedule_strat: &str = args.value_of("schedule_strat").unwrap();
-    let voting_strat: &str = args.value_of("voting").unwrap();
+    let fp_strat: &str = args.value_of("fpstrat").unwrap();
     let memorder = MemOrder::from_str(args.value_of("memorder").unwrap());
     let scope = Scope::from_str(args.value_of("scope").unwrap());
 
@@ -140,7 +140,7 @@ fn main() {
                             .collect(),
                     );
                 } else {
-                    let fp_strat: Box<dyn FPStrategy> = match (schedule_strat, voting_strat) {
+                    let fp_strat: Box<dyn FPStrategy> = match (schedule_strat, fp_strat) {
                         ("in-kernel", "in-kernel-simple") => {
                             Box::new(InKernelSimpleFixpoint::new(fixpoint_depth(&program.schedule)))
                         }
