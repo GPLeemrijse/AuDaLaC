@@ -18,4 +18,4 @@ struct ListElem(val : Int, prev: ListElem, auxprev: ListElem, auxval : Int) {
 	}
 }
 
-Fix(prefixOne < prefixTwo) < print_sol
+Fix(prefixOne < prefixTwo) //< print_sol
