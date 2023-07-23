@@ -264,7 +264,7 @@ impl GraphLaunchSchedule<'_> {
 impl CompileComponent for GraphLaunchSchedule<'_> {
 	fn add_includes(&self, set: &mut BTreeSet<&str>) {
 		set.insert("<cooperative_groups.h>");
-		set.insert("\"Schedule.h\"");
+		set.insert("\"GraphSchedule.h\"");
 	}
 
 	fn defines(&self) -> Option<String> {
@@ -323,7 +323,7 @@ impl CompileComponent for GraphLaunchSchedule<'_> {
 		let mut result = formatdoc!{"
 			\tcudaStream_t kernel_stream;
 			\tCHECK(cudaStreamCreate(&kernel_stream));
-			\tSchedule schedule((void*)launch_kernel, {relaunch_kernel});
+			\tGraphSchedule schedule((void*)launch_kernel, {relaunch_kernel});
 		
 		"};
 		

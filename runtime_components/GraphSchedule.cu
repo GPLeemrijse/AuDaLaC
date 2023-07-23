@@ -1,9 +1,9 @@
-#include "Schedule.h"
+#include "GraphSchedule.h"
 #include "ADL.h"
 
-int Schedule::Subgraph::nrof_subgraphs = 0;
+int GraphSchedule::Subgraph::nrof_subgraphs = 0;
 
-void Schedule::add_step(void* kernel, inst_size capacity, size_t smem) {
+void GraphSchedule::add_step(void* kernel, inst_size capacity, size_t smem) {
 	int min_grid_size;
 	int dyn_block_size;
 	cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
@@ -33,45 +33,45 @@ void Schedule::add_step(void* kernel, inst_size capacity, size_t smem) {
 	current->last_node = new_node;
 }
 
-void Schedule::begin_fixpoint(void){
+void GraphSchedule::begin_fixpoint(void){
 	current->next = new Subgraph(current->lvl + 1);
 	fixpoints.push_back(current->next);
 	current = current->next;
 }
 
-void Schedule::end_fixpoint(void){
+void GraphSchedule::end_fixpoint(void){
 	current->fp_start = fixpoints.back();
 	fixpoints.pop_back();
 	current->next = new Subgraph(current->lvl - 1);
 	current = current->next;
 }
 
-cudaGraphExec_t Schedule::instantiate(cudaStream_t stream){
+cudaGraphExec_t GraphSchedule::instantiate(cudaStream_t stream){
 	cudaGraphExec_t result = head->instantiate(launch_kernel, relaunch_fp_kernel);
 	head->fill_out_fixpoints(stream, relaunch_fp_kernel);
 	return result;
 }
 
-void Schedule::print_dot(void){
+void GraphSchedule::print_dot(void){
 	head->print_dot();
 }
 
-void Schedule::print_debug(void){
+void GraphSchedule::print_debug(void){
 	head->print_debug();
 }
 
-Schedule::Schedule(void* launch_kernel, void* relaunch_fp_kernel) :
+GraphSchedule::GraphSchedule(void* launch_kernel, void* relaunch_fp_kernel) :
 	launch_kernel(launch_kernel), relaunch_fp_kernel(relaunch_fp_kernel) {
 	head = new Subgraph(-1);
 	current = head;
 }
 
-Schedule::Subgraph::Subgraph(int lvl) : lvl(lvl), next(NULL), last_node(NULL), fp_start(NULL) {
+GraphSchedule::Subgraph::Subgraph(int lvl) : lvl(lvl), next(NULL), last_node(NULL), fp_start(NULL) {
 	CHECK(cudaGraphCreate(&graph, 0));
 	number = ++Subgraph::nrof_subgraphs;
 }
 
-cudaGraphExec_t Schedule::Subgraph::instantiate(void* launch_kernel, void* relaunch_fp_kernel) {
+cudaGraphExec_t GraphSchedule::Subgraph::instantiate(void* launch_kernel, void* relaunch_fp_kernel) {
 	cudaGraphExec_t next_to_launch;
 	if(next == NULL) {
 		next_to_launch = NULL;
@@ -138,7 +138,7 @@ cudaGraphExec_t Schedule::Subgraph::instantiate(void* launch_kernel, void* relau
 	return graph_exec;
 }
 
-void Schedule::Subgraph::fill_out_fixpoints(cudaStream_t stream, void* relaunch_fp_kernel) {
+void GraphSchedule::Subgraph::fill_out_fixpoints(cudaStream_t stream, void* relaunch_fp_kernel) {
 	// If we have a fixpoint to start, we update our relaunch node.
 	if(fp_start != NULL) {
 		// Holds kernel node parameters
@@ -179,7 +179,7 @@ void Schedule::Subgraph::fill_out_fixpoints(cudaStream_t stream, void* relaunch_
 	}
 }
 
-void Schedule::Subgraph::print_dot(){
+void GraphSchedule::Subgraph::print_dot(){
 	char dot_file[20];
 	sprintf(dot_file, "graph%u.dot", number);
 	CHECK(cudaGraphDebugDotPrint(graph, dot_file, cudaGraphDebugDotFlagsKernelNodeParams));
@@ -188,7 +188,7 @@ void Schedule::Subgraph::print_dot(){
 	}
 }
 
-void Schedule::Subgraph::print_debug(){
+void GraphSchedule::Subgraph::print_debug(){
 	for (int i = 0; i < lvl + 1; i++){
 		printf("\t");
 	}

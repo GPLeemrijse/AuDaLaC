@@ -4,7 +4,7 @@
 #include "ADL.h"
 using namespace ADL;
 
-class Schedule {
+class GraphSchedule {
 	class Subgraph {
 		static int nrof_subgraphs;
 	public:
@@ -31,13 +31,13 @@ class Schedule {
 	void* launch_kernel;
 	void* relaunch_fp_kernel;
 	cudaKernelNodeParams k_params;
-	Schedule::Subgraph* head;
-	Schedule::Subgraph* current;
-	std::vector<Schedule::Subgraph*> fixpoints;
+	GraphSchedule::Subgraph* head;
+	GraphSchedule::Subgraph* current;
+	std::vector<GraphSchedule::Subgraph*> fixpoints;
 
 
 public:
-	Schedule(void* launch_kernel, void* relaunch_fp_kernel);
+	GraphSchedule(void* launch_kernel, void* relaunch_fp_kernel);
 
 	void add_step(void* kernel, inst_size capacity, size_t smem);
 
