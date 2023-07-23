@@ -1,4 +1,4 @@
-SPM: SPM.cu ../../../compile_resources/*.cu ../../../compile_resources/*.h
-	nvcc -arch=sm_60 -dc ../../../compile_resources/*.cu -odir ../../../compile_resources/ -O3
-	nvcc -arch=sm_60 -dc SPM.cu -I../../../compile_resources/ --ptxas-options=-v -O3
-	nvcc -arch=sm_60 SPM.o ../../../compile_resources/*.o -o SPM.out -O3
+SPM: SPM.cu ../../../runtime_components/*.cu ../../../runtime_components/*.h
+	nvcc -arch=sm_60 -dc ../../../runtime_components/*.cu -odir ../../../runtime_components/ -O3
+	nvcc -arch=sm_60 -dc SPM.cu -I../../../runtime_components/ --ptxas-options=-v -O3
+	nvcc -arch=sm_60 SPM.o ../../../runtime_components/*.o -o SPM.out -O3
