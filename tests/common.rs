@@ -13,7 +13,7 @@ use std::fmt;
 use std::fmt::Display;
 use std::process::Command;
 
-const REPS: usize = 5;
+const REPS: usize = 10;
 pub type TestCase<'a> = (&'a str, Vec<(&'a str, Vec<String>, usize)>);
 
 
@@ -60,7 +60,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
 
                 
                 let csv_prefix = format!("{},{bin_name},{problem_type},{p_size}", config.as_csv_row());
-                let runtime = bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(45));
+                let runtime = bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*5));
                 result_file.write_all(format!("{csv_prefix},{runtime}\n").as_bytes()).expect("Could not write to result file.");
             }
         }
