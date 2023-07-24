@@ -2,7 +2,7 @@ use crate::common::*;
 mod common;
 
 #[test]
-fn test_benchmark_synthesis() {
+fn test_benchmark_prefix_sum() {
     let vec_of_vec_of_configs = vec![
         memorder_impact_configs(),
         voting_impact_configs(),
