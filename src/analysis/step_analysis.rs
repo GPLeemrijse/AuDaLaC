@@ -1,6 +1,6 @@
 use crate::analysis::*;
 use std::collections::{HashSet, HashMap};
-use crate::parser::ast::*;
+use crate::frontend::ast::*;
 
 pub fn racing_parameters<'a>(
     step: &'a Step,
@@ -279,7 +279,7 @@ mod tests {
     use std::collections::HashSet;
     use crate::analysis::step_analysis::written_parameters;
     use crate::analysis::racing_parameters;
-    use crate::parser::*;
+    use crate::frontend::*;
 
     #[test]
     fn test_racing_parameters() {

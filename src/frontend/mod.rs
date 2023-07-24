@@ -3,7 +3,7 @@ mod ast_validator;
 mod validation_error;
 
 
-lalrpop_mod!(pub grammar, "/parser/grammar.rs"); // synthesized by LALRPOP
+lalrpop_mod!(pub grammar, "/frontend/grammar.rs"); // synthesized by LALRPOP
 
 pub use ast_validator::validate_ast;
 

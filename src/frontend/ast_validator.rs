@@ -1,5 +1,5 @@
-use crate::parser::validation_error::*;
-use crate::parser::ast::*;
+use crate::frontend::validation_error::*;
+use crate::frontend::ast::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -185,7 +185,7 @@ fn check_no_reserved_keywords_steps<'ast>(
 
 
 fn check_schedule<'ast>(schedule: &'ast Schedule, context: &mut BlockEvaluationContext<'ast>) {
-    use crate::parser::ast::Schedule::*;
+    use crate::frontend::ast::Schedule::*;
     match schedule {
         StepCall(step_name, loc) => {
             if !context.program.has_any_step_by_name(step_name) {
@@ -280,7 +280,7 @@ fn check_uniqueness_of_steps<'ast>(
 
 fn check_statement_block<'ast>(block: &'ast Vec<Stat>, context: &mut BlockEvaluationContext<'ast>) {
     for stmt in block {
-        use crate::parser::ast::Stat::*;
+        use crate::frontend::ast::Stat::*;
 
         match stmt {
             Declaration(decl_type, id, exp, loc) => {
@@ -498,9 +498,9 @@ fn get_expr_type<'ast>(
     expr: &'ast Exp,
     context: &mut BlockEvaluationContext<'ast>,
 ) -> Option<Type> {
-    use crate::parser::ast::Exp::*;
-    use crate::parser::ast::Literal::*;
-    use crate::parser::ast::Type::*;
+    use crate::frontend::ast::Exp::*;
+    use crate::frontend::ast::Literal::*;
+    use crate::frontend::ast::Type::*;
 
     match expr {
         BinOp(l, code, r, loc) => {
@@ -601,8 +601,8 @@ fn get_expr_type<'ast>(
 }
 
 fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<Type> {
-    use crate::parser::ast::BinOpcode::*;
-    use crate::parser::ast::Type::*;
+    use crate::frontend::ast::BinOpcode::*;
+    use crate::frontend::ast::Type::*;
 
     let is_arithmetic = |o: &'ast BinOpcode| match o {
         Plus | Minus | Mult | Div | Mod => true,
@@ -641,10 +641,10 @@ fn get_binop_expr_type<'ast>(l: &Type, op: &'ast BinOpcode, r: &Type) -> Option<
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::ast_validator::validate_ast;
-    use crate::parser::ast_validator::ErrorContext;
-    use crate::parser::ast_validator::ValidationError;
-    use crate::parser::ast_validator::ValidationErrorType::*;
+    use crate::frontend::ast_validator::validate_ast;
+    use crate::frontend::ast_validator::ErrorContext;
+    use crate::frontend::ast_validator::ValidationError;
+    use crate::frontend::ast_validator::ValidationErrorType::*;
     use crate::ProgramParser;
 
     #[test]
@@ -847,8 +847,8 @@ mod tests {
 
     #[test]
     fn test_validate_var_type_correct() {
-        use crate::parser::ast::Type::*;
-        use crate::parser::ast::*;
+        use crate::frontend::ast::Type::*;
+        use crate::frontend::ast::*;
 
         let program_string =
             r#"struct A(a : Int, ab : B){} struct B(b : A){ init {b.ab.b.a := 1; b.a := 1;}} init"#;

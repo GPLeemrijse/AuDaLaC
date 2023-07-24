@@ -1,9 +1,9 @@
 use core::ops::Range;
 use codespan_reporting::diagnostic::Label;
 use codespan_reporting::diagnostic::Diagnostic;
-use crate::parser::ast::BinOpcode;
-use crate::parser::ast::Type;
-use crate::parser::ast::Loc;
+use crate::frontend::ast::BinOpcode;
+use crate::frontend::ast::Type;
+use crate::frontend::ast::Loc;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ValidationError {

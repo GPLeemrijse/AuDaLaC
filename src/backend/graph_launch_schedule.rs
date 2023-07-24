@@ -3,10 +3,10 @@ use std::collections::HashSet;
 use crate::analysis::fixpoint_depth;
 use crate::utils::format_signature;
 use crate::analysis::get_step_to_structs;
-use crate::compiler::compilation_traits::*;
+use crate::backend::compilation_traits::*;
 
-use crate::compiler::StepBodyCompiler;
-use crate::parser::ast::*;
+use crate::backend::StepBodyCompiler;
+use crate::frontend::ast::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 use std::collections::HashMap;

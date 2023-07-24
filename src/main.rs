@@ -1,13 +1,13 @@
 #[macro_use]
 extern crate lalrpop_util;
 use crate::analysis::fixpoint_depth;
-use crate::compiler::components::*;
-use crate::compiler::fp_strategies::*;
-use crate::compiler::utils::{MemOrder, Scope};
-use crate::compiler::*;
+use crate::backend::components::*;
+use crate::backend::fp_strategies::*;
+use crate::backend::utils::{MemOrder, Scope};
+use crate::backend::*;
 use crate::init_file_generator::generate_init_file;
-use crate::parser::validate_ast;
-use crate::parser::ProgramParser;
+use crate::frontend::validate_ast;
+use crate::frontend::ProgramParser;
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
@@ -21,10 +21,9 @@ use std::io::BufWriter;
 use std::io::Write;
 
 use clap::clap_app;
-mod compiler;
+mod backend;
 mod init_file_generator;
-#[allow(dead_code)]
-mod parser;
+mod frontend;
 mod analysis;
 
 fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error + Send + Sync + 'static>>
@@ -206,7 +205,7 @@ fn main() {
                         _ => panic!("Schedule strategy not found."),
                     };
 
-                    let result = compiler::compile(vec![
+                    let result = backend::compile(vec![
                         &InitFileReader {},
                         &PrintbufferSizeAdjuster::new(buffer_size),
                         &work_divisor,

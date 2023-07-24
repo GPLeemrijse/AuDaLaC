@@ -1,7 +1,7 @@
 use crate::analysis::get_new_label_params;
 use crate::analysis::racing_parameters;
-use crate::compiler::utils::*;
-use crate::parser::ast::*;
+use crate::backend::utils::*;
+use crate::frontend::ast::*;
 use indoc::formatdoc;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -493,7 +493,7 @@ impl StepBodyCompiler<'_> {
 #[cfg(test)]
 mod tests {
 	use crate::analysis::racing_parameters;
-	use crate::parser::*;
+	use crate::frontend::*;
 	use crate::StepBodyCompiler;
 	use indoc::formatdoc;
 	use crate::MemOrder;

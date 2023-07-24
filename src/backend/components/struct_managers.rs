@@ -1,8 +1,8 @@
 use crate::analysis::executors;
 use crate::utils::as_type_enum;
-use crate::compiler::utils::*;
-use crate::compiler::CompileComponent;
-use crate::parser::ast::*;
+use crate::backend::utils::*;
+use crate::backend::CompileComponent;
+use crate::frontend::ast::*;
 use crate::MemOrder;
 use crate::Scope;
 use indoc::formatdoc;
