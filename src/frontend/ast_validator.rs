@@ -413,7 +413,7 @@ fn get_var_type<'ast>(
 
     if found_type.is_none() {
         context.errors.push(ValidationError {
-            error_type: ValidationErrorType::UndefinedVar(parts[0].clone()),
+            error_type: ValidationErrorType::UndefinedVariable(parts[0].clone()),
             context: ErrorContext::from_block_context(context),
             loc: *loc,
         });
@@ -444,7 +444,7 @@ fn get_var_type<'ast>(
 
     if found_type.is_none() || premature_break {
         context.errors.push(ValidationError {
-            error_type: ValidationErrorType::UndefinedField(
+            error_type: ValidationErrorType::UndefinedParameter(
                 parts[idx - 2].clone(),
                 parts[idx - 1].clone(),
             ),
@@ -779,7 +779,7 @@ mod tests {
         assert_eq!(
             validation_errors[0],
             ValidationError {
-                error_type: UndefinedVar("c".to_string()),
+                error_type: UndefinedVariable("c".to_string()),
                 context: ErrorContext {
                     struct_name: Some("A".to_string()),
                     step_name: Some("init".to_string())
@@ -800,7 +800,7 @@ mod tests {
         assert_eq!(
             validation_errors[0],
             ValidationError {
-                error_type: UndefinedField("b".to_string(), "c".to_string()),
+                error_type: UndefinedParameter("b".to_string(), "c".to_string()),
                 context: ErrorContext {
                     struct_name: Some("A".to_string()),
                     step_name: Some("init".to_string())
@@ -821,7 +821,7 @@ mod tests {
         assert_eq!(
             validation_errors[0],
             ValidationError {
-                error_type: UndefinedField("b".to_string(), "c".to_string()),
+                error_type: UndefinedParameter("b".to_string(), "c".to_string()),
                 context: ErrorContext {
                     struct_name: Some("A".to_string()),
                     step_name: Some("init".to_string())
@@ -843,7 +843,7 @@ mod tests {
         assert_eq!(
             validation_errors[0],
             ValidationError {
-                error_type: UndefinedField("a".to_string(), "extra_index".to_string()),
+                error_type: UndefinedParameter("a".to_string(), "extra_index".to_string()),
                 context: ErrorContext {
                     struct_name: Some("B".to_string()),
                     step_name: Some("init".to_string())

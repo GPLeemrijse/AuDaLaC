@@ -19,8 +19,8 @@ pub enum ValidationErrorType {
     ParameterDefinedTwice(String, Loc),             // parameter name, Loc of earlier decl
     VariableAlreadyDeclared(String, Loc),           // var name, Loc of earlier decl
     UndefinedType(String),                          // attempted type name
-    UndefinedVar(String),                           // attempted var name
-    UndefinedField(String, String),                 // parent name, field name
+    UndefinedVariable(String),                           // attempted var name
+    UndefinedParameter(String, String),                 // parent name, field name
     UndefinedStep,                                  // Step and struct name already in error_context
     InvalidNumberOfArguments(usize, usize),         // Expected number, supplied number
     TypeMismatch(Type, Type),                       // Expected type, gotten type
@@ -52,13 +52,13 @@ impl ValidationError {
             ParameterDefinedTwice(..) => "E003",
             VariableAlreadyDeclared(..) => "E004",
             UndefinedType(..) => "E005",
-            UndefinedField(..) => "E006",
+            UndefinedParameter(..) => "E006",
             UndefinedStep => "E007",
-            InvalidNumberOfArguments(..) => "E008",
-            TypeMismatch(..) => "E009",
-            InvalidTypesForOperator(..) => "E010",
-            ReservedKeyword(_) => "E011",
-            UndefinedVar(..) => "E012",
+            UndefinedVariable(..) => "E008",
+            InvalidNumberOfArguments(..) => "E009",
+            TypeMismatch(..) => "E010",
+            InvalidTypesForOperator(..) => "E011",
+            ReservedKeyword(_) => "E012",
         }
     }
 
@@ -97,8 +97,8 @@ impl ValidationError {
             ParameterDefinedTwice(p, _) => format!("Parameter {} defined twice.", p),
             VariableAlreadyDeclared(v, _) => format!("Variable {} defined twice.", v),
             UndefinedType(t) => format!("Undefined type {}.", t),
-            UndefinedVar(t) => format!("Undefined variable {}.", t),
-            UndefinedField(f, t) => format!("Undefined field {} of {}.", t, f),
+            UndefinedVariable(t) => format!("Undefined variable {}.", t),
+            UndefinedParameter(f, t) => format!("Undefined parameter {} of {}.", t, f),
             UndefinedStep => {
                 if let Some(n) = &self.context.struct_name {
                     format!(
@@ -136,8 +136,8 @@ impl ValidationError {
             ParameterDefinedTwice(..) => "Parameter defined twice.",
             VariableAlreadyDeclared(..) => "Variable defined twice.",
             UndefinedType(..) => "Undefined type.",
-            UndefinedVar(..) => "Undefined variable.",
-            UndefinedField(..) => "Undefined field.",
+            UndefinedVariable(..) => "Undefined variable.",
+            UndefinedParameter(..) => "Undefined parameter.",
             UndefinedStep => "Undefined step",
             InvalidNumberOfArguments(..) => "Invalid number of arguments supplied.",
             TypeMismatch(..) => "An invalid type has been given.",
