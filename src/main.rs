@@ -40,10 +40,10 @@ where
 }
 
 fn main() {
-    let args = clap_app!(ADL =>
+    let args = clap_app!(AuDauLaC =>
         (version: "0.1")
         (author: "GPLeemrijse <g.p.leemrijse@student.tue.nl>")
-        (about: "Parses \"ADL\" programs")
+        (about: "Compiles AuDauLa programs")
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
         (@arg time: -t --time "Print timing information.")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
@@ -81,7 +81,7 @@ fn main() {
         (@arg buffersize: -b --buffersize +takes_value default_value("1024") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
         (@arg printunstable: -u --printunstable "Print which step changed the stability stack.")
         (@arg output: -o --output +takes_value "Output file")
-        (@arg file: +required "\"ADL\" file")
+        (@arg file: +required "AuDauLa (.adl) file")
     )
     .get_matches();
 
