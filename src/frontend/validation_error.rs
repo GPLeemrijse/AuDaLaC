@@ -25,7 +25,6 @@ pub enum ValidationErrorType {
     InvalidNumberOfArguments(usize, usize),         // Expected number, supplied number
     TypeMismatch(Type, Type),                       // Expected type, gotten type
     InvalidTypesForOperator(Type, BinOpcode, Type), // lhs type, operator, rhs type
-    NoNullLiteralForType(Option<Type>),             // Type of attempted null literal
     ReservedKeyword(String),                        // Name of reserved keyword.
 }
 
@@ -58,9 +57,8 @@ impl ValidationError {
             InvalidNumberOfArguments(..) => "E008",
             TypeMismatch(..) => "E009",
             InvalidTypesForOperator(..) => "E010",
-            NoNullLiteralForType(..) => "E011",
-            ReservedKeyword(_) => "E012",
-            UndefinedVar(..) => "E013",
+            ReservedKeyword(_) => "E011",
+            UndefinedVar(..) => "E012",
         }
     }
 
@@ -126,12 +124,6 @@ impl ValidationError {
                 "The operator {} can not be applied to a LHS of type {} and a RHS of type {}",
                 o, l, r
             ),
-            NoNullLiteralForType(None) => {
-                "The null literal is not defined in this context.".to_string()
-            }
-            NoNullLiteralForType(Some(t)) => {
-                format!("The null literal is not defined for type {}.", t)
-            }
             ReservedKeyword(kw) => format!("The token '{}' is a reserved keyword.", kw),
         }
     }
@@ -150,7 +142,6 @@ impl ValidationError {
             InvalidNumberOfArguments(..) => "Invalid number of arguments supplied.",
             TypeMismatch(..) => "An invalid type has been given.",
             InvalidTypesForOperator(..) => "Operator can not be applied to given types.",
-            NoNullLiteralForType(..) => "The null literal is not defined in this context.",
             ReservedKeyword(_) => "Used a reserved keyword.",
         }
     }
