@@ -37,6 +37,12 @@ struct Edge(n : Node){
 
         n.something.abc := 12;
     }
+
+    step2 {
+        Int null_val := null;
+        Int stable := this;
+
+    }
 }
 
 Node.init2 < Fix(ste_node) < abc.d

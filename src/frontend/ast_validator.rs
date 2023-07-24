@@ -313,6 +313,14 @@ fn check_declaration<'ast>(
                 context: ErrorContext::from_block_context(context),
                 loc: *loc,
             });
+        }
+        // Make sure no reserved keyword is used
+        else if is_reserved(id) {
+            context.errors.push(ValidationError {
+                error_type: ValidationErrorType::ReservedKeyword(id.clone()),
+                context: ErrorContext::from_block_context(context),
+                loc: *loc,
+            });
         } else {
             // check type of exp
             if let Some(exp_type) = get_expr_type(exp, context) {
