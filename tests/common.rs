@@ -44,6 +44,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
         for (problem_type_idx, (problem_type, files_and_args)) in testcases.iter().enumerate() {
             eprintln!("\tProblem: {problem_type}({}/{})", problem_type_idx + 1, testcases.len());
 
+            let mut timedout = false;
             for (test_idx, (file, extra_args, p_size)) in files_and_args.iter().enumerate() {
                 let file_name = file.split("/").last().unwrap();
                 eprintln!("\tFile: {file_name}({}/{})", test_idx + 1, files_and_args.len());
@@ -60,8 +61,15 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
 
                 
                 let csv_prefix = format!("{},{bin_name},{problem_type},{p_size}", config.as_csv_row());
-                let runtime = bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*5));
+                let runtime = if timedout {
+                    "timeout".to_string()
+                } else {
+                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*5))
+                };
                 result_file.write_all(format!("{csv_prefix},{runtime}\n").as_bytes()).expect("Could not write to result file.");
+                if runtime == "timeout" {
+                    timedout = true;
+                }
             }
         }
         last_extra_args = None;
