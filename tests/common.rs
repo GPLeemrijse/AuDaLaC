@@ -13,7 +13,7 @@ use std::fmt;
 use std::fmt::Display;
 use std::process::Command;
 
-const REPS: usize = 10;
+const REPS: usize = 5;
 pub type TestCase<'a> = (&'a str, Vec<(&'a str, Vec<String>, usize)>);
 
 
@@ -50,7 +50,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                 eprintln!("\tFile: {file_name}({}/{})", test_idx + 1, files_and_args.len());
                 
                 // Compile if needed
-                if last_extra_args.is_none() || extra_args != last_extra_args.unwrap() {
+                if !timedout && (last_extra_args.is_none() || extra_args != last_extra_args.unwrap()) {
                     let compile_err = compile_config(config, bin_name, bin_folder, extra_args).err();
                     if let Some(e) = compile_err {
                         eprintln!("{}", e);
@@ -64,7 +64,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                 let (runtime, std_dev) = if timedout {
                     ("timeout".to_string(), "-".to_string())
                 } else {
-                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*5))
+                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(1))
                 };
                 result_file.write_all(format!("{csv_prefix},{runtime},{std_dev}\n").as_bytes()).expect("Could not write to result file.");
                 if runtime == "timeout" {
