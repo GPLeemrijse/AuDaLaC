@@ -37,6 +37,7 @@ fn synthesis_files() -> Vec<TestCase<'static>> {
                 ("tests/benchmarks/synthesis/testcases/synthesis_1000000_1300269.init", Vec::new(), 1000000 + 1300269),
                 ("tests/benchmarks/synthesis/testcases/synthesis_3162278_4112232.init", Vec::new(), 3162278 + 4112232),
                 ("tests/benchmarks/synthesis/testcases/synthesis_10000000_13006610.init", Vec::new(), 10000000 + 13006610),
+                //("tests/benchmarks/synthesis/testcases/synthesis_31622777_41100055.init", Vec::new(), 31622777 + 41100055)
             ],
         )
     ]
