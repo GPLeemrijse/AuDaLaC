@@ -30,15 +30,18 @@ def main():
 
 			out_file.writelines([f"{val} {idx}\n" for (idx, val) in enumerate(nums)]);
 
-		solution_file_name = os.path.join(args.output_dir, f"prefix_sum_{n}.sol");
-		with open(solution_file_name, "w") as out_file:
-			prefix_sum = 0;
-			for (idx, val) in enumerate(nums):
-				prefix_sum += val;
-				if (idx + 1) % 5000 == 1:
-					out_file.writelines([
-						f"({idx+1}, {prefix_sum})\n"
-					]);
+		print(f"(\"tests/benchmarks/prefix_sum/testcases/prefix_sum_{n}.init\", Vec::new(), {n}),");
+		# solution_file_name = os.path.join(args.output_dir, f"prefix_sum_{n}.sol");
+		# with open(solution_file_name, "w") as out_file:
+		# 	prefix_sum = 0;
+		# 	for (idx, val) in enumerate(nums):
+		# 		prefix_sum += val;
+		# 		if (idx + 1) % 5000 == 1:
+		# 			out_file.writelines([
+		# 				f"({idx+1}, {prefix_sum})\n"
+		# 			]);
+
+
 
 
 

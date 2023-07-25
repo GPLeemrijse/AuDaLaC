@@ -31,5 +31,7 @@ def main():
 
 			out_file.writelines(["Printer instances 0 0\n"]);
 
+
+		print(f"(\"tests/benchmarks/sorting/testcases/sorting_{n}.init\", Vec::new(), {n}),");
 if __name__ == '__main__':
 	main()

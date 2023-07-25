@@ -28,7 +28,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
     result_file
         .write_all(
             format!(
-                "{},algorithm,problem_type,problem_size,runtime\n",
+                "{},algorithm,problem_type,problem_size,runtime,standard_deviation\n",
                 Config::HEADER
             )
             .as_bytes(),
@@ -61,12 +61,12 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
 
                 
                 let csv_prefix = format!("{},{bin_name},{problem_type},{p_size}", config.as_csv_row());
-                let runtime = if timedout {
-                    "timeout".to_string()
+                let (runtime, std_dev) = if timedout {
+                    ("timeout".to_string(), "-".to_string())
                 } else {
                     bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*5))
                 };
-                result_file.write_all(format!("{csv_prefix},{runtime}\n").as_bytes()).expect("Could not write to result file.");
+                result_file.write_all(format!("{csv_prefix},{runtime},{std_dev}\n").as_bytes()).expect("Could not write to result file.");
                 if runtime == "timeout" {
                     timedout = true;
                 }
@@ -337,8 +337,8 @@ fn cuda_compile(bin_name: &str, dir: &str) -> Result<(), String> {
     }
 }
 
-fn bench_file<'a>(bin: &str, input_file: &str, reps: usize, timeout: Duration) -> String {
-    let mut total_ms = 0.0;
+fn bench_file<'a>(bin: &str, input_file: &str, reps: usize, timeout: Duration) -> (String, String) {
+    let mut measurements : Vec<f32> = Vec::new();
 
     for i in 0..reps {
         eprint!("\r\t\tStarting input {input_file} ({}/{reps})", i + 1);
@@ -348,19 +348,23 @@ fn bench_file<'a>(bin: &str, input_file: &str, reps: usize, timeout: Duration) -
         if r.is_err() {
             let e = r.unwrap_err();
             eprintln!("\n\t\t\t{e}");
-            return e;
+            return (e, "-".to_string());
         } else {
             let stdout = r.unwrap();
             let ms = get_runtime_ms_from_stdout(&stdout);
             if ms.is_none() {
                 eprintln!("\n\t\t\tCould not find time information in output.");
-                return "NaN".to_string();
+                return ("NaN".to_string(), "-".to_string());
             }
-
-            total_ms += ms.unwrap();
+            measurements.push(ms.unwrap());
         }
     }
     eprint!("\n");
+    assert_eq!(measurements.len(), reps);
 
-    return (total_ms / (reps as f32)).to_string();
+    let mean : f32 = measurements.iter().sum::<f32>() / (measurements.len() as f32);
+    let variance : f32 = measurements.iter().map(|v| (mean - v)*(mean-v)).sum::<f32>() / (measurements.len() as f32);
+    let std_dev = variance.sqrt();
+
+    return (mean.to_string(), std_dev.to_string());
 }
