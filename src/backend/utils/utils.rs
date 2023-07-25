@@ -1,5 +1,5 @@
-use crate::parser::ast::Literal;
-use crate::parser::ast::Type;
+use crate::frontend::ast::Literal;
+use crate::frontend::ast::Type;
 
 pub fn as_c_type(t: &Type) -> String {
     use Type::*;

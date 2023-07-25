@@ -1,4 +1,4 @@
-use crate::compiler::CompileComponent;
+use crate::backend::CompileComponent;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 

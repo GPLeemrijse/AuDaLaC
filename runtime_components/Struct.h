@@ -27,7 +27,6 @@ public:
 
 	__host__ size_t created_instances_offset(void);
 
-	// WILL BE DEPRECATED
 	__host__ __device__ inst_size nrof_instances(void);
 
 	__host__ __device__ inst_size nrof_instances2(bool step_parity);
@@ -49,7 +48,7 @@ protected:
 
 	virtual size_t param_size(uint idx) = 0;
 
-	// Keep sequential in memory  (WILL BE DEPRECATED)
+	// Keep sequential in memory
 	inst_size active_instances; // How many are part of the current iteration?
 	cuda::atomic<inst_size, cuda::thread_scope_device> instantiated_instances; // How many have been created in total?
 

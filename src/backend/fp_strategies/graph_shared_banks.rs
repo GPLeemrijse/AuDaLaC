@@ -1,17 +1,17 @@
-use crate::compiler::FPStrategy;
+use crate::backend::FPStrategy;
 use indoc::formatdoc;
 
-pub struct GraphSharedBanksOpportunisticFixpoint {
+pub struct GraphSharedBanksFixpoint {
 	fp_depth: usize,
 }
 
-impl GraphSharedBanksOpportunisticFixpoint {
-	pub fn new(fp_depth: usize) -> GraphSharedBanksOpportunisticFixpoint {
-		GraphSharedBanksOpportunisticFixpoint { fp_depth }
+impl GraphSharedBanksFixpoint {
+	pub fn new(fp_depth: usize) -> GraphSharedBanksFixpoint {
+		GraphSharedBanksFixpoint { fp_depth }
 	}
 }
 
-impl FPStrategy for GraphSharedBanksOpportunisticFixpoint {
+impl FPStrategy for GraphSharedBanksFixpoint {
 	fn global_decl(&self) -> String {
 		let fp_depth = self.fp_depth;
 		let funcs = if fp_depth > 0 {
@@ -53,9 +53,12 @@ impl FPStrategy for GraphSharedBanksOpportunisticFixpoint {
 	fn post_kernel(&self) -> String {
 		formatdoc!{"
 			\tif(fp_lvl >= 0){{
-			\t\tbool stable_reduced = __all_sync(__activemask(), stable[bl_rank % 32]);
-			\t\tif(!stable_reduced){{
-			\t\t\tclear_stack(fp_lvl);
+			\t\t__syncthreads();
+			\t\tif(bl_rank < 32){{
+			\t\t\tbool stable_reduced = __all_sync(0xffffffff, stable[bl_rank]);
+			\t\t\tif(bl_rank == 0 && !stable_reduced){{
+			\t\t\t\tclear_stack(fp_lvl);
+			\t\t\t}}
 			\t\t}}
 			\t}}
 		"}

@@ -1,4 +1,4 @@
-use crate::parser::ast::{Exp, Program, Stat, Step, Type};
+use crate::frontend::ast::{Exp, Program, Stat, Step, Type};
 use indoc::formatdoc;
 use std::collections::HashMap;
 use std::io::Write;
@@ -100,7 +100,7 @@ pub fn generate_init_file(ast: &Program, mut writer: Box<dyn Write>) {
                     let p_value = match p {
                         // If the expression is a literal we return the corresponding value
                         Exp::Lit(lit, _) => {
-                            use crate::parser::ast::Literal::*;
+                            use crate::frontend::ast::Literal::*;
                             match lit {
                                 NatLit(nat) => *nat as i64,
                                 IntLit(int) => *int as i64,

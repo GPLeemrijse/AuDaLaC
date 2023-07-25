@@ -1,4 +1,4 @@
-use crate::compiler::compilation_traits::*;
+use crate::backend::compilation_traits::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 

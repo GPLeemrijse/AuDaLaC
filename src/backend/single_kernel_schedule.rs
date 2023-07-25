@@ -2,10 +2,10 @@ use std::collections::HashSet;
 use crate::analysis::earliest_subschedule;
 use crate::analysis::get_step_to_structs;
 use crate::analysis::constructors;
-use crate::compiler::compilation_traits::*;
-use crate::compiler::utils::*;
-use crate::compiler::StepBodyCompiler;
-use crate::parser::ast::*;
+use crate::backend::compilation_traits::*;
+use crate::backend::utils::*;
+use crate::backend::StepBodyCompiler;
+use crate::frontend::ast::*;
 use crate::WorkDivisor;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
@@ -59,7 +59,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn schedule_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::parser::ast::Schedule::*;
+        use crate::frontend::ast::Schedule::*;
 
         match sched {
             StepCall(..) => self.step_call_as_c(sched, fp_level),
@@ -70,7 +70,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn fixpoint_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::parser::ast::Schedule::*;
+        use crate::frontend::ast::Schedule::*;
         if let Fixpoint(s, _) = sched {
             let indent = "\t".repeat(fp_level + 1);
             let pre_iteration = self.fp.pre_iteration(fp_level);
@@ -101,7 +101,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn sequential_step_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::parser::ast::Schedule::*;
+        use crate::frontend::ast::Schedule::*;
         if let Sequential(s1, s2, _) = sched {
             let indent = "\t".repeat(fp_level + 1);
             let sched1 = self.schedule_as_c(s1, fp_level);
@@ -124,7 +124,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn typed_step_call_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::parser::ast::Schedule::*;
+        use crate::frontend::ast::Schedule::*;
 
         if let TypedStepCall(struct_name, step_name, _) = sched {
             let indent = "\t".repeat(fp_level + 1);
@@ -166,7 +166,7 @@ impl SingleKernelSchedule<'_> {
     }
 
     fn step_call_as_c(&self, sched: &Schedule, fp_level: usize) -> String {
-        use crate::parser::ast::Schedule::*;
+        use crate::frontend::ast::Schedule::*;
         if let StepCall(step_name, _) = sched {
             let mut structs = self.step_to_structs.get(step_name).unwrap().iter();
 

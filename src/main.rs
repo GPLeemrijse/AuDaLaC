@@ -1,13 +1,13 @@
 #[macro_use]
 extern crate lalrpop_util;
 use crate::analysis::fixpoint_depth;
-use crate::compiler::components::*;
-use crate::compiler::fp_strategies::*;
-use crate::compiler::utils::{MemOrder, Scope};
-use crate::compiler::*;
+use crate::backend::components::*;
+use crate::backend::fp_strategies::*;
+use crate::backend::utils::{MemOrder, Scope};
+use crate::backend::*;
 use crate::init_file_generator::generate_init_file;
-use crate::parser::validate_ast;
-use crate::parser::ProgramParser;
+use crate::frontend::validate_ast;
+use crate::frontend::ProgramParser;
 use codespan_reporting::diagnostic::{Diagnostic, Label};
 use codespan_reporting::files::SimpleFile;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
@@ -21,10 +21,9 @@ use std::io::BufWriter;
 use std::io::Write;
 
 use clap::clap_app;
-mod compiler;
+mod backend;
 mod init_file_generator;
-#[allow(dead_code)]
-mod parser;
+mod frontend;
 mod analysis;
 
 fn parse_key_val<T, U>(s: &str) -> Result<(T, U), Box<dyn Error + Send + Sync + 'static>>
@@ -41,10 +40,10 @@ where
 }
 
 fn main() {
-    let args = clap_app!(ADL =>
+    let args = clap_app!(AuDauLaC =>
         (version: "0.1")
         (author: "GPLeemrijse <g.p.leemrijse@student.tue.nl>")
-        (about: "Parses \"ADL\" programs")
+        (about: "Compiles AuDauLa programs")
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
         (@arg time: -t --time "Print timing information.")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
@@ -82,7 +81,7 @@ fn main() {
         (@arg buffersize: -b --buffersize +takes_value default_value("1024") value_parser(clap::value_parser!(usize)) "CUDA printf buffer size (KB).")
         (@arg printunstable: -u --printunstable "Print which step changed the stability stack.")
         (@arg output: -o --output +takes_value "Output file")
-        (@arg file: +required "\"ADL\" file")
+        (@arg file: +required "AuDauLa (.adl) file")
     )
     .get_matches();
 
@@ -206,7 +205,7 @@ fn main() {
                         _ => panic!("Schedule strategy not found."),
                     };
 
-                    let result = compiler::compile(vec![
+                    let result = backend::compile(vec![
                         &InitFileReader {},
                         &PrintbufferSizeAdjuster::new(buffer_size),
                         &work_divisor,

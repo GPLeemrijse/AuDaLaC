@@ -1,9 +1,9 @@
 use crate::analysis::constructors;
 use crate::utils::format_signature;
 use crate::analysis::get_step_to_structs;
-use crate::compiler::compilation_traits::*;
-use crate::compiler::StepBodyCompiler;
-use crate::parser::ast::*;
+use crate::backend::compilation_traits::*;
+use crate::backend::StepBodyCompiler;
+use crate::frontend::ast::*;
 use indoc::formatdoc;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -187,6 +187,7 @@ impl OnHostSchedule<'_> {
 impl CompileComponent for OnHostSchedule<'_> {
 	fn add_includes(&self, set: &mut BTreeSet<&str>) {
 		set.insert("<cooperative_groups.h>");
+		set.insert("\"OnHostStep.h\"");
 	}
 
 	fn defines(&self) -> Option<String> {
@@ -195,57 +196,9 @@ impl CompileComponent for OnHostSchedule<'_> {
 
 	fn typedefs(&self) -> Option<String> {
 		let cg = "using namespace cooperative_groups;".to_string();
-		let alternating = self.fp.is_stable(0).contains("iter_idx"); // Hacky...
-
 		let fp = self.fp.global_decl();
 		
-		let num_args = if alternating { 3 } else { 2 };
-		let extra_arg = if alternating {"args[2] = (void*)iter_idx;\n"} else {""};
-		let iter_idx_param = if alternating {", iter_idx_t* iter_idx"} else {""};
-
-		let launch_params = formatdoc!{"
-			class Step {{
-				void* kernel;
-				void* args[{num_args}];
-				dim3 gridDim;
-				dim3 blockDim;
-				const char* name;
-				inst_size prev_nrof_instances;
-
-				public:
-				Step(const char* name, void* kernel, inst_size* nrof_instances, int* fp_lvl{iter_idx_param})
-					: kernel(kernel), name(name) {{
-					args[0] = (void*)nrof_instances;
-					args[1] = (void*)fp_lvl;
-					{extra_arg}
-					prev_nrof_instances = *nrof_instances;
-					int min_grid_size;
-					int dyn_block_size;
-					cudaOccupancyMaxPotentialBlockSize(&min_grid_size, &dyn_block_size, kernel, 0, 0);
-					
-					blockDim = dim3(dyn_block_size, 1, 1);
-					
-					update_dims();
-				}}
-
-				void launch(cudaStream_t stream) {{
-					if (*((inst_size*)args[0]) != prev_nrof_instances){{
-						update_dims();
-						prev_nrof_instances = *((inst_size*)args[0]);
-					}}
-
-					CHECK(cudaLaunchKernel(kernel, gridDim, blockDim, args, 128, stream));
-				}}
-
-				private:
-				void update_dims(void) {{
-					int used_blocks = (*((inst_size*)args[0]) + blockDim.x - 1) / blockDim.x;
-					gridDim.x = used_blocks;
-					//fprintf(stderr, \"Updated %s to %u/%u blocks of %u threads = %u threads.\\n\", name, used_blocks, max_blocks, blockDim.x, used_blocks * blockDim.x);
-				}}
-			}};
-		"};
-		Some(cg + "\n" + &fp + "\n" + &launch_params)
+		Some(cg + "\n" + &fp)
 	}
 
 	fn globals(&self) -> Option<String> {
@@ -319,15 +272,16 @@ impl CompileComponent for OnHostSchedule<'_> {
 						 .map(|step_name|
 						 	
 							formatdoc!{"
-								\tStep {strct_n}_{step_name}(
+								\tOnHostStep {strct_n}_{step_name}(
 								\t\t\"{strct_n}.{step_name}\",
 								\t\t(void*){kernel},
 								\t\t&nrof_{strct_n}s,
-								\t\t&fp_lvl{iter_idx_arg}
+								\t\t&fp_lvl,
+								\t\t{iter_idx_arg}
 								\t);",
 								strct_n = strct.name,
 								kernel = self.kernel_name(&strct.name, &step_name),
-								iter_idx_arg = if alternating {",\n\t\t&iter_idx"} else {""},
+								iter_idx_arg = if alternating {"(void*)&iter_idx"} else {"NULL"},
 							}
 						 )
 				)

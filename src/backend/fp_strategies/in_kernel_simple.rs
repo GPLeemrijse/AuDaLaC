@@ -1,4 +1,4 @@
-use crate::compiler::FPStrategy;
+use crate::backend::FPStrategy;
 use indoc::formatdoc;
 
 pub struct InKernelSimpleFixpoint {

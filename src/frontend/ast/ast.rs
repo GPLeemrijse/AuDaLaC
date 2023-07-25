@@ -39,7 +39,7 @@ pub enum Schedule {
 
 impl Schedule {
     pub fn is_fixpoint(&self) -> bool {
-        return matches!(self, crate::parser::ast::Schedule::Fixpoint(..));
+        return matches!(self, crate::frontend::ast::Schedule::Fixpoint(..));
     }
 }
 
@@ -101,7 +101,7 @@ impl Exp {
 
 impl Display for Exp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::parser::ast::Exp::*;
+        use crate::frontend::ast::Exp::*;
         match self {
             BinOp(l, o, r, _) => write!(f, "{l} {o} {r}"),
             UnOp(o, e, _) => write!(f, "{o}{e}"),
@@ -157,7 +157,7 @@ impl Type {
 
 impl Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::parser::ast::Type::*;
+        use crate::frontend::ast::Type::*;
         match self {
             Named(s) => write!(f, "{}", s),
             String => write!(f, "String"),
@@ -181,7 +181,7 @@ pub enum Literal {
 
 impl Display for Literal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::parser::ast::Literal::*;
+        use crate::frontend::ast::Literal::*;
         match self {
             NatLit(v) => write!(f, "{v}"),
             IntLit(v) => write!(f, "{v}"),
@@ -212,7 +212,7 @@ pub enum BinOpcode {
 
 impl Display for BinOpcode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::parser::ast::BinOpcode::*;
+        use crate::frontend::ast::BinOpcode::*;
         match self {
             Equals => write!(f, "=="),
             NotEquals => write!(f, "!="),
@@ -238,7 +238,7 @@ pub enum UnOpcode {
 
 impl Display for UnOpcode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::parser::ast::UnOpcode::*;
+        use crate::frontend::ast::UnOpcode::*;
         match self {
             Negation => write!(f, "!"),
         }
@@ -247,8 +247,8 @@ impl Display for UnOpcode {
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::ast::*;
-    use crate::parser::*;
+    use crate::frontend::ast::*;
+    use crate::frontend::*;
     use lalrpop_util::ParseError::User;
 
     #[test]
