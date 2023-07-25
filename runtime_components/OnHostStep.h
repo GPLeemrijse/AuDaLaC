@@ -2,6 +2,7 @@
 #define ON_HOST_STEP_H
 
 #include "ADL.h"
+using namespace ADL;
 
 class OnHostStep {
 	void* kernel;
