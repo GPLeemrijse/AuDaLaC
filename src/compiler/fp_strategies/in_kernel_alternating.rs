@@ -23,14 +23,14 @@ impl FPStrategy for InKernelAlternatingFixpoint {
 				#define FP_RESET(X) ((X) + 1 >= 3 ? (X) + 1 - 3 : (X) + 1)
 				#define FP_READ(X) ((X) + 2 >= 3 ? (X) + 2 - 3 : (X) + 2)
 
-				__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH][3];
+				__device__ bool fp_stack[FP_DEPTH][3];
 
 				__device__ void clear_stack(int lvl, uint8_t* iter_idx) {{
 					/*	Clears the stack on the FP_SET side.
 						The FP_RESET and FP_READ sides should remain the same.
 					*/
 					while(lvl >= 0){{
-						fp_stack[lvl][FP_SET(iter_idx[lvl])].store(false, cuda::memory_order_relaxed);
+						fp_stack[lvl][FP_SET(iter_idx[lvl])] = false;
 						lvl--;
 					}}
 				}}"
@@ -45,7 +45,7 @@ impl FPStrategy for InKernelAlternatingFixpoint {
     }
 
     fn is_stable(&self, lvl: usize) -> String {
-        format!("fp_stack[{lvl}][FP_READ(iter_idx[{lvl}])].load(cuda::memory_order_relaxed)")
+        format!("fp_stack[{lvl}][FP_READ(iter_idx[{lvl}])]")
     }
 
     fn top_of_kernel_decl(&self) -> String {
@@ -64,7 +64,7 @@ impl FPStrategy for InKernelAlternatingFixpoint {
 			{indent}bool stable = true;
 			{indent}if (grid.thread_rank() == 0){{
 			{indent}	/* Resets the next fp_stack index in advance. */
-			{indent}	fp_stack[{lvl}][FP_RESET(iter_idx[{lvl}])].store(true, cuda::memory_order_relaxed);
+			{indent}	fp_stack[{lvl}][FP_RESET(iter_idx[{lvl}])] = true;
 			{indent}}}
 		"}
     }
@@ -83,9 +83,9 @@ impl FPStrategy for InKernelAlternatingFixpoint {
     fn initialise(&self) -> String {
         if self.fp_depth > 0 {
             formatdoc!("
-				\tcuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
+				\tbool* fp_stack_address;
 				\tCHECK(cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack));
-				\tCHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));"
+				\tCHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(bool)));"
 			)
         } else {
             "".to_string()

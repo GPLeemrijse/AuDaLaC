@@ -16,11 +16,11 @@ impl FPStrategy for InKernelSimpleFixpoint {
         let fp_depth = self.fp_depth;
         let stack_and_clear = if fp_depth > 0 {
             formatdoc! {"
-				__device__ cuda::atomic<bool, cuda::thread_scope_device> fp_stack[FP_DEPTH];
+				__device__ bool fp_stack[FP_DEPTH];
 
 				__device__ void clear_stack(int lvl) {{
 					while(lvl >= 0){{
-						fp_stack[lvl--].store(false, cuda::memory_order_relaxed);
+						fp_stack[lvl--] = false;
 					}}
 				}}"
             }
@@ -34,7 +34,7 @@ impl FPStrategy for InKernelSimpleFixpoint {
     }
 
     fn is_stable(&self, lvl: usize) -> String {
-        format!("fp_stack[{lvl}].load(cuda::memory_order_relaxed)")
+        format!("fp_stack[{lvl}]")
     }
 
     fn top_of_kernel_decl(&self) -> String {
@@ -47,7 +47,7 @@ impl FPStrategy for InKernelSimpleFixpoint {
 			{indent}bool stable = true;
 			{indent}grid.sync();
 			{indent}if (grid.thread_rank() == 0)
-			{indent}	fp_stack[{lvl}].store(true, cuda::memory_order_relaxed);
+			{indent}	fp_stack[{lvl}] = true;
 			{indent}grid.sync();
 		"}
     }

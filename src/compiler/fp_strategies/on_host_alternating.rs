@@ -23,7 +23,7 @@ impl FPStrategy for OnHostAlternatingFixpoint {
 				#define FP_RESET(X) ((X) + 1 >= 3 ? (X) + 1 - 3 : (X) + 1)
 				#define FP_READ(X) ((X) + 2 >= 3 ? (X) + 2 - 3 : (X) + 2)
 
-				__device__ cuda::atomic<bool, cuda::thread_scope_system> fp_stack[FP_DEPTH][3];
+				__device__ bool fp_stack[FP_DEPTH][3];
 
 				typedef struct {{
 					uint8_t idxs[FP_DEPTH];
@@ -34,35 +34,35 @@ impl FPStrategy for OnHostAlternatingFixpoint {
 						The FP_RESET and FP_READ sides should remain the same.
 					*/
 					while(lvl >= 0){{
-						fp_stack[lvl][FP_SET(iter_idx.idxs[lvl])].store(false, cuda::memory_order_relaxed);
+						fp_stack[lvl][FP_SET(iter_idx.idxs[lvl])] = false;
 						lvl--;
 					}}
 				}}
 
 				__host__ bool load_fp_stack_from_host(int lvl, iter_idx_t iter_idx, cudaStream_t kernel_stream, cudaStream_t reset_fp_stream) {{
 					CHECK(cudaStreamSynchronize(reset_fp_stream));
-					cuda::atomic<bool, cuda::thread_scope_device> top_of_stack;
+					bool top_of_stack;
 					CHECK(
 						cudaMemcpyFromSymbolAsync(
 							&top_of_stack,
 							fp_stack,
-							sizeof(cuda::atomic<bool, cuda::thread_scope_device>),
-							sizeof(cuda::atomic<bool, cuda::thread_scope_device>) * (3 * lvl + FP_READ(iter_idx.idxs[lvl])),
+							sizeof(bool),
+							sizeof(bool) * (3 * lvl + FP_READ(iter_idx.idxs[lvl])),
 							cudaMemcpyDefault,
 							kernel_stream
 						)
 					);
-					return top_of_stack.load(cuda::memory_order_relaxed);
+					return top_of_stack;
 				}}
 
 				__host__ void reset_fp_stack_from_host(int lvl, iter_idx_t iter_idx, cudaStream_t stream) {{
-					cuda::atomic<bool, cuda::thread_scope_device> stack_entry(true);
+					bool stack_entry = true;
 					CHECK(
 						cudaMemcpyToSymbolAsync(
 							fp_stack,
 							&stack_entry,
-							sizeof(cuda::atomic<bool, cuda::thread_scope_device>),
-							sizeof(cuda::atomic<bool, cuda::thread_scope_device>) * (3 * lvl + FP_RESET(iter_idx.idxs[lvl])),
+							sizeof(bool),
+							sizeof(bool) * (3 * lvl + FP_RESET(iter_idx.idxs[lvl])),
 							cudaMemcpyDefault,
 							stream 
 						)
@@ -119,9 +119,9 @@ impl FPStrategy for OnHostAlternatingFixpoint {
 
 		if self.fp_depth > 0 {
             result.push_str(&formatdoc!("
-				\tcuda::atomic<bool, cuda::thread_scope_device>* fp_stack_address;
+				\tbool* fp_stack_address;
 				\tCHECK(cudaGetSymbolAddress((void **)&fp_stack_address, fp_stack));
-				\tCHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(cuda::atomic<bool, cuda::thread_scope_device>)));"
+				\tCHECK(cudaMemset((void*)fp_stack_address, 1, FP_DEPTH * 3 * sizeof(bool)));"
 			));
         }
         result

@@ -16,34 +16,34 @@ impl FPStrategy for OnHostSimpleFixpoint {
 		let fp_depth = self.fp_depth;
 		let funcs = if fp_depth > 0 {
 			formatdoc! {"
-				__device__ cuda::atomic<bool, cuda::thread_scope_system> fp_stack[FP_DEPTH];
+				__device__ bool fp_stack[FP_DEPTH];
 
 				__device__ void clear_stack(int lvl) {{
 					while(lvl >= 0){{
-						fp_stack[lvl--].store(false, cuda::memory_order_relaxed);
+						fp_stack[lvl--] = false;
 					}}
 				}}
 				__host__ bool load_fp_stack_from_host(int lvl) {{
-					cuda::atomic<bool, cuda::thread_scope_device> top_of_stack;
+					bool top_of_stack;
 					CHECK(
 						cudaMemcpyFromSymbol(
 							&top_of_stack,
 							fp_stack,
-							sizeof(cuda::atomic<bool, cuda::thread_scope_device>),
-							sizeof(cuda::atomic<bool, cuda::thread_scope_device>) * lvl
+							sizeof(bool),
+							sizeof(bool) * lvl
 						)
 					);
-					return top_of_stack.load(cuda::memory_order_relaxed);
+					return top_of_stack;
 				}}
 
 				__host__ void reset_fp_stack_from_host(int lvl) {{
-					cuda::atomic<bool, cuda::thread_scope_device> stack_entry(true);
+					bool stack_entry = true;
 					CHECK(
 						cudaMemcpyToSymbol(
 							fp_stack,
 							&stack_entry,
-							sizeof(cuda::atomic<bool, cuda::thread_scope_device>),
-							sizeof(cuda::atomic<bool, cuda::thread_scope_device>) * lvl
+							sizeof(bool),
+							sizeof(bool) * lvl
 						)
 					);
 				}}
