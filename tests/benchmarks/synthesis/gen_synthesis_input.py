@@ -24,22 +24,16 @@ def main():
 
 		m_exp = p*n*n;
 
-		cont = input(f"Expected nrof edges is {m_exp:,} and n*p = {n*p}, do you wish to continue? [y/n]");
-		if cont != "y":
-			exit("Stopped.");
-
 		use_fast = n**2 > (n + p*n*n); # O(n^2) vs O(n + m)
 
 		if use_fast:
-			print("Using fast!");
 			graph = nx.fast_gnp_random_graph(n, p, directed=True);
 		else:
-			print("Using default!");
 			graph = nx.gnp_random_graph(n, p, directed=True);
 
 		m = graph.number_of_edges();
 
-		print(f"The graph contains {n} nodes and {m} edges.");
+		print(f"(\"tests/benchmarks/synthesis/testcases/synthesis_{n}_{m}.init\", Vec::new(), {n} + {m}),");
 
 		p_initial = 0.05;
 		p_marked = 0.2;

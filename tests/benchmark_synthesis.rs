@@ -30,13 +30,13 @@ fn synthesis_files() -> Vec<TestCase<'static>> {
         (
             "Random",
             vec![
-                ("tests/benchmarks/synthesis/testcases/synthesis_10000_13030.init", Vec::new(),   10000 + 13030),
-                ("tests/benchmarks/synthesis/testcases/synthesis_55000_71400.init", Vec::new(),   55000 + 71400),
-                ("tests/benchmarks/synthesis/testcases/synthesis_100000_129856.init", Vec::new(),  100000 + 129856),
-                ("tests/benchmarks/synthesis/testcases/synthesis_550000_713755.init", Vec::new(),   550000 + 713755),
-                ("tests/benchmarks/synthesis/testcases/synthesis_1000000_1298699.init", Vec::new(), 1000000 + 1298699),
-                ("tests/benchmarks/synthesis/testcases/synthesis_5500000_7153328.init", Vec::new(),   5500000 + 7153328),
-                ("tests/benchmarks/synthesis/testcases/synthesis_10000000_13001871.init", Vec::new(),10000000 + 13001871),
+                ("tests/benchmarks/synthesis/testcases/synthesis_10000_12923.init", Vec::new(), 10000 + 12923),
+                ("tests/benchmarks/synthesis/testcases/synthesis_31623_41401.init", Vec::new(), 31623 + 41401),
+                ("tests/benchmarks/synthesis/testcases/synthesis_100000_129684.init", Vec::new(), 100000 + 129684),
+                ("tests/benchmarks/synthesis/testcases/synthesis_316228_410964.init", Vec::new(), 316228 + 410964),
+                ("tests/benchmarks/synthesis/testcases/synthesis_1000000_1300269.init", Vec::new(), 1000000 + 1300269),
+                ("tests/benchmarks/synthesis/testcases/synthesis_3162278_4112232.init", Vec::new(), 3162278 + 4112232),
+                ("tests/benchmarks/synthesis/testcases/synthesis_10000000_13006610.init", Vec::new(), 10000000 + 13006610),
             ],
         )
     ]
