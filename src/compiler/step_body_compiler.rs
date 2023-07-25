@@ -128,7 +128,7 @@ impl StepBodyCompiler<'_> {
 		let params_as_expr = strct
 			.parameters
 			.iter()
-			.map(|(n, _, _)| format!(", LOAD({s_name_lwr}->{n}[self])"))
+			.map(|(n, t, _)| format!(", WLOAD({}, {s_name_lwr}->{n}[self])", as_c_type(t)))
 			.reduce(|a, n| a + &n)
 			.unwrap();
 
