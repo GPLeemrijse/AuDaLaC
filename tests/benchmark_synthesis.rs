@@ -30,14 +30,15 @@ fn synthesis_files() -> Vec<TestCase<'static>> {
         (
             "Random",
             vec![
-                ("tests/benchmarks/synthesis/testcases/synthesis_10000_12923.init", Vec::new(), 10000 + 12923),
-                ("tests/benchmarks/synthesis/testcases/synthesis_31623_41401.init", Vec::new(), 31623 + 41401),
-                ("tests/benchmarks/synthesis/testcases/synthesis_100000_129684.init", Vec::new(), 100000 + 129684),
-                ("tests/benchmarks/synthesis/testcases/synthesis_316228_410964.init", Vec::new(), 316228 + 410964),
-                ("tests/benchmarks/synthesis/testcases/synthesis_1000000_1300269.init", Vec::new(), 1000000 + 1300269),
-                ("tests/benchmarks/synthesis/testcases/synthesis_3162278_4112232.init", Vec::new(), 3162278 + 4112232),
-                ("tests/benchmarks/synthesis/testcases/synthesis_10000000_13006610.init", Vec::new(), 10000000 + 13006610),
-                //("tests/benchmarks/synthesis/testcases/synthesis_31622777_41100055.init", Vec::new(), 31622777 + 41100055)
+                ("tests/benchmarks/synthesis/testcases/synthesis_1000_1240.init", Vec::new(), 1000 + 1240),
+                ("tests/benchmarks/synthesis/testcases/synthesis_3162_4027.init", Vec::new(), 3162 + 4027),
+                ("tests/benchmarks/synthesis/testcases/synthesis_10000_12933.init", Vec::new(), 10000 + 12933),
+                ("tests/benchmarks/synthesis/testcases/synthesis_31623_41167.init", Vec::new(), 31623 + 41167),
+                ("tests/benchmarks/synthesis/testcases/synthesis_100000_130524.init", Vec::new(), 100000 + 130524),
+                ("tests/benchmarks/synthesis/testcases/synthesis_316228_410968.init", Vec::new(), 316228 + 410968),
+                ("tests/benchmarks/synthesis/testcases/synthesis_1000000_1299707.init", Vec::new(), 1000000 + 1299707),
+                ("tests/benchmarks/synthesis/testcases/synthesis_3162278_4113503.init", Vec::new(), 3162278 + 4113503),
+                ("tests/benchmarks/synthesis/testcases/synthesis_10000000_13005088.init", Vec::new(), 10000000 + 13005088),
             ],
         )
     ]
