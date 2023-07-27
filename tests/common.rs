@@ -1,3 +1,4 @@
+use std::fs::OpenOptions;
 use std::io::Read;
 use std::io::stderr;
 use regex::Regex;
@@ -6,14 +7,14 @@ use core::time::Duration;
 use std::process::Output;
 use wait_timeout::ChildExt;
 use std::io::Write;
-use std::fs::File;
+use std::fs::{File, read_to_string};
 use std::collections::HashSet;
 use std::env;
 use std::fmt;
 use std::fmt::Display;
 use std::process::Command;
 
-const REPS: usize = 5;
+const REPS: usize = 10;
 pub type TestCase<'a> = (&'a str, Vec<(&'a str, Vec<String>, usize)>);
 
 
@@ -23,17 +24,53 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
         return;
     }
 
-    let mut result_file = File::create(format!("{bin_folder}/{bin_name}_results.csv"))
-        .expect("Could not create benchmark csv file.");
-    result_file
-        .write_all(
-            format!(
-                "{},algorithm,problem_type,problem_size,runtime,standard_deviation\n",
-                Config::HEADER
-            )
-            .as_bytes(),
-        )
-        .expect("Could not write header.");
+    let result_file_path = format!("{bin_folder}/{bin_name}_results.csv");
+    let previous_file = read_to_string(&result_file_path);
+    let results_header = format!("{},algorithm,problem_type,problem_size,runtime,standard_deviation", Config::HEADER);
+
+    let mut previous_results : HashSet<String> = HashSet::new();
+
+
+    // If previous measurements exist, we read all finished results
+    if let Ok(contents) = previous_file {
+        let mut lines = contents.split("\n");
+        let read_header = lines.next().expect("File was empty");
+        if results_header != read_header {
+            eprintln!("\nexpected: {results_header}\nreceived: {read_header}");
+            panic!("Results csv header seems to have changed!");
+        }
+
+        for l in lines {
+            if l == "" {
+                continue;
+            }
+            let comma_idxs : Vec<_> = l.chars()
+                                       .enumerate()
+                                       .filter(|(_, c)| *c == ',')
+                                       .map(|(i, _)| i)
+                                       .collect::<Vec<_>>();
+
+            let nrof_config_params = Config::NROF_PARAMS+2;
+            let c = &l[0..comma_idxs[nrof_config_params]];
+            let rt = &l[comma_idxs[nrof_config_params]+1..comma_idxs[nrof_config_params+1]];
+            if rt != "timeout" {
+                previous_results.insert(c.to_string());
+            }
+        }
+    }
+    // If no previous file exists, we create one and write the header.
+    else {
+        File::create(&result_file_path)
+            .expect("Could not create benchmark csv file.")
+            .write_all(format!("{results_header}\n").as_bytes())
+            .expect("Could not write header.");
+    }
+
+
+    let mut result_file = OpenOptions::new()
+        .append(true)
+        .open(&result_file_path)
+        .expect("Could not open benchmark csv file in append mode.");
 
     let mut last_extra_args : Option<&Vec<String>> = None;
 
@@ -48,6 +85,12 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
             for (test_idx, (file, extra_args, p_size)) in files_and_args.iter().enumerate() {
                 let file_name = file.split("/").last().unwrap();
                 eprintln!("\tFile: {file_name}({}/{})", test_idx + 1, files_and_args.len());
+                let csv_prefix = format!("{},{bin_name},{problem_type},{p_size}", config.as_csv_row());
+
+                if previous_results.contains(&csv_prefix) {
+                    eprintln!("\t\tAlready have results for this file: skipping...");
+                    continue;
+                }
                 
                 // Compile if needed
                 if !timedout && (last_extra_args.is_none() || extra_args != last_extra_args.unwrap()) {
@@ -58,13 +101,11 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                     }
                     last_extra_args = Some(extra_args);
                 }
-
                 
-                let csv_prefix = format!("{},{bin_name},{problem_type},{p_size}", config.as_csv_row());
                 let (runtime, std_dev) = if timedout {
                     ("timeout".to_string(), "-".to_string())
                 } else {
-                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(1))
+                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*2))
                 };
                 result_file.write_all(format!("{csv_prefix},{runtime},{std_dev}\n").as_bytes()).expect("Could not write to result file.");
                 if runtime == "timeout" {
@@ -130,6 +171,7 @@ pub struct Config<'a> {
 
 impl<'a> Config<'_> {
     pub const HEADER: &str = "memorder,schedule,voting-strat,weak_non_racing";
+    pub const NROF_PARAMS: usize = 4;
 
     pub fn new(m: &'a str, s: &'a str, v: &'a str, w: &'a str) -> Config<'a> {
         Config {
@@ -209,7 +251,7 @@ fn run_make(bin_name: &str, dir: &str) -> Result<bool, std::io::Error> {
     if is_nvcc_installed() {
         Command::new("make")
             .current_dir(dir)
-            .arg(bin_name)
+            .arg(format!("{bin_name}.out"))
             .output()
             .map(|o| o.status.success())
     } else {
