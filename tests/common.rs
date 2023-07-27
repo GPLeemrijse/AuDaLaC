@@ -50,7 +50,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                                        .map(|(i, _)| i)
                                        .collect::<Vec<_>>();
 
-            let nrof_config_params = Config::NROF_PARAMS+2;
+            let nrof_config_params = Config::NROF_PARAMS+4;
             let c = &l[0..comma_idxs[nrof_config_params]];
             let rt = &l[comma_idxs[nrof_config_params]+1..comma_idxs[nrof_config_params+1]];
             if rt != "timeout" {
@@ -105,7 +105,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                 let (runtime, std_dev, rsd) = if timedout {
                     ("timeout".to_string(), "-".to_string(), "-".to_string())
                 } else {
-                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*2))
+                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(2))
                 };
                 result_file.write_all(format!("{csv_prefix},{runtime},{std_dev},{rsd}\n").as_bytes()).expect("Could not write to result file.");
                 if runtime == "timeout" {
@@ -386,7 +386,7 @@ fn bench_file<'a>(bin: &str, input_file: &str, reps: usize, timeout: Duration) -
     let mut rsd : f32 = 0.0;
 
 
-    while attempts < 3 {
+    while attempts < 5 {
         attempts += 1;
         let mut measurements : Vec<f32> = Vec::new();
 
