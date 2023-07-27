@@ -44,9 +44,10 @@ def main():
 				graph_f.write(f"{u+1} {v+1}\n");
 
 			graph_f.write(f"Node instances {n} {n}\n");
-			nodes = "1 0 0\n" * n;
-			graph_f.write(nodes);
-			graph_f.write("NodeSet instances 1 1\n0 0 0 0 0 0 0 0\n");
+			for i in range(n):
+				graph_f.write("1\n");
+
+			graph_f.write("NodeSet instances 0 1\n");
 
 		print(f"(\"tests/benchmarks/SCC/testcases/random_scc_{n}_{m}.init\", vec![\"-N\".to_string(), \"NodeSet={n}\".to_string()], {n} + {m}),")
 

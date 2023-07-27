@@ -1,0 +1,98 @@
+$$__device__ uint nrof_components = 1;
+
+struct NodeSet(pivot : Node,
+			   f_and_not_b : NodeSet,
+			   not_f_and_b : NodeSet,
+			   not_f_and_not_b : NodeSet){
+
+	allocate_sets {
+		if pivot != null then {
+			if f_and_not_b == null then {
+				f_and_not_b := NodeSet(null, null, null, null);
+				not_f_and_b := NodeSet(null, null, null, null);
+				not_f_and_not_b := NodeSet(null, null, null, null);
+			}
+		}
+	}
+
+	initialise_pivot {
+		pivot.fwd := true;
+		pivot.bwd := true;
+	}
+
+	count_nrof_sets {
+		if pivot != null then {
+			$$atomicInc(&nrof_components, 0xffffffff);
+		}
+	}
+
+	print_nrof_sets {
+		if this == null then {
+			$$printf("Nrof components: %u\n", nrof_components);
+		}
+	}
+}
+
+struct Node(set : NodeSet,
+			fwd : Bool,
+			bwd : Bool,
+			has_inc: Bool,
+			has_out: Bool
+			){
+
+	pivot_nominate {
+		if set.pivot == null then {
+			set.pivot := this;
+		}
+	}
+
+	divide_into_sets {
+		Bool f := fwd;
+		Bool b := bwd;
+
+		if f  && !b then { set := set.f_and_not_b; }
+		if !f &&  b then { set := set.not_f_and_b; }
+		if !f && !b then { set := set.not_f_and_not_b; }
+
+		if !(f && b) then {
+			fwd := false;
+			bwd := false;
+		}
+	}
+
+	trim {
+		if !has_inc || !has_out then {
+			set := NodeSet(this, null, null, null);
+			set.f_and_not_b := set;
+			set.not_f_and_b := set;
+			set.not_f_and_not_b := set;
+			fwd := true;
+			bwd := true;
+		}
+	}
+}
+
+struct Edge(s : Node, t : Node){
+	compute_fwd_bwd {
+		if t.set == s.set then {
+			t.fwd := t.fwd || s.fwd;
+			s.bwd := s.bwd || t.bwd;
+		}
+	}
+
+	set_in_out {
+		t.has_inc := true;
+		s.has_out := true;
+	}
+}
+
+set_in_out <
+trim <
+Fix(pivot_nominate <
+	allocate_sets <
+	divide_into_sets <
+	initialise_pivot <
+	Fix(compute_fwd_bwd)
+)
+< count_nrof_sets
+< print_nrof_sets
