@@ -30,15 +30,15 @@ fn prefix_sum_files() -> Vec<TestCase<'static>> {
         (
             "Random",
             vec![
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_1000.init", Vec::new(), 1000),
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_3162.init", Vec::new(), 3162),
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_10000.init", Vec::new(), 10000),
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_31623.init", Vec::new(), 31623),
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_100000.init", Vec::new(), 100000),
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_316228.init", Vec::new(), 316228),
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_1000000.init", Vec::new(), 1000000),
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_3162278.init", Vec::new(), 3162278),
-                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_10000000.init", Vec::new(), 10000000),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_1000.init", Vec::new(), 1000, 0, 0),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_3162.init", Vec::new(), 3162, 0, 0),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_10000.init", Vec::new(), 10000, 0, 0),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_31623.init", Vec::new(), 31623, 0, 0),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_100000.init", Vec::new(), 100000, 0, 0),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_316228.init", Vec::new(), 316228, 0, 0),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_1000000.init", Vec::new(), 1000000, 0, 0),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_3162278.init", Vec::new(), 3162278, 0, 0),
+                ("tests/benchmarks/prefix_sum/testcases/prefix_sum_10000000.init", Vec::new(), 10000000, 0, 0),
             ],
         )
     ]

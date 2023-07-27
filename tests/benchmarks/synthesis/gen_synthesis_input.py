@@ -33,7 +33,6 @@ def main():
 
 		m = graph.number_of_edges();
 
-		print(f"(\"tests/benchmarks/synthesis/testcases/synthesis_{n}_{m}.init\", Vec::new(), {n} + {m}),");
 
 		p_initial = 0.05;
 		p_marked = 0.2;
@@ -67,10 +66,11 @@ def main():
 				graph_f.write(f"{int(is_marked[i])} {int(is_init[i])}\n");
 
 			# Print UncontrollableEvent
-			graph_f.write(f"UncontrollableEvent instances {n - nrof_controllable} {n - nrof_controllable}\n");
+			graph_f.write(f"UncontrollableEvent instances {m - nrof_controllable} {m - nrof_controllable}\n");
 			for (u, v) in permuted_edges[nrof_controllable:]:
 				graph_f.write(f"{u+1} {v+1}\n");
 
+		print(f"(\"tests/benchmarks/synthesis/testcases/synthesis_{n}_{m}.init\", Vec::new(), {n}, {nrof_controllable}, {m - nrof_controllable}),");
 
 if __name__ == '__main__':
 	main()

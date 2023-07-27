@@ -15,7 +15,7 @@ use std::fmt::Display;
 use std::process::Command;
 
 const REPS: usize = 10;
-pub type TestCase<'a> = (&'a str, Vec<(&'a str, Vec<String>, usize)>);
+pub type TestCase<'a> = (&'a str, Vec<(&'a str, Vec<String>, usize, usize, usize)>);
 
 
 pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_folder: &str) {
@@ -26,7 +26,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
 
     let result_file_path = format!("{bin_folder}/{bin_name}_results.csv");
     let previous_file = read_to_string(&result_file_path);
-    let results_header = format!("{},algorithm,problem_type,problem_size,runtime,standard_deviation", Config::HEADER);
+    let results_header = format!("{},algorithm,problem_type,problem_size1,problem_size2,problem_size3,runtime,standard_deviation,relative_standard_deviation", Config::HEADER);
 
     let mut previous_results : HashSet<String> = HashSet::new();
 
@@ -82,10 +82,10 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
             eprintln!("\tProblem: {problem_type}({}/{})", problem_type_idx + 1, testcases.len());
 
             let mut timedout = false;
-            for (test_idx, (file, extra_args, p_size)) in files_and_args.iter().enumerate() {
+            for (test_idx, (file, extra_args, p_size1, p_size2, p_size3)) in files_and_args.iter().enumerate() {
                 let file_name = file.split("/").last().unwrap();
                 eprintln!("\tFile: {file_name}({}/{})", test_idx + 1, files_and_args.len());
-                let csv_prefix = format!("{},{bin_name},{problem_type},{p_size}", config.as_csv_row());
+                let csv_prefix = format!("{},{bin_name},{problem_type},{p_size1},{p_size2},{p_size3}", config.as_csv_row());
 
                 if previous_results.contains(&csv_prefix) {
                     eprintln!("\t\tAlready have results for this file: skipping...");
@@ -102,12 +102,12 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                     last_extra_args = Some(extra_args);
                 }
                 
-                let (runtime, std_dev) = if timedout {
-                    ("timeout".to_string(), "-".to_string())
+                let (runtime, std_dev, rsd) = if timedout {
+                    ("timeout".to_string(), "-".to_string(), "-".to_string())
                 } else {
                     bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*2))
                 };
-                result_file.write_all(format!("{csv_prefix},{runtime},{std_dev}\n").as_bytes()).expect("Could not write to result file.");
+                result_file.write_all(format!("{csv_prefix},{runtime},{std_dev},{rsd}\n").as_bytes()).expect("Could not write to result file.");
                 if runtime == "timeout" {
                     timedout = true;
                 }
@@ -379,34 +379,51 @@ fn cuda_compile(bin_name: &str, dir: &str) -> Result<(), String> {
     }
 }
 
-fn bench_file<'a>(bin: &str, input_file: &str, reps: usize, timeout: Duration) -> (String, String) {
-    let mut measurements : Vec<f32> = Vec::new();
+fn bench_file<'a>(bin: &str, input_file: &str, reps: usize, timeout: Duration) -> (String, String, String) {
+    let mut attempts = 0;
+    let mut mean : f32 = 0.0;
+    let mut std_dev : f32 = 0.0;
+    let mut rsd : f32 = 0.0;
 
-    for i in 0..reps {
-        eprint!("\r\t\tStarting input {input_file} ({}/{reps})", i + 1);
-        stderr().flush().unwrap();
-        let r = run_bin(bin, input_file, timeout);
 
-        if r.is_err() {
-            let e = r.unwrap_err();
-            eprintln!("\n\t\t\t{e}");
-            return (e, "-".to_string());
-        } else {
-            let stdout = r.unwrap();
-            let ms = get_runtime_ms_from_stdout(&stdout);
-            if ms.is_none() {
-                eprintln!("\n\t\t\tCould not find time information in output.");
-                return ("NaN".to_string(), "-".to_string());
+    while attempts < 3 {
+        attempts += 1;
+        let mut measurements : Vec<f32> = Vec::new();
+
+        for i in 0..reps {
+            eprint!("\r\t\tStarting input {input_file} ({}/{reps})", i + 1);
+            stderr().flush().unwrap();
+            let r = run_bin(bin, input_file, timeout);
+
+            if r.is_err() {
+                let e = r.unwrap_err();
+                eprintln!("\n\t\t\t{e}");
+                return (e, "-".to_string(), "-".to_string());
+            } else {
+                let stdout = r.unwrap();
+                let ms = get_runtime_ms_from_stdout(&stdout);
+                if ms.is_none() {
+                    eprintln!("\n\t\t\tCould not find time information in output.");
+                    return ("NaN".to_string(), "-".to_string(), "-".to_string());
+                }
+                measurements.push(ms.unwrap());
             }
-            measurements.push(ms.unwrap());
+        }
+        eprint!("\n");
+        assert_eq!(measurements.len(), reps);
+
+        mean = measurements.iter().sum::<f32>() / (measurements.len() as f32);
+        let variance : f32 = measurements.iter().map(|v| (mean - v)*(mean-v)).sum::<f32>() / (measurements.len() as f32);
+        std_dev = variance.sqrt();
+        rsd = (std_dev*100.0)/mean;
+        
+        if rsd < 2.5 {
+            break;
+        } else {
+            eprintln!("\n\t\tRejected measurement! RSD = {rsd}%");
         }
     }
-    eprint!("\n");
-    assert_eq!(measurements.len(), reps);
+    eprintln!("RSD: {rsd}%");
 
-    let mean : f32 = measurements.iter().sum::<f32>() / (measurements.len() as f32);
-    let variance : f32 = measurements.iter().map(|v| (mean - v)*(mean-v)).sum::<f32>() / (measurements.len() as f32);
-    let std_dev = variance.sqrt();
-
-    return (mean.to_string(), std_dev.to_string());
+    return (mean.to_string(), std_dev.to_string(), rsd.to_string());
 }
