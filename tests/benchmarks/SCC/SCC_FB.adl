@@ -72,11 +72,16 @@ struct Node(set : NodeSet,
 struct Edge(s : Node, t : Node){
 	compute_fwd_bwd {
 		if t.set == s.set then {
-			t.fwd := t.fwd || s.fwd;
-			s.bwd := s.bwd || t.bwd;
+			if s.fwd then {
+				t.fwd := true;
+			}
+			
+			if t.bwd then {
+				s.bwd := true;
+			}
 		}
 	}
-
+	
 	set_in_out {
 		t.has_inc := true;
 		s.has_out := true;

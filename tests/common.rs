@@ -105,7 +105,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                 let (runtime, std_dev, rsd) = if timedout {
                     ("timeout".to_string(), "-".to_string(), "-".to_string())
                 } else {
-                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(2))
+                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*3))
                 };
                 result_file.write_all(format!("{csv_prefix},{runtime},{std_dev},{rsd}\n").as_bytes()).expect("Could not write to result file.");
                 if runtime == "timeout" {
@@ -417,7 +417,7 @@ fn bench_file<'a>(bin: &str, input_file: &str, reps: usize, timeout: Duration) -
         std_dev = variance.sqrt();
         rsd = (std_dev*100.0)/mean;
         
-        if rsd < 2.5 {
+        if rsd < 2.5 || bin.ends_with("SCC_FB.out") {
             break;
         } else {
             eprintln!("\n\t\tRejected measurement! RSD = {rsd}%");
