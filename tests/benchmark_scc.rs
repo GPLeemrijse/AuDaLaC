@@ -54,15 +54,15 @@ fn scc_fb_graphs() -> Vec<TestCase<'static>> {
         (
             "Random Graph (p=1.3/n)",
             vec![
-                ("tests/benchmarks/SCC/testcases/random_scc_1000_1301.init", vec!["-N".to_string(), "NodeSet=1000".to_string()], 1000, 1301, 0),
-                ("tests/benchmarks/SCC/testcases/random_scc_3162_4073.init", vec!["-N".to_string(), "NodeSet=3162".to_string()], 3162, 4073, 0),
-                ("tests/benchmarks/SCC/testcases/random_scc_10000_13124.init", vec!["-N".to_string(), "NodeSet=10000".to_string()], 10000, 13124, 0),
-                ("tests/benchmarks/SCC/testcases/random_scc_31623_40798.init", vec!["-N".to_string(), "NodeSet=31623".to_string()], 31623, 40798, 0),
-                ("tests/benchmarks/SCC/testcases/random_scc_100000_129454.init", vec!["-N".to_string(), "NodeSet=100000".to_string()], 100000, 129454, 0),
-                ("tests/benchmarks/SCC/testcases/random_scc_316228_410483.init", vec!["-N".to_string(), "NodeSet=316228".to_string()], 316228, 410483, 0),
-                ("tests/benchmarks/SCC/testcases/random_scc_1000000_1299394.init", vec!["-N".to_string(), "NodeSet=1000000".to_string()], 1000000, 1299394, 0),
-                ("tests/benchmarks/SCC/testcases/random_scc_3162278_4108430.init", vec!["-N".to_string(), "NodeSet=3162278".to_string()], 3162278, 4108430, 0),
-                ("tests/benchmarks/SCC/testcases/random_scc_10000000_12994496.init", vec!["-N".to_string(), "NodeSet=10000000".to_string()], 10000000, 12994496, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_1000_1309.init", vec!["-N".to_string(), "NodeSet=3000".to_string()], 1000, 1309, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_3162_4130.init", vec!["-N".to_string(), "NodeSet=9486".to_string()], 3162, 4130, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_10000_13061.init", vec!["-N".to_string(), "NodeSet=30000".to_string()], 10000, 13061, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_31623_41030.init", vec!["-N".to_string(), "NodeSet=94869".to_string()], 31623, 41030, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_100000_130295.init", vec!["-N".to_string(), "NodeSet=300000".to_string()], 100000, 130295, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_316228_411280.init", vec!["-N".to_string(), "NodeSet=948684".to_string()], 316228, 411280, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_1000000_1299887.init", vec!["-N".to_string(), "NodeSet=3000000".to_string()], 1000000, 1299887, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_3162278_4108274.init", vec!["-N".to_string(), "NodeSet=9486834".to_string()], 3162278, 4108274, 0),
+                ("tests/benchmarks/SCC/testcases/random_scc_10000000_12995172.init", vec!["-N".to_string(), "NodeSet=30000000".to_string()], 10000000, 12995172, 0),
             ],
         ),
     ]
@@ -73,16 +73,17 @@ fn scc_col_graphs() -> Vec<TestCase<'static>> {
         (
             "Random Graph (p=1.3/n)",
             vec![
-                ("tests/benchmarks/SCC/testcases/random_col_1000_1301.init", Vec::new(), 1000, 1301, 0),
-                ("tests/benchmarks/SCC/testcases/random_col_3162_4073.init", Vec::new(), 3162, 4073, 0),
-                ("tests/benchmarks/SCC/testcases/random_col_10000_13124.init", Vec::new(), 10000, 13124, 0),
-                ("tests/benchmarks/SCC/testcases/random_col_31623_40798.init", Vec::new(), 31623, 40798, 0),
-                ("tests/benchmarks/SCC/testcases/random_col_100000_129454.init", Vec::new(), 100000, 129454, 0),
-                ("tests/benchmarks/SCC/testcases/random_col_316228_410483.init", Vec::new(), 316228, 410483, 0),
-                ("tests/benchmarks/SCC/testcases/random_col_1000000_1299394.init", Vec::new(), 1000000, 1299394, 0),
-                ("tests/benchmarks/SCC/testcases/random_col_3162278_4108430.init", Vec::new(), 3162278, 4108430, 0),
-                ("tests/benchmarks/SCC/testcases/random_col_10000000_12994496.init", Vec::new(), 10000000, 12994496, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_1000_1309.init", Vec::new(), 1000, 1309, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_3162_4130.init", Vec::new(), 3162, 4130, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_10000_13061.init", Vec::new(), 10000, 13061, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_31623_41030.init", Vec::new(), 31623, 41030, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_100000_130295.init", Vec::new(), 100000, 130295, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_316228_411280.init", Vec::new(), 316228, 411280, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_1000000_1299887.init", Vec::new(), 1000000, 1299887, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_3162278_4108274.init", Vec::new(), 3162278, 4108274, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_10000000_12995172.init", Vec::new(), 10000000, 12995172, 0),
             ],
         ),
     ]
 }
+

@@ -33,22 +33,22 @@ def main():
 			for (u, v) in graph.edges:
 				graph_f.write(f"{u} {v}\n");
 
-
-		# Write SCC.adl ADL init file to disk
+		# Write SCC_FB.adl ADL init file to disk
 		adl_init_file = os.path.join(args.output_dir, f"random_scc_{n}_{m}.init");
 		with open(adl_init_file, "w") as graph_f:
-			graph_f.write("ADL structures 3\nEdge Node Node\nNode NodeSet Bool Bool\nNodeSet Node Node Node Node Bool NodeSet NodeSet NodeSet\n");
+			graph_f.write("ADL structures 3\nEdge Node Node\nNode NodeSet Bool Bool Bool Bool\nNodeSet Node NodeSet NodeSet NodeSet\n");
 			graph_f.write(f"Edge instances {m} {m}\n");
 
 			for (u, v) in graph.edges:
 				graph_f.write(f"{u+1} {v+1}\n");
 
 			graph_f.write(f"Node instances {n} {n}\n");
-			nodes = "1 0 0\n" * n;
-			graph_f.write(nodes);
-			graph_f.write("NodeSet instances 1 1\n0 0 0 0 0 0 0 0\n");
+			for i in range(n):
+				graph_f.write("1\n");
 
-		print(f"(\"tests/benchmarks/SCC/testcases/random_scc_{n}_{m}.init\", vec![\"-N\".to_string(), \"NodeSet={n}\".to_string()], {n} + {m}),")
+			graph_f.write("NodeSet instances 0 1\n");
+
+		print(f"(\"tests/benchmarks/SCC/testcases/random_scc_{n}_{m}.init\", vec![\"-N\".to_string(), \"NodeSet={3*n}\".to_string()], {n} + {m}),")
 
 
 		# Write SCC_col.adl ADL init file to disk
