@@ -1,6 +1,5 @@
 memorder,schedule,voting-strat,weak_non_racing,algorithm,problem_type,problem_size1,problem_size2,problem_size3,runtime,standard_deviation,relative_standard_deviation
 acqrel,in-kernel,in-kernel-simple,1,synthesis,Random,1000,768,512,0.30731517,0.0061451877,1.9996369
-acqrel,in-kernel,in-kernel-simple,1,synthesis,Random,3162,2458,1640,0.395872,0.08846257,22.346256
 acqrel,in-kernel,in-kernel-simple,1,synthesis,Random,10000,7869,5247,0.81007683,0.0063183745,0.7799722
 acqrel,in-kernel,in-kernel-simple,1,synthesis,Random,31623,24954,16637,2.012528,0.016547615,0.8222303
 acqrel,in-kernel,in-kernel-simple,1,synthesis,Random,100000,78202,52136,5.5545726,0.002132971,0.038400274
@@ -26,7 +25,6 @@ seqcons,in-kernel,in-kernel-simple,1,synthesis,Random,316228,246635,164424,5.904
 seqcons,in-kernel,in-kernel-simple,1,synthesis,Random,1000000,779295,519531,13.302378,0.21417634,1.6100607
 seqcons,in-kernel,in-kernel-simple,1,synthesis,Random,3162278,2468470,1645647,timeout,-,-
 seqcons,in-kernel,in-kernel-simple,1,synthesis,Random,10000000,7798436,5198958,timeout,-,-
-relaxed,in-kernel,in-kernel-alternating,1,synthesis,Random,1000,768,512,0.2206048,0.029960237,13.580954
 relaxed,in-kernel,in-kernel-alternating,1,synthesis,Random,10000,7869,5247,0.6779712,0.008190897,1.2081482
 relaxed,in-kernel,in-kernel-alternating,1,synthesis,Random,31623,24954,16637,1.7810208,0.031518817,1.7697052
 relaxed,in-kernel,in-kernel-alternating,1,synthesis,Random,100000,78202,52136,5.1813216,0.049122505,0.94806904
@@ -158,7 +156,6 @@ seqcons,on-host,on-host-simple,1,synthesis,Random,1000000,779295,519531,10.11825
 seqcons,on-host,on-host-simple,1,synthesis,Random,3162278,2468470,1645647,timeout,-,-
 seqcons,on-host,on-host-simple,1,synthesis,Random,10000000,7798436,5198958,timeout,-,-
 relaxed,in-kernel,in-kernel-simple,0,synthesis,Random,1000,768,512,0.29088962,0.0071561746,2.4600997
-relaxed,in-kernel,in-kernel-simple,0,synthesis,Random,3162,2458,1640,0.38062078,0.06773751,17.796589
 relaxed,in-kernel,in-kernel-simple,0,synthesis,Random,10000,7869,5247,0.793488,0.0056682713,0.7143487
 relaxed,in-kernel,in-kernel-simple,0,synthesis,Random,31623,24954,16637,1.8760641,0.025426341,1.3553023
 relaxed,in-kernel,in-kernel-simple,0,synthesis,Random,100000,78202,52136,5.4282594,0.02594607,0.4779814

@@ -116,7 +116,6 @@ relaxed,on-host,on-host-simple,0,sorting,Random,316228,0,0,timeout,-,-
 relaxed,on-host,on-host-simple,0,sorting,Random,1000000,0,0,timeout,-,-
 relaxed,on-host,on-host-simple,0,sorting,Random,3162278,0,0,timeout,-,-
 relaxed,on-host,on-host-simple,0,sorting,Random,10000000,0,0,timeout,-,-
-seqcons,on-host,on-host-simple,1,sorting,Random,1000,0,0,17.320316,1.7641906,10.185672
 seqcons,on-host,on-host-simple,1,sorting,Random,3162,0,0,57.180805,0.6651763,1.1632859
 seqcons,on-host,on-host-simple,1,sorting,Random,10000,0,0,180.61833,2.820785,1.5617379
 seqcons,on-host,on-host-simple,1,sorting,Random,31623,0,0,572.915,4.9028726,0.85577667
