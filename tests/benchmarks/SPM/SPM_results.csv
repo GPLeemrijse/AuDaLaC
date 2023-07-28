@@ -368,3 +368,17 @@ relaxed,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,308903,16631
 seqcons,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,28319,120943,0,11446.785,14.678351,0.12823121
 seqcons,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,93529,450679,0,62637.97,153.78879,0.24552007
 seqcons,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,308903,1663133,0,timeout,-,-
+acqrel,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,308903,1663133,0,441090.4,205.59569,0.04661078
+seqcons,graph,graph-simple,0,SPM,Invariantly Inevitably Eat,308903,1663133,0,476920,217.98854,0.04570757
+seqcons,on-host,on-host-simple,0,SPM,Invariantly Inevitably Eat,308903,1663133,0,481082.5,57.075546,0.011863983
+seqcons,in-kernel,in-kernel-simple,1,SPM,Invariantly Inevitably Eat,308903,1663133,0,277584.84,95.56582,0.03442761
+seqcons,on-host,on-host-simple,1,SPM,Invariantly Inevitably Eat,308903,1663133,0,210950.11,263.31967,0.12482557
+relaxed,in-kernel,in-kernel-simple,1,SPM,Invariantly Inevitably Eat,308903,1663133,0,189678.3,82.15185,0.043311145
+acqrel,graph,graph-simple,0,SPM,Invariantly Inevitably Eat,308903,1663133,0,355605,231.36707,0.06506294
+seqcons,graph,graph-simple,1,SPM,Invariantly Inevitably Eat,308903,1663133,0,200613.77,110.14456,0.05490379
+acqrel,on-host,on-host-simple,0,SPM,Invariantly Inevitably Eat,308903,1663133,0,361134.78,204.7173,0.05668723
+acqrel,in-kernel,in-kernel-simple,1,SPM,Invariantly Inevitably Eat,308903,1663133,0,236177.83,75.41716,0.03193236
+relaxed,in-kernel,in-kernel-alternating,1,SPM,Invariantly Inevitably Eat,308903,1663133,0,186448.2,11.1480255,0.005979154
+relaxed,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,308903,1663133,0,209712.58,94.73269,0.045172628
+seqcons,in-kernel,in-kernel-simple,0,SPM,Invariantly Inevitably Eat,308903,1663133,0,557546.25,322.50928,0.0578444
+acqrel,on-host,on-host-simple,1,SPM,Invariantly Inevitably Eat,308903,1663133,0,187124.13,184.94678,0.098836415

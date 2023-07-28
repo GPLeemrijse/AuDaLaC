@@ -193,7 +193,8 @@ relaxed,in-kernel,in-kernel-simple,1,synthesis,Random,10000000,7798436,5198958,t
 relaxed,in-kernel,in-kernel-alternating,1,synthesis,Random,3162,2458,1640,0.2514752,0.0022025325,0.87584484
 relaxed,on-host,on-host-alternating,1,synthesis,Random,1000,768,512,0.5042624,0.005007378,0.9930104
 relaxed,on-host,on-host-simple,1,synthesis,Random,10000,7869,5247,1.2810817,0.005859109,0.45735642
-seqcons,on-host,on-host-simple,0,synthesis,Random,1000,768,512,0.858672,0.019728042,2.297506relaxed,on-host,on-host-simple,0,synthesis,Random,3162278,2468470,1645647,59.537163,0.118420124,0.19890119
+seqcons,on-host,on-host-simple,0,synthesis,Random,1000,768,512,0.858672,0.019728042,2.297506
+relaxed,on-host,on-host-simple,0,synthesis,Random,3162278,2468470,1645647,59.537163,0.118420124,0.19890119
 relaxed,on-host,on-host-simple,0,synthesis,Random,10000000,7798436,5198958,243.11057,0.500159,0.20573315
 relaxed,in-kernel,in-kernel-simple,1,synthesis,Random,3162278,2468470,1645647,60.99052,0.3504036,0.5745214
 relaxed,in-kernel,in-kernel-simple,1,synthesis,Random,10000000,7798436,5198958,248.38535,3.5419872,1.4260049
