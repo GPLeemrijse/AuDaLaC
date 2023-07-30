@@ -1,0 +1,8 @@
+alg,problem_type,problem_size1,problem_size2,problem_size3,runtime
+SPM,Invariantly Inevitably Eat,239,555,0,5
+SPM,Invariantly Inevitably Eat,787,2177,0,10
+SPM,Invariantly Inevitably Eat,2597,8417,0,20
+SPM,Invariantly Inevitably Eat,8575,32102,0,70
+SPM,Invariantly Inevitably Eat,28319,120943,0,290
+SPM,Invariantly Inevitably Eat,93529,450679,0,1260
+SPM,Invariantly Inevitably Eat,308903,1663133,0,5820

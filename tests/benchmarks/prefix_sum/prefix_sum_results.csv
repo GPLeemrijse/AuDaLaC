@@ -213,9 +213,9 @@ acqrel,on-host,on-host-simple,0,prefix_sum,Random,3162,0,0,0.29603845,0.00196704
 acqrel,on-host,on-host-simple,0,prefix_sum,Random,10000000,0,0,35.231762,0.017294172,0.04908688
 seqcons,graph,graph-simple,0,prefix_sum,Random,10000000,0,0,46.74928,0.09979693,0.21347265
 acqrel,in-kernel,in-kernel-simple,1,prefix_sum,Random,1000,0,0,0.1215264,0.0013053501,1.0741289
-acqrel,in-kernel,in-kernel-simple,1,prefix_sum,Random,3162,0,0,0.178784,0.013336532,7.459578
 acqrel,in-kernel,in-kernel-simple,1,prefix_sum,Random,10000000,0,0,32.377884,0.039490853,0.121968605
 acqrel,graph,graph-simple,0,prefix_sum,Random,10000000,0,0,36.287025,0.050942928,0.14038882
 relaxed,in-kernel,in-kernel-alternating,1,prefix_sum,Random,1000,0,0,0.1258336,0.051092736,40.603413
 relaxed,in-kernel,in-kernel-alternating,1,prefix_sum,Random,10000000,0,0,32.33502,0.026166072,0.08092178
 relaxed,graph,graph-simple,0,prefix_sum,Random,10000000,0,0,29.709423,0.01556657,0.052396066
+acqrel,in-kernel,in-kernel-simple,1,prefix_sum,Random,3162,0,0,0.16832748,0.007423598,4.410211
