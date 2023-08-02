@@ -26,17 +26,10 @@ def main():
 
 		m = graph.number_of_edges();
 
-		# Write input file for sequential to disk
-		sequential_in_file = os.path.join(args.output_dir, f"random_kos_{n}_{m}.in");
-		with open(sequential_in_file, "w") as graph_f:
-			graph_f.write(f"{n} {m}\n");
-			for (u, v) in graph.edges:
-				graph_f.write(f"{u} {v}\n");
-
 		# Write SCC_FB.adl ADL init file to disk
-		adl_init_file = os.path.join(args.output_dir, f"random_scc_{n}_{m}.init");
+		adl_init_file = os.path.join(args.output_dir, f"random_fb_{n}_{m}.init");
 		with open(adl_init_file, "w") as graph_f:
-			graph_f.write("ADL structures 3\nEdge Node Node\nNode NodeSet Bool Bool Bool Bool\nNodeSet Node NodeSet NodeSet NodeSet\n");
+			graph_f.write("ADL structures 3\nEdge Node Node\nNode NodeSet Bool Bool Edge Edge\nNodeSet Node NodeSet NodeSet NodeSet\n");
 			graph_f.write(f"Edge instances {m} {m}\n");
 
 			for (u, v) in graph.edges:
@@ -48,7 +41,7 @@ def main():
 
 			graph_f.write("NodeSet instances 0 1\n");
 
-		print(f"(\"tests/benchmarks/SCC/testcases/random_scc_{n}_{m}.init\", vec![\"-N\".to_string(), \"NodeSet={3*n}\".to_string()], {n} + {m}),")
+		print(f"(\"tests/benchmarks/SCC/testcases/random_fb_{n}_{m}.init\", vec![\"-N\".to_string(), \"NodeSet={n}\".to_string()], {n}, {m}, {n}),")
 
 
 		# Write SCC_col.adl ADL init file to disk
@@ -62,7 +55,7 @@ def main():
 
 			graph_f.write(f"Node instances 0 {n}\n");
 
-		print(f"(\"tests/benchmarks/SCC/testcases/random_col_{n}_{m}.init\", Vec::new(), {n} + {m}),")
+		print(f"(\"tests/benchmarks/SCC/testcases/random_col_{n}_{m}.init\", Vec::new(), {n}, {m}, 0),")
 
 
 if __name__ == '__main__':

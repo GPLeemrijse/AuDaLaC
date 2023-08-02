@@ -53,9 +53,9 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
             let nrof_config_params = Config::NROF_PARAMS+4;
             let c = &l[0..comma_idxs[nrof_config_params]];
             let rt = &l[comma_idxs[nrof_config_params]+1..comma_idxs[nrof_config_params+1]];
-            if rt != "timeout" {
+            // if rt != "timeout" {
                 previous_results.insert(c.to_string());
-            }
+            // }
         }
     }
     // If no previous file exists, we create one and write the header.
@@ -105,7 +105,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                 let (runtime, std_dev, rsd) = if timedout {
                     ("timeout".to_string(), "-".to_string(), "-".to_string())
                 } else {
-                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(60*3))
+                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(10))
                 };
                 result_file.write_all(format!("{csv_prefix},{runtime},{std_dev},{rsd}\n").as_bytes()).expect("Could not write to result file.");
                 if runtime == "timeout" {
@@ -380,49 +380,39 @@ fn cuda_compile(bin_name: &str, dir: &str) -> Result<(), String> {
 }
 
 fn bench_file<'a>(bin: &str, input_file: &str, reps: usize, timeout: Duration) -> (String, String, String) {
-    let mut attempts = 0;
-    let mut mean : f32 = 0.0;
-    let mut std_dev : f32 = 0.0;
-    let mut rsd : f32 = 0.0;
+    let mean : f32 ;
+    let std_dev : f32;
+    let rsd : f32;
 
+    let mut measurements : Vec<f32> = Vec::new();
 
-    while attempts < 5 {
-        attempts += 1;
-        let mut measurements : Vec<f32> = Vec::new();
+    for i in 0..reps {
+        eprint!("\r\t\tStarting input {input_file} ({}/{reps})", i + 1);
+        stderr().flush().unwrap();
+        let r = run_bin(bin, input_file, timeout);
 
-        for i in 0..reps {
-            eprint!("\r\t\tStarting input {input_file} ({}/{reps})", i + 1);
-            stderr().flush().unwrap();
-            let r = run_bin(bin, input_file, timeout);
-
-            if r.is_err() {
-                let e = r.unwrap_err();
-                eprintln!("\n\t\t\t{e}");
-                return (e, "-".to_string(), "-".to_string());
-            } else {
-                let stdout = r.unwrap();
-                let ms = get_runtime_ms_from_stdout(&stdout);
-                if ms.is_none() {
-                    eprintln!("\n\t\t\tCould not find time information in output.");
-                    return ("NaN".to_string(), "-".to_string(), "-".to_string());
-                }
-                measurements.push(ms.unwrap());
-            }
-        }
-        eprint!("\n");
-        assert_eq!(measurements.len(), reps);
-
-        mean = measurements.iter().sum::<f32>() / (measurements.len() as f32);
-        let variance : f32 = measurements.iter().map(|v| (mean - v)*(mean-v)).sum::<f32>() / (measurements.len() as f32);
-        std_dev = variance.sqrt();
-        rsd = (std_dev*100.0)/mean;
-        
-        if rsd < 2.5 || bin.ends_with("SCC_FB.out") {
-            break;
+        if r.is_err() {
+            let e = r.unwrap_err();
+            eprintln!("\n\t\t\t{e}");
+            return (e, "-".to_string(), "-".to_string());
         } else {
-            eprintln!("\n\t\tRejected measurement! RSD = {rsd}%");
+            let stdout = r.unwrap();
+            let ms = get_runtime_ms_from_stdout(&stdout);
+            if ms.is_none() {
+                eprintln!("\n\t\t\tCould not find time information in output.");
+                return ("NaN".to_string(), "-".to_string(), "-".to_string());
+            }
+            measurements.push(ms.unwrap());
         }
     }
+    eprint!("\n");
+    assert_eq!(measurements.len(), reps);
+
+    mean = measurements.iter().sum::<f32>() / (measurements.len() as f32);
+    let variance : f32 = measurements.iter().map(|v| (mean - v)*(mean-v)).sum::<f32>() / (measurements.len() as f32);
+    std_dev = variance.sqrt();
+    rsd = (std_dev*100.0)/mean;
+    
     eprintln!("RSD: {rsd}%");
 
     return (mean.to_string(), std_dev.to_string(), rsd.to_string());

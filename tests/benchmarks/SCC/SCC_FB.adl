@@ -33,8 +33,8 @@ struct NodeSet(pivot : Node,
 struct Node(set : NodeSet,
 			fwd : Bool,
 			bwd : Bool,
-			has_inc: Bool,
-			has_out: Bool
+			inc: Edge,
+			outg: Edge
 			){
 
 	pivot_nominate {
@@ -58,7 +58,7 @@ struct Node(set : NodeSet,
 	}
 
 	trim {
-		if !has_inc || !has_out then {
+		if this != null && !fwd && (inc == null || outg == null) then {
 			set := NodeSet(this, null, null, null);
 			set.f_and_not_b := set;
 			set.not_f_and_b := set;
@@ -83,17 +83,37 @@ struct Edge(s : Node, t : Node){
 	}
 	
 	set_in_out {
-		t.has_inc := true;
-		s.has_out := true;
+		if t.set == s.set then {
+			if t.inc == null then {
+				t.inc := this;
+			}
+			if s.outg == null then {
+				s.outg := this;
+			}
+		}
+	}
+
+	reset_in_out {
+		if t.set != s.set then {
+			if t.inc == this then {
+				t.inc := null;
+			}
+			if s.outg == this then {
+				s.outg := null;
+			}
+		}
 	}
 }
 
-set_in_out <
-trim <
+Fix(
+	set_in_out <
+	trim <
+	reset_in_out
+) <
 Fix(pivot_nominate <
 	allocate_sets <
 	Fix(compute_fwd_bwd) <
 	divide_into_sets
 )
-//< count_nrof_sets
-//< print_nrof_sets
+// < count_nrof_sets
+// < print_nrof_sets

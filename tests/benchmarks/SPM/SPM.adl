@@ -97,11 +97,16 @@ struct Edge(v: Node,
 		}
 	}
 
-	minmax_top {
-		if v.cand == null || (
-			/*min*/	(!v.is_odd &&  v.cand.prog_top && !prog_top) ||
+	minmax_top1 {
+		if v.cand == null then {
+			v.cand := this;
+		}
+	}
+
+	minmax_top2 {
+		if  /*min*/	(!v.is_odd &&  v.cand.prog_top && !prog_top) ||
 			/*max*/	( v.is_odd && !v.cand.prog_top &&  prog_top)
-			) then {
+			 then {
 			v.cand := this;
 		}
 	}
@@ -135,10 +140,11 @@ struct Edge(v: Node,
 self_loops_to_top <
 Fix(
 	prog <
-	Fix(minmax_top) <
+	minmax_top1 <
+	minmax_top2 <
 	Fix(minmax_1) <
 	Fix(minmax_3) <
 	lift
 )
- // < count_odd
- // < print_odd
+// < count_odd
+// < print_odd

@@ -49,6 +49,7 @@ fn parity_games() -> Vec<TestCase<'static>> {
                 ("tests/benchmarks/SPM/testcases/dining/dining_8.invariantly_plato_starves.init", Vec::new(), 20466, 111774, 0),
                 ("tests/benchmarks/SPM/testcases/dining/dining_9.invariantly_plato_starves.init", Vec::new(), 67590, 412322, 0),
                 ("tests/benchmarks/SPM/testcases/dining/dining_10.invariantly_plato_starves.init", Vec::new(), 223230, 1504368, 0),
+                ("tests/benchmarks/SPM/testcases/dining/dining_11.invariantly_plato_starves.init", Vec::new(), 737274, 5439458, 0),
             ],
         ),
         // (

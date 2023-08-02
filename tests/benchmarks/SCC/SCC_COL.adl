@@ -66,5 +66,5 @@ Fix(
 	delete_bwd_frontier_edges <
 	reset_fwd_bwd
 )
- //< count_if_scc
- //< print_components
+// < count_if_scc
+// < print_components
