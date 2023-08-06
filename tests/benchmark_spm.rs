@@ -30,7 +30,6 @@ fn parity_games() -> Vec<TestCase<'static>> {
         (
             "Invariantly Inevitably Eat",
             vec![
-                ("tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_inevitably_eat.init", Vec::new(), 239, 555, 0),
                 ("tests/benchmarks/SPM/testcases/dining/dining_5.invariantly_inevitably_eat.init", Vec::new(), 787, 2177, 0),
                 ("tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_inevitably_eat.init", Vec::new(), 2597, 8417, 0),
                 ("tests/benchmarks/SPM/testcases/dining/dining_7.invariantly_inevitably_eat.init", Vec::new(), 8575, 32102, 0),
@@ -42,7 +41,6 @@ fn parity_games() -> Vec<TestCase<'static>> {
         (
             "Invariantly Plato Starves",
             vec![
-                ("tests/benchmarks/SPM/testcases/dining/dining_4.invariantly_plato_starves.init", Vec::new(), 174, 504, 0),
                 ("tests/benchmarks/SPM/testcases/dining/dining_5.invariantly_plato_starves.init", Vec::new(), 570, 2018, 0),
                 ("tests/benchmarks/SPM/testcases/dining/dining_6.invariantly_plato_starves.init", Vec::new(), 1878, 7854, 0),
                 ("tests/benchmarks/SPM/testcases/dining/dining_7.invariantly_plato_starves.init", Vec::new(), 6198, 29888, 0),

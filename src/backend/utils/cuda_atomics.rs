@@ -46,6 +46,7 @@ impl MemOrder {
 pub enum Scope {
     System,
     Device,
+    Block
 }
 
 impl Scope {
@@ -53,6 +54,7 @@ impl Scope {
         match s {
             "system" => Scope::System,
             "device" => Scope::Device,
+            "block" => Scope::Block,
             _ => panic!("Invalid scope"),
         }
     }
@@ -61,6 +63,7 @@ impl Scope {
         (match self {
             Scope::System => "cuda::thread_scope_system",
             Scope::Device => "cuda::thread_scope_device",
+            Scope::Block => "cuda::thread_scope_block",
         })
         .to_string()
     }

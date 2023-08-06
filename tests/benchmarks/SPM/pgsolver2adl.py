@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, FileType
 import re
 import os
+import numpy as np
 
 class Node:
 	def __init__(self, idx, prio, owner):
@@ -11,7 +12,10 @@ class Node:
 regex = re.compile(r"([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+(,[0-9]+)*);");
 
 
-def print_init(output_file_name, nodes, edges, prios):
+def print_init(output_file_name, nodes, edges, prios, permute):
+	if permute:
+		edges = np.random.permutation(edges);
+
 	# Print .init file
 	with open(output_file_name, "w") as out_file:
 		nrof_nodes = len(nodes);
@@ -71,6 +75,8 @@ def main():
 	parser.add_argument('pg_files', type=FileType('r'), nargs='+', help="The pgsolver input file(s).");
 	parser.add_argument('output_dir', help="The output directory.");
 	parser.add_argument('-f', action='store_true', dest='force', help="Do not confirm before generating.");
+	parser.add_argument('-p', action='store_true', dest='permute', help="Permute edges.");
+
 
 
 	args = parser.parse_args()
@@ -88,8 +94,11 @@ def main():
 		if (nodes, edges, prios) == ([], [], []):
 			continue;
 		
-		output_file_name = os.path.join(args.output_dir, name[:-3] + ".init");
-		print_init(output_file_name, nodes, edges, prios);
+		if args.permute:
+			output_file_name = os.path.join(args.output_dir, name[:-3] + "_perm.init");
+		else:
+			output_file_name = os.path.join(args.output_dir, name[:-3] + ".init");
+		print_init(output_file_name, nodes, edges, prios, args.permute);
 
 		print(f"Sucessfully generated {output_file_name}");
 

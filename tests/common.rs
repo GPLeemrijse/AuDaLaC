@@ -14,7 +14,6 @@ use std::fmt;
 use std::fmt::Display;
 use std::process::Command;
 
-const REPS: usize = 10;
 pub type TestCase<'a> = (&'a str, Vec<(&'a str, Vec<String>, usize, usize, usize)>);
 
 
@@ -52,10 +51,7 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
 
             let nrof_config_params = Config::NROF_PARAMS+4;
             let c = &l[0..comma_idxs[nrof_config_params]];
-            let rt = &l[comma_idxs[nrof_config_params]+1..comma_idxs[nrof_config_params+1]];
-            // if rt != "timeout" {
-                previous_results.insert(c.to_string());
-            // }
+            previous_results.insert(c.to_string());
         }
     }
     // If no previous file exists, we create one and write the header.
@@ -105,7 +101,12 @@ pub fn benchmark(tests: &Vec<(&Config, &Vec<TestCase>)>, bin_name: &str, bin_fol
                 let (runtime, std_dev, rsd) = if timedout {
                     ("timeout".to_string(), "-".to_string(), "-".to_string())
                 } else {
-                    bench_file(&format!("{bin_folder}/{bin_name}.out"), file, REPS, Duration::from_secs(10))
+                    bench_file(
+                        &format!("{bin_folder}/{bin_name}.out"),
+                        file,
+                        if bin_name == "SPM" { 10 } else { 30 },
+                        Duration::from_secs(10*60)
+                    )
                 };
                 result_file.write_all(format!("{csv_prefix},{runtime},{std_dev},{rsd}\n").as_bytes()).expect("Could not write to result file.");
                 if runtime == "timeout" {
@@ -136,8 +137,8 @@ pub fn voting_impact_configs() -> Vec<Config<'static>> {
         ("in-kernel", "in-kernel-alternating"),
         ("on-host", "on-host-simple"),
         ("on-host", "on-host-alternating"),
-        ("graph", "graph-shared"),
-        ("graph", "graph-shared-banks"),
+        //("graph", "graph-shared"),
+        //("graph", "graph-shared-banks"),
         //("graph", "graph-shared-opportunistic"),
         ("graph", "graph-simple")
     ];
