@@ -65,10 +65,10 @@ fn main() {
             possible_value("graph-shared")
             possible_value("graph-shared-banks")
             possible_value("graph-shared-opportunistic")
-            possible_value("on-host-alternating")
+            possible_value("on-host-rotating")
             possible_value("on-host-simple")
             possible_value("in-kernel-simple")
-            possible_value("in-kernel-alternating")
+            possible_value("in-kernel-rotating")
             default_value("graph-simple")
             "Which fixpoint stability synchronisation strategy to use.")
         (@arg weak_ld_st: -w --weak_ld_st
@@ -143,14 +143,14 @@ fn main() {
                         ("in-kernel", "in-kernel-simple") => {
                             Box::new(InKernelSimpleFixpoint::new(fixpoint_depth(&program.schedule)))
                         }
-                        ("in-kernel", "in-kernel-alternating") => Box::new(
-                            InKernelAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ("in-kernel", "in-kernel-rotating") => Box::new(
+                            InKernelRotatingFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
                         ("on-host", "on-host-simple") => Box::new(
                             OnHostSimpleFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
-                        ("on-host", "on-host-alternating") => Box::new(
-                            OnHostAlternatingFixpoint::new(fixpoint_depth(&program.schedule)),
+                        ("on-host", "on-host-rotating") => Box::new(
+                            OnHostRotatingFixpoint::new(fixpoint_depth(&program.schedule)),
                         ),
                         ("graph", "graph-shared") => Box::new(
                             GraphSharedFixpoint::new(fixpoint_depth(&program.schedule)),
