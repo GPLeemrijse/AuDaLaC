@@ -40,10 +40,10 @@ where
 }
 
 fn main() {
-    let args = clap_app!(AuDauLaC =>
+    let args = clap_app!(AuDaLaC =>
         (version: "0.1")
         (author: "GPLeemrijse <g.p.leemrijse@student.tue.nl>")
-        (about: "Compiles AuDauLa programs")
+        (about: "Compiles AuDaLa programs")
         (@arg print_ast: -a --ast "Output the AST of the program (skips validation)")
         (@arg time: -t --time "Print timing information.")
         (@arg init_file: -i --init_file "Output the init file of the program (skips validation)")
