@@ -1,17 +1,17 @@
 use crate::backend::FPStrategy;
 use indoc::formatdoc;
 
-pub struct OnHostAlternatingFixpoint {
+pub struct OnHostRotatingFixpoint {
 	fp_depth: usize,
 }
 
-impl OnHostAlternatingFixpoint {
-	pub fn new(fp_depth: usize) -> OnHostAlternatingFixpoint {
-		OnHostAlternatingFixpoint { fp_depth }
+impl OnHostRotatingFixpoint {
+	pub fn new(fp_depth: usize) -> OnHostRotatingFixpoint {
+		OnHostRotatingFixpoint { fp_depth }
 	}
 }
 
-impl FPStrategy for OnHostAlternatingFixpoint {
+impl FPStrategy for OnHostRotatingFixpoint {
 	fn global_decl(&self) -> String {
 		let fp_depth = self.fp_depth;
 		let funcs = if fp_depth > 0 {

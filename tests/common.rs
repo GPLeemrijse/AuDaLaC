@@ -134,9 +134,9 @@ pub fn voting_impact_configs() -> Vec<Config<'static>> {
     let orders = ["relaxed"];
     let voting = [
         ("in-kernel", "in-kernel-simple"),
-        ("in-kernel", "in-kernel-alternating"),
+        ("in-kernel", "in-kernel-rotating"),
         ("on-host", "on-host-simple"),
-        ("on-host", "on-host-alternating"),
+        ("on-host", "on-host-rotating"),
         //("graph", "graph-shared"),
         //("graph", "graph-shared-banks"),
         //("graph", "graph-shared-opportunistic"),

@@ -161,8 +161,8 @@ impl OnHostSchedule<'_> {
 		
 		let mut params = vec!["inst_size nrof_instances".to_string(), "int fp_lvl".to_string()];
 		
-		let alternating = self.fp.is_stable(0).contains("iter_idx"); // Hacky...
-		if alternating {
+		let rotating = self.fp.is_stable(0).contains("iter_idx"); // Hacky...
+		if rotating {
 			params.push("iter_idx_t iter_idx".to_string());
 		}
 		let kernel_signature = format_signature(&func_header, &params, 0);
@@ -258,7 +258,7 @@ impl CompileComponent for OnHostSchedule<'_> {
 		result.push_str(&self.fp.initialise());
 
 		// The Step instances
-		let alternating = self.fp.is_stable(0).contains("iter_idx"); // Hacky...
+		let rotating = self.fp.is_stable(0).contains("iter_idx"); // Hacky...
 		let print = "print".to_string();
 		result.push_str(
 			&self.program
@@ -281,7 +281,7 @@ impl CompileComponent for OnHostSchedule<'_> {
 								\t);",
 								strct_n = strct.name,
 								kernel = self.kernel_name(&strct.name, &step_name),
-								iter_idx_arg = if alternating {"(void*)&iter_idx"} else {"NULL"},
+								iter_idx_arg = if rotating {"(void*)&iter_idx"} else {"NULL"},
 							}
 						 )
 				)
