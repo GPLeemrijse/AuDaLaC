@@ -1,0 +1,14 @@
+alg,problem_type,problem_size1,problem_size2,problem_size3,runtime
+SPM,Invariantly Inevitably Eat,787,2177,0,0.0204
+SPM,Invariantly Inevitably Eat,2597,8417,0,0.0589
+SPM,Invariantly Inevitably Eat,8575,32102,0,0.1834
+SPM,Invariantly Inevitably Eat,28319,120943,0,0.7138
+SPM,Invariantly Inevitably Eat,93529,450679,0,2.3011
+SPM,Invariantly Inevitably Eat,308903,1663133,0,15.0917
+SPM,Invariantly Plato Starves,570,2018,0,0.0521
+SPM,Invariantly Plato Starves,1878,7854,0,0.1369
+SPM,Invariantly Plato Starves,6198,29888,0,0.3978
+SPM,Invariantly Plato Starves,20466,111774,0,1.3929
+SPM,Invariantly Plato Starves,67590,412322,0,3.6718
+SPM,Invariantly Plato Starves,223230,1504368,0,19.0957
+SPM,Invariantly Plato Starves,737274,5439458,0,74.6106

@@ -1,0 +1,10 @@
+alg,problem_type,problem_size1,problem_size2,problem_size3,runtime
+prefix_sum,Random,1000,0,0,0.0012014
+prefix_sum,Random,3162,0,0,0.0074629
+prefix_sum,Random,10000,0,0,0.0138133
+prefix_sum,Random,31623,0,0,0.0554346
+prefix_sum,Random,100000,0,0,0.1809865
+prefix_sum,Random,316228,0,0,0.3855974
+prefix_sum,Random,1000000,0,0,1.204576
+prefix_sum,Random,3162278,0,0,3.944365
+prefix_sum,Random,10000000,0,0,12.49182

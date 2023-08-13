@@ -1,68 +1,83 @@
-struct State(X_m : Bool, X_0 : Bool, X_k : Bool, N : Bool, B : Bool, Y : Bool) {
+$$__device__ uint nrof_supervisor = 0;
+$$__device__ uint nrof_deleted = 0;
 
-	init_X_k {
-		// X_k = X
-		X_k := true;
+struct State(marked : Bool, initial : Bool, deleted : Bool, m_route : ControllableEvent, supervisor: Bool) {
+
+	init_supervisor {
+		supervisor := initial && !deleted;
 	}
 
-	init_N {
-		// N_0^k = X_m ∩ X^k
-		N := X_m && X_k;
+	count_supervisor {
+		if this != null && supervisor then {
+			$$atomicInc(&nrof_supervisor, 0xffffffff);
+		}
 	}
 
-	init_B {
-		// B_0^k = X^k \ N^k
-		B := X_k && !N;
+	print_supervisor {
+		if this == null then {
+			$$printf("Nrof supervisor states: %u\n", nrof_supervisor);
+		}
 	}
 
-	remove_bad {
-		// X^(k+1) = X^k \ B^k
-		X_k := X_k && !B;
+	count_deleted {
+		if this != null && deleted then {
+			$$atomicInc(&nrof_deleted, 0xffffffff);
+		}
 	}
 
-	init_Y {
-		// Y_0 = X_0 ∩ X^k
-		Y := X_0 && X_k;
+	print_deleted {
+		if this == null then {
+			$$printf("Nrof deleted states: %u\n", nrof_deleted);
+		}
+	}
+
+	delete_if_cant_reach_marked {
+		if m_route == null && !marked then {
+			deleted := true;
+		}
+	}
+
+	collapse_m_routes {
+		if m_route != null && (m_route.y.deleted || (m_route.y.m_route == null && !m_route.y.marked)) then {
+			m_route := null;
+		}
 	}
 }
 
 struct ControllableEvent(x : State, y : State){
-	compute_nonblocking {
-		if x.X_k && y.N then {
-			x.N := true;
+	expand_m_route {
+		if !x.deleted && !y.deleted then {
+			if x.m_route == null && (y.m_route != null || y.marked) then {
+				x.m_route := this;
+			} 
 		}
 	}
 
-	compute_supervisor {
-		// Note reversal: y --> x instead of x --> y
-		if y.X_k && x.Y then {
-			y.Y := true;
+	expand_supervisor {
+		if !x.deleted && !y.deleted then {
+			if x.supervisor then {
+				y.supervisor := true;
+			}
 		}
 	}
 }
 
 struct UncontrollableEvent(x : State, y : State){
-	compute_bad {
-		if x.X_k && y.B then {
-			x.B := true;
+
+	delete_if_del_state_is_reachable_via_uncontrollable {
+		if y.deleted then {
+			x.deleted := true;
 		}
 	}
 }
 
-init_X_k
-< Fix(
-	init_N
-	< Fix(
-		compute_nonblocking
-	)
-	< init_B
-	< Fix(
-		compute_bad
-	)
-	<
-	remove_bad
-)
-< init_Y
-< Fix(
-	compute_supervisor
-)
+Fix(
+	Fix(expand_m_route) <
+	delete_if_cant_reach_marked <
+	Fix(delete_if_del_state_is_reachable_via_uncontrollable) <
+	Fix(collapse_m_routes)
+) <
+init_supervisor <
+Fix(expand_supervisor)
+//< count_supervisor
+//< print_supervisor

@@ -3,7 +3,6 @@ use std::fs;
 use std::str;
 
 #[test]
-#[ignore]
 fn test_ast_fixtures() {
     let paths = fs::read_dir("tests/ast_fixtures").unwrap();
 
@@ -22,13 +21,11 @@ fn check_file_ast(file: &str) {
 
     let out = Command::cargo_bin("adl")
         .unwrap()
-        .arg("--print")
+        .arg("-a")
         .arg(file)
         .output()
         .expect("Could not collect output of command.");
     let stdout = str::from_utf8(&out.stdout).unwrap();
 
-    if stdout != expected_output {
-        panic!("Result is:\n'{}'\nEXPECTED:\n'{}'", stdout, expected_output);
-    }
+    assert_eq!(stdout, expected_output);
 }

@@ -15,9 +15,9 @@ def main():
 	args = parser.parse_args()
 
 	for n in args.N:
-		nums = random.sample(range(-1000000, 1000000), n);
+		nums = random.sample(range(-10000000, 10000000), n);
 
-		output_file_name = os.path.join(args.output_dir, f"prefix_sum_{n}.init");
+		output_file_name = os.path.join(args.output_dir, f"sorting_{n}.init");
 
 		with open(output_file_name, "w") as out_file:
 			out_file.writelines([
@@ -27,9 +27,11 @@ def main():
 				f"ListElem instances {n} {n}\n"
 			]);
 
-			out_file.writelines([f"{val} {idx+2 if idx != n - 1 else 0} 0 1 0\n" for (idx, val) in enumerate(nums)]);
+			out_file.writelines([f"{val} {idx+2 if idx != n - 1 else 0} 1\n" for (idx, val) in enumerate(nums)]);
 
 			out_file.writelines(["Printer instances 0 0\n"]);
 
+
+		print(f"(\"tests/benchmarks/sorting/testcases/sorting_{n}.init\", Vec::new(), {n}),");
 if __name__ == '__main__':
 	main()

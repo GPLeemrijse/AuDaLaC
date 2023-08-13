@@ -1,0 +1,119 @@
+$$__device__ uint nrof_components = 0;
+
+struct NodeSet(pivot : Node,
+			   f_and_not_b : NodeSet,
+			   not_f_and_b : NodeSet,
+			   not_f_and_not_b : NodeSet){
+
+	allocate_sets {
+		if pivot != null then {
+			if f_and_not_b == null then {
+				f_and_not_b := NodeSet(null, null, null, null);
+				not_f_and_b := NodeSet(null, null, null, null);
+				not_f_and_not_b := NodeSet(null, null, null, null);
+			}
+			pivot.fwd := true;
+			pivot.bwd := true;
+		}
+	}
+
+	count_nrof_sets {
+		if pivot != null then {
+			$$atomicInc(&nrof_components, 0xffffffff);
+		}
+	}
+
+	print_nrof_sets {
+		if this == null then {
+			$$printf("Nrof components: %u\n", nrof_components);
+		}
+	}
+}
+
+struct Node(set : NodeSet,
+			fwd : Bool,
+			bwd : Bool,
+			inc: Edge,
+			outg: Edge
+			){
+
+	pivot_nominate {
+		if set.pivot == null then {
+			set.pivot := this;
+		}
+	}
+
+	divide_into_sets {
+		Bool f := fwd;
+		Bool b := bwd;
+
+		if f  && !b then { set := set.f_and_not_b; }
+		if !f &&  b then { set := set.not_f_and_b; }
+		if !f && !b then { set := set.not_f_and_not_b; }
+
+		if !(f && b) then {
+			fwd := false;
+			bwd := false;
+		}
+	}
+
+	trim {
+		if this != null && !fwd && (inc == null || outg == null) then {
+			set := NodeSet(this, null, null, null);
+			set.f_and_not_b := set;
+			set.not_f_and_b := set;
+			set.not_f_and_not_b := set;
+			fwd := true;
+			bwd := true;
+		}
+	}
+}
+
+struct Edge(s : Node, t : Node){
+	compute_fwd_bwd {
+		if t.set == s.set then {
+			if s.fwd then {
+				t.fwd := true;
+			}
+			
+			if t.bwd then {
+				s.bwd := true;
+			}
+		}
+	}
+	
+	set_in_out {
+		if t.set == s.set then {
+			if t.inc == null then {
+				t.inc := this;
+			}
+			if s.outg == null then {
+				s.outg := this;
+			}
+		}
+	}
+
+	reset_in_out {
+		if t.set != s.set then {
+			if t.inc == this then {
+				t.inc := null;
+			}
+			if s.outg == this then {
+				s.outg := null;
+			}
+		}
+	}
+}
+
+Fix(
+	set_in_out <
+	trim <
+	reset_in_out
+) <
+Fix(pivot_nominate <
+	allocate_sets <
+	Fix(compute_fwd_bwd) <
+	divide_into_sets
+)
+// < count_nrof_sets
+// < print_nrof_sets

@@ -1,24 +1,32 @@
 $$__device__ uint nrof_odd_wins = 0;
+//transformer -mm ~/repos/ModelChecking2/tests/testcases/dining/dining_9.invariantly_inevitably_eat.gm | pgsolver -global smallprog -dsd -dgo -dsg -dlo | grep "Chosen"
 
-
-struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Measure) {
-
-	max_candidate {
-		if candidate != null && !rho.top then {
-			Bool copy := candidate.top ||
-						 (candidate.p1 > rho.p1) ||
-						 (candidate.p1 <= rho.p1 && candidate.p3 > rho.p3);
-
-			if copy then {
-				rho.top := candidate.top;
-				rho.p1 := candidate.p1;
-				rho.p3 := candidate.p3;
+// V_diamond = even == false
+// V_square = odd == true
+struct Node(p: Nat,
+			is_odd: Bool,
+			dirty: Bool,
+			rho_top: Bool,
+			rho_1: Nat,
+			rho_3: Nat,
+			cand: Edge){
+	lift {
+		dirty := false;
+		if cand != null then {
+			// Copy candidate if it is lexicographically larger
+			if (cand.prog_top != rho_top && cand.prog_top) ||
+			   (cand.prog_top == rho_top && cand.prog_1 > rho_1) ||
+			   (cand.prog_top == rho_top && cand.prog_1 == rho_1 && cand.prog_3 > rho_3) then {
+				rho_top := cand.prog_top;
+				rho_1 := cand.prog_1;
+				rho_3 := cand.prog_3;
+				dirty := true;
 			}
 		}
 	}
 
 	count_odd {
-		if this != null && rho.top then {
+		if this != null && rho_top then {
 			$$atomicInc(&nrof_odd_wins, 0xffffffff);
 		}
 	}
@@ -28,162 +36,115 @@ struct Node(p : Nat, owner : Bool, rho : Measure, candidate : Measure, max : Mea
 			$$printf("Number of odd won vertices = %u\n", nrof_odd_wins);
 		}
 	}
-
-	print_nrof_nodes {
-		if this == null then {
-			$$printf("Number nodes = (%u, %u)\n", node->nrof_instances2(true), node->nrof_instances2(false));
-		}
-	}
-
-	print_max {
-		Nat p1 := max.p1;
-		Nat p3 := max.p3;
-		$$if (self == 1) {
-			$$printf("Max = (%u, %u)\n", p1, p3);
-		$$}
-	}
 }
 
-struct Edge(v : Node, w : Node, m : Measure, max : Measure) {
-
+struct Edge(v: Node,
+			w: Node,
+			max1: Nat,
+			max3: Nat,
+			prog_top: Bool,
+			prog_1: Nat,
+			prog_3: Nat) {
 	prog {
-		Bool top_old := m.top;
-		Nat p1_old := m.p1;
-		Nat p3_old := m.p3;
-
-		// Even
-		if v.p % 2 == 0 then {
-			// m is (least) equivalent up to v.p to w.rho
-			m.top := w.rho.top;
-
-			if !m.top then {
-				if v.p >= 1 then {
-					m.p1 := w.rho.p1;
-				}
-				if v.p < 1 then {
-					m.p1 := 0;
-				}
-
-				if v.p >= 3 then {
-					m.p3 := w.rho.p3;
-				}
-				if v.p < 3 then {
-					m.p3 := 0;
-				}
+		if w.dirty then {
+			// Set m s.t. m =_p(v) rho(w)
+			Bool m_top := w.rho_top;
+			Nat m_1 := 0;
+			if v.p >= 1 then {
+				m_1 := w.rho_1;
 			}
-		}
-
-		// Odd
-		if v.p % 2 == 1 then {
-			// Result is strictly greater up to v.p than w.rho, or Top 
-			if w.rho.top then {
-				m.top := true;
+			Nat m_3 := 0;
+			if v.p >= 3 then {
+				m_3 := w.rho_3;
 			}
-			if !w.rho.top then {
-				Bool incr := false;
+			
+			// Increase if v.p is odd
+			if v.p % 2 == 1 then {
+				Bool increased := m_top;// If m = T, then we're done already.
 				
-				// Attempt to increase least significant measure
-				if v.p >= 3 && w.rho.p3 < max.p3 then {
-					m.p3 := w.rho.p3 + 1;
-					m.p1 := w.rho.p1;
-					m.top := false;
-					incr := true;
+				if v.p >= 3 && !increased then {
+					Nat new_3 := 0;
+					if m_3 < max3 then {
+						new_3 := m_3 + 1;
+						increased := true;
+					}
+					m_3 := new_3;
 				}
 
-				// If not increased, check next priority.
-				if !incr then {
-					// incrementing p1 possible
-					if v.p >= 1 && w.rho.p1 < max.p1 then {
-						m.p3 := 0;
-						m.p1 := w.rho.p1 + 1;
-						m.top := false;
-						incr := true;
+				if v.p >= 1 && !increased then {
+					Nat new_1 := 0;
+					if m_1 < max1 then {
+						new_1 := m_1 + 1;
+						increased := true;
 					}
-					// If p1 couldn't be incremented, Top is the only option.
-					if !incr then {
-						m.top := true;
-					}
+					m_1 := new_1;
+				}
+				if !increased then {
+					m_top := true;
 				}
 			}
-		}
-		Bool is_stable := (top_old == m.top) && (p1_old == m.p1) && (p3_old == m.p3);
 
-		/* If m is v's candidate, and m changed, reset v's candidate. */
-		if !is_stable && v.candidate == m then {
-			v.candidate := null;
-		}
-	}
-	
-	top {
-		/*	Nominate yourself as minimum (because owner is even) candidate
-			if you are not top but the current candidate is, or the current 
-			candidate is null.
-		*/
-		if !v.owner && (v.candidate == null || (!m.top && v.candidate.top)) then {
-			v.candidate := m;
-		}
-
-		/*	Nominate yourself as maximum (because owner is odd) candidate
-			if you are top but the current candidate is not, or the current
-			candidate is null.
-		*/
-		if v.owner && (v.candidate == null || (m.top && !v.candidate.top)) then {
-			v.candidate := m;
-		}
-	}
-
-	priority_1 {
-		/*	First make sure you share the higher significance measures
-			with the candidate (which is now guaranteed not to be null).
-		*/
-		if v.candidate.top == m.top then {
-			/*	If the owner is even and you have a lower p1 measure,
-				or the owner is odd and you have a higher p1 measure,
-				then nominate yourself as candidate.
-			*/
-			if (!v.owner && m.p1 < v.candidate.p1) ||
-			   (v.owner  && m.p1 > v.candidate.p1) then {
-				v.candidate := m;
+			// If we are w's candidate and we changed, a new vote is in order.
+			if v.cand == this then {
+				Bool changed := m_top != prog_top || prog_1 != m_1 || prog_3 != m_3;
+				if changed then {
+					v.cand := null;
+				}
 			}
-		}	
+			prog_top := m_top;
+			prog_1 := m_1;
+			prog_3 := m_3;
+		}
 	}
 
-	priority_3 {
-		/*	First make sure you share the higher significance measures
-			with the candidate (which is now guaranteed not to be null).
-		*/
-		if v.candidate.top == m.top && v.candidate.p1 == m.p1 then {
-			/*	If the owner is even and you have a lower p3 measure,
-				or the owner is odd and you have a higher p3 measure,
-				then nominate yourself as candidate.
-			*/
-			if (!v.owner && m.p3 < v.candidate.p3) ||
-			   (v.owner  && m.p3 > v.candidate.p3) then {
-				v.candidate := m;
-			}
+	minmax_top1 {
+		if v.cand == null then {
+			v.cand := this;
+		}
+	}
+
+	minmax_top2 {
+		if  /*min*/	(!v.is_odd &&  v.cand.prog_top && !prog_top) ||
+			/*max*/	( v.is_odd && !v.cand.prog_top &&  prog_top)
+			 then {
+			v.cand := this;
+		}
+	}
+
+	minmax_1 {
+		if v.cand.prog_top == prog_top && (
+			/*min*/	(!v.is_odd && v.cand.prog_1 > prog_1) ||
+			/*max*/	( v.is_odd && v.cand.prog_1 < prog_1)
+			) then {
+			v.cand := this;
+		}
+	}
+
+	minmax_3 {
+		if v.cand.prog_top == prog_top &&
+		   v.cand.prog_1   == prog_1   && (
+			/*min*/	(!v.is_odd && v.cand.prog_3 > prog_3) ||
+			/*max*/	( v.is_odd && v.cand.prog_3 < prog_3)
+			) then {
+			v.cand := this;
 		}
 	}
 
 	self_loops_to_top {
-		if v == w && v.owner && v.p % 2 == 1 then {
-			v.rho.top := true;
+		if v == w && v.is_odd && v.p % 2 == 1 then {
+			v.rho_top := true;
 		}
 	}
 }
 
-struct Measure(top : Bool, p1 : Nat, p3 : Nat) {
-}
-
-print_nrof_nodes <
-print_max <
 self_loops_to_top <
-Fix (
+Fix(
 	prog <
-	Fix(top) <
-	Fix(priority_1) <
-	Fix(priority_3) <
-	max_candidate
-) <
-print_nrof_nodes <
-count_odd <
-print_odd
+	minmax_top1 <
+	minmax_top2 <
+	Fix(minmax_1) <
+	Fix(minmax_3) <
+	lift
+)
+// < count_odd
+// < print_odd

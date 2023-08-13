@@ -1,4 +1,4 @@
-struct ListElem(val : Int, next: ListElem, newNext: ListElem, comp: ListElem, has_inc: Bool) {
+struct ListElem(val : Int, next: ListElem, comp: ListElem, newNext: ListElem, has_inc: Bool) {
 	find_order {
 		if (comp != null) then {
 			if (comp.val > val && (comp.val < newNext.val || newNext == null)) then {
@@ -30,4 +30,4 @@ struct Printer(cur: ListElem) {
 	}
 }
 
-Fix(find_order) < reorder < create_printer < Fix(print_ordered)
+Fix(find_order) < reorder //< create_printer < Fix(print_ordered)

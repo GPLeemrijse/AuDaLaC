@@ -1,0 +1,10 @@
+alg,problem_type,problem_size1,problem_size2,problem_size3,runtime
+synthesis,Random,1000,768,512,0.0814265
+synthesis,Random,3162,2458,1640,0.2760558
+synthesis,Random,10000,7869,5247,0.8261675
+synthesis,Random,31623,24954,16637,3.072344
+synthesis,Random,100000,78202,52136,9.017301
+synthesis,Random,316228,246635,164424,32.90873
+synthesis,Random,1000000,779295,519531,209.8643
+synthesis,Random,3162278,2468470,1645647,662.7911
+synthesis,Random,10000000,7798436,5198958,2485.518

@@ -1,143 +1,91 @@
-use std::time::Duration;
-use crate::benchmarks::bench_testcases;
-use crate::benchmarks::compile_config;
 use crate::common::*;
-use regex::Regex;
-use std::fs::File;
-use std::io::Write;
-
-mod benchmarks;
 mod common;
 
-const REPS: usize = 10;
-
 #[test]
-fn test_benchmark_scc() {
+fn test_benchmark_scc_fb() {
     let vec_of_vec_of_configs = vec![
         memorder_impact_configs(),
         voting_impact_configs(),
-        block_size_impact_configs(),
-        weak_ro_impact_configs(),
     ];
 
     let configs = Config::union(&vec_of_vec_of_configs);
 
-    let mut vec_configs: Vec<Config> = Vec::new();
-    for c in configs {
-        vec_configs.push(c.clone());
+    let mut vec_configs: Vec<&Config> = Vec::new();
+    for c in &configs {
+        vec_configs.push(c);
     }
+    
+    let pgs = scc_fb_graphs();
+    let tests : Vec<(&Config, &Vec<TestCase>)> = configs.iter()
+                                                        .map(|c| 
+                                                            (*c, &pgs)
+                                                        )
+                                                        .collect();
 
-    benchmark_scc_set(&vec_configs, "scc");
+    benchmark(&tests, "SCC_FB", "tests/benchmarks/SCC");
 }
 
-fn random_scc_set() -> Vec<(&'static str, Vec<&'static str>)> {
+#[test]
+fn test_benchmark_scc_col() {
+    let vec_of_vec_of_configs = vec![
+        memorder_impact_configs(),
+        voting_impact_configs(),
+    ];
+
+    let configs = Config::union(&vec_of_vec_of_configs);
+
+    let mut vec_configs: Vec<&Config> = Vec::new();
+    for c in &configs {
+        vec_configs.push(c);
+    }
+    
+    let pgs = scc_col_graphs();
+    let tests : Vec<(&Config, &Vec<TestCase>)> = configs.iter()
+                                                        .map(|c| 
+                                                            (*c, &pgs)
+                                                        )
+                                                        .collect();
+
+    benchmark(&tests, "SCC_COL", "tests/benchmarks/SCC");
+}
+
+fn scc_fb_graphs() -> Vec<TestCase<'static>> {
     vec![
         (
-            "random n*p=1.3",
+            "(P=1.3/N)",
             vec![
-                "tests/benchmarks/SCC/testcases/random_scc_50000_65319.init",
-                "tests/benchmarks/SCC/testcases/random_scc_500000_649925.init",
-                "tests/benchmarks/SCC/testcases/random_scc_5000000_6499862.init",
+                ("tests/benchmarks/SCC/testcases/random_fb_1000_1289.init", vec!["-N".to_string(), "NodeSet=1000".to_string()], 1000, 1289, 1000),
+                ("tests/benchmarks/SCC/testcases/random_fb_3162_4157.init", vec!["-N".to_string(), "NodeSet=3162".to_string()], 3162, 4157, 3162),
+                ("tests/benchmarks/SCC/testcases/random_fb_10000_13021.init", vec!["-N".to_string(), "NodeSet=10000".to_string()], 10000, 13021, 10000),
+                ("tests/benchmarks/SCC/testcases/random_fb_31623_40761.init", vec!["-N".to_string(), "NodeSet=31623".to_string()], 31623, 40761, 31623),
+                ("tests/benchmarks/SCC/testcases/random_fb_100000_129651.init", vec!["-N".to_string(), "NodeSet=100000".to_string()], 100000, 129651, 100000),
+                ("tests/benchmarks/SCC/testcases/random_fb_316228_411169.init", vec!["-N".to_string(), "NodeSet=316228".to_string()], 316228, 411169, 316228),
+                ("tests/benchmarks/SCC/testcases/random_fb_1000000_1301143.init", vec!["-N".to_string(), "NodeSet=1000000".to_string()], 1000000, 1301143, 1000000),
+                ("tests/benchmarks/SCC/testcases/random_fb_3162278_4110178.init", vec!["-N".to_string(), "NodeSet=3162278".to_string()], 3162278, 4110178, 3162278),
+                ("tests/benchmarks/SCC/testcases/random_fb_10000000_12996160.init", vec!["-N".to_string(), "NodeSet=10000000".to_string()], 10000000, 12996160, 10000000),
             ],
         ),
     ]
 }
 
-fn random_mp_set() -> Vec<(&'static str, Vec<&'static str>)> {
+fn scc_col_graphs() -> Vec<TestCase<'static>> {
     vec![
         (
-            "random n*p=1.3",
+            "(P=1.3/N)",
             vec![
-                "tests/benchmarks/SCC/testcases/random_mp_50000_65319.init",
-                "tests/benchmarks/SCC/testcases/random_mp_500000_649925.init",
-                "tests/benchmarks/SCC/testcases/random_mp_5000000_6499862.init",
+                ("tests/benchmarks/SCC/testcases/random_col_1000_1289.init", Vec::new(), 1000, 1289, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_3162_4157.init", Vec::new(), 3162, 4157, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_10000_13021.init", Vec::new(), 10000, 13021, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_31623_40761.init", Vec::new(), 31623, 40761, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_100000_129651.init", Vec::new(), 100000, 129651, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_316228_411169.init", Vec::new(), 316228, 411169, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_1000000_1301143.init", Vec::new(), 1000000, 1301143, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_3162278_4110178.init", Vec::new(), 3162278, 4110178, 0),
+                ("tests/benchmarks/SCC/testcases/random_col_10000000_12996160.init", Vec::new(), 10000000, 12996160, 0),
             ],
         ),
     ]
 }
 
-fn fname2nrof_edges(in_file: &str) -> String {
-    let capts = Regex::new(r"^tests/benchmarks/SCC/testcases/random_\w+_([0-9]+)_([0-9]+)\.init$")
-        .unwrap()
-        .captures(in_file)
-        .unwrap();
 
-    let nodes = capts.get(1)
-         .unwrap()
-         .as_str().parse::<i32>().unwrap();
 
-    let edges = capts.get(2)
-         .unwrap()
-         .as_str().parse::<i32>().unwrap();
-
-    (nodes + edges).to_string()
-}
-
-fn benchmark_scc_set(configs: &Vec<Config>, set_name: &str) {
-    if !is_benchmarking() {
-        eprintln!("@@@@@ SKIPPING {set_name} @@@@@");
-        return;
-    }
-
-    let mut result_file = File::create(format!("tests/benchmarks/SCC/{set_name}_results.csv"))
-        .expect("Could not create SCC benchmark csv file.");
-    result_file
-        .write_all(
-            format!(
-                "{},algorithm,problem_type,problem_size,runtime\n",
-                Config::HEADER
-            )
-            .as_bytes(),
-        )
-        .expect("Could not write header.");
-
-    eprintln!("Benchmarking SCC ({set_name})...");
-
-    for (idx, c) in configs.iter().enumerate() {
-        eprintln!("\tTesting SCC config {}/{}: {c}", idx + 1, configs.len());
-        let compile_err = compile_config(
-            "SCC",
-            "tests/benchmarks/SCC",
-            Some("SCC"),
-            c,
-            vec!["-N".to_string(), "NodeSet=5000000".to_string()],
-        )
-        .err();
-
-        if let Some(e) = compile_err {
-            eprintln!("{}", e);
-            continue;
-        }
-        let csv_prefix = format!("{},SCC", c.as_csv_row());
-        bench_testcases(
-            &random_scc_set(),
-            "tests/benchmarks/SCC/SCC.out",
-            &csv_prefix,
-            fname2nrof_edges,
-            REPS,
-            &mut result_file,
-            Duration::from_secs(60)
-        );
-    }
-
-    for (idx, c) in configs.iter().enumerate() {
-        eprintln!("\tTesting SCC_MP config {}/{}: {c}", idx + 1, configs.len());
-        let compile_err =
-            compile_config("SCC_MP", "tests/benchmarks/SCC", Some("MP"), c, Vec::new()).err();
-
-        if let Some(e) = compile_err {
-            eprintln!("{}", e);
-            continue;
-        }
-        let csv_prefix = format!("{},SCC_MP", c.as_csv_row());
-        bench_testcases(
-            &random_mp_set(),
-            "tests/benchmarks/SCC/SCC_MP.out",
-            &csv_prefix,
-            fname2nrof_edges,
-            REPS,
-            &mut result_file,
-            Duration::from_secs(60)
-        );
-    }
-}

@@ -1,6 +1,6 @@
 use crate::analysis::step_calls;
 use std::collections::HashMap;
-use crate::parser::ast::*;
+use crate::frontend::ast::*;
 use std::collections::HashSet;
 
 pub fn executors(program: &Program) -> HashSet<&String> {
