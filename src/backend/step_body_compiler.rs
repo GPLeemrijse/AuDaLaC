@@ -12,7 +12,8 @@ pub struct StepBodyCompiler<'a> {
 	print_unstable: bool,
 	ld_st_weakly_for_non_racing: bool,
 	memorder: &'a MemOrder,
-	program: &'a Program
+	program: &'a Program,
+	inline_execute: bool,
 }
 
 
@@ -30,7 +31,8 @@ impl StepBodyCompiler<'_> {
 		print_unstable: bool,
 		ld_st_weakly_for_non_racing: bool,
 		memorder: &'a MemOrder,
-		program: &'a Program
+		program: &'a Program,
+		inline_execute: bool,
 	) -> StepBodyCompiler<'a> {
 		StepBodyCompiler {
 			var_exp_type_info: type_info,
@@ -38,7 +40,8 @@ impl StepBodyCompiler<'_> {
 			print_unstable,
 			ld_st_weakly_for_non_racing,
 			memorder,
-			program
+			program,
+			inline_execute
 		}
 	}
 
@@ -76,7 +79,8 @@ impl StepBodyCompiler<'_> {
 	}
 
 	fn body_as_device_function(&self, f_name: &String, f_body: &String) -> String {
-		let func_header = format!("__device__ void {f_name}");
+		let inline = if self.inline_execute {"__inline__ "} else {""};
+		let func_header = format!("__device__ void {inline}{f_name}");
 		let params = vec!["RefType self".to_string(), "bool* stable".to_string()];
 		let kernel_signature = format_signature(&func_header, &params, 0);
 
@@ -520,7 +524,7 @@ mod tests {
 		let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
 		let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-		let step_compiler = StepBodyCompiler::new(&type_info, true, false, false, &MemOrder::Relaxed, &program);
+		let step_compiler = StepBodyCompiler::new(&type_info, true, false, false, &MemOrder::Relaxed, &program, true);
 
 		let expected = formatdoc!(
 			"
@@ -567,7 +571,7 @@ mod tests {
 		assert!(racing_params.contains(&(&"S1".to_string(), &"p1".to_string())));
 		assert!(racing_params.len() == 1);
 
-		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program);
+		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program, true);
 
 		let expected = formatdoc!(
 			"
@@ -609,7 +613,7 @@ mod tests {
 		let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
 		let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program);
+		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program, true);
 
 		let expected = formatdoc!(
 			"
@@ -648,7 +652,7 @@ mod tests {
 		let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
 		let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program);
+		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program, true);
 
 		let expected = formatdoc!(
 			"
@@ -688,7 +692,7 @@ mod tests {
 		let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
 		let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program);
+		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program, true);
 
 		let expected = formatdoc!(
 			"
@@ -726,7 +730,7 @@ mod tests {
 		let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
 		let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program);
+		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program, true);
 
 		let expected = formatdoc!(
 			"
@@ -764,7 +768,7 @@ mod tests {
 		let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
 		let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program);
+		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program, true);
 
 		let expected = formatdoc!(
 			"
@@ -804,7 +808,7 @@ mod tests {
 		let s1 = program.struct_by_name(&"S1".to_string()).unwrap();
 		let step1 = s1.step_by_name(&"step1".to_string()).unwrap();
 
-		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program);
+		let step_compiler = StepBodyCompiler::new(&type_info, true, false, true, &MemOrder::Relaxed, &program, true);
 
 		let expected = formatdoc!(
 			"
