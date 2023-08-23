@@ -65,5 +65,5 @@ make synthesis.out
 To run the unittests, simply run `cargo test`. If the benchmarks should also be run, run:
 ```
 export BENCHMARK=true
-cargo run -- --nocapture --test-threads=1
+cargo test -- --nocapture --test-threads=1
 ```
